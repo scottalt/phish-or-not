@@ -1,0 +1,89 @@
+import Link from 'next/link';
+
+async function getStats() {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'}/api/admin/stats`, {
+      cache: 'no-store',
+    });
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
+}
+
+export default async function AdminPage() {
+  const stats = await getStats();
+  const progress = stats ? Math.round((stats.liveCards / stats.targetCards) * 100) : 0;
+
+  return (
+    <div className="min-h-screen bg-[#060c06] p-4 flex flex-col items-center">
+      <div className="w-full max-w-sm space-y-4 mt-8">
+        <div className="term-border bg-[#060c06]">
+          <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-2 flex items-center justify-between">
+            <span className="text-[#00aa28] text-xs tracking-widest">ADMIN_DASHBOARD</span>
+            <Link href="/" className="text-[#003a0e] text-xs font-mono hover:text-[#00aa28]">← BACK</Link>
+          </div>
+          <div className="px-3 py-4 space-y-4">
+            {stats ? (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { label: 'PENDING', value: stats.pending, color: 'text-[#ffaa00]' },
+                    { label: 'APPROVED', value: stats.approved, color: 'text-[#00ff41]' },
+                    { label: 'REJECTED', value: stats.rejected, color: 'text-[#ff3333]' },
+                    { label: 'NEEDS REVIEW', value: stats.needsReview, color: 'text-[#ffaa00]' },
+                  ].map(({ label, value, color }) => (
+                    <div key={label} className="term-border px-3 py-2 text-center">
+                      <div className={`text-2xl font-black font-mono ${color}`}>{value}</div>
+                      <div className="text-[10px] font-mono text-[#003a0e] mt-0.5">{label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs font-mono">
+                    <span className="text-[#00aa28]">DATASET v1 PROGRESS</span>
+                    <span className="text-[#00ff41]">{stats.liveCards} / {stats.targetCards}</span>
+                  </div>
+                  <div className="w-full h-2 bg-[#003a0e]">
+                    <div
+                      className="h-full bg-[#00ff41] transition-all"
+                      style={{ width: `${progress}%`, boxShadow: '0 0 6px rgba(0,255,65,0.8)' }}
+                    />
+                  </div>
+                  <div className="text-[10px] font-mono text-[#003a0e] text-right">{progress}% COMPLETE</div>
+                </div>
+              </>
+            ) : (
+              <div className="text-[#00aa28] text-xs font-mono text-center py-4">
+                SUPABASE NOT CONNECTED — set env vars to enable
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Link
+            href="/admin/review"
+            className="block w-full py-3 term-border text-[#00ff41] font-mono font-bold tracking-widest text-sm text-center hover:bg-[rgba(0,255,65,0.08)] transition-all glow"
+          >
+            [ REVIEW QUEUE ]
+          </Link>
+          <Link
+            href="/api/admin/export?format=json"
+            className="block w-full py-3 term-border text-[#00aa28] font-mono text-xs tracking-widest text-center hover:bg-[rgba(0,255,65,0.05)] transition-all"
+          >
+            [ EXPORT DATASET (JSON) ]
+          </Link>
+          <Link
+            href="/api/admin/export?format=csv"
+            className="block w-full py-3 term-border text-[#00aa28] font-mono text-xs tracking-widest text-center hover:bg-[rgba(0,255,65,0.05)] transition-all"
+          >
+            [ EXPORT DATASET (CSV) ]
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
