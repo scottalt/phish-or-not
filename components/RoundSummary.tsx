@@ -1,13 +1,15 @@
 'use client';
 
-import { useState } from 'react';
-import type { RoundResult } from '@/lib/types';
+import { useState, useEffect } from 'react';
+import type { RoundResult, GameMode } from '@/lib/types';
 
 interface Props {
   score: number;
   total: number;
   totalScore: number;
   results: RoundResult[];
+  mode: GameMode;
+  date: string;
   onPlayAgain: () => void;
 }
 
@@ -22,11 +24,20 @@ function getTier(score: number, total: number): { label: string; sub: string; co
 
 const CONFIDENCE_LABEL: Record<string, string> = { guessing: 'G', likely: 'L', certain: 'C' };
 
-export function RoundSummary({ score, total, totalScore, results, onPlayAgain }: Props) {
+export function RoundSummary({ score, total, totalScore, results, mode, date, onPlayAgain }: Props) {
   const tier = getTier(score, total);
   const [name, setName] = useState('');
   const [submitState, setSubmitState] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+  const [dailyLeaderboard, setDailyLeaderboard] = useState<{ name: string; score: number }[]>([]);
+
+  useEffect(() => {
+    if (mode !== 'daily') return;
+    fetch(`/api/leaderboard?date=${date}`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then(setDailyLeaderboard)
+      .catch(() => {});
+  }, [mode, date]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -37,7 +48,11 @@ export function RoundSummary({ score, total, totalScore, results, onPlayAgain }:
       const res = await fetch('/api/leaderboard', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), score: totalScore }),
+        body: JSON.stringify({
+          name: name.trim(),
+          score: totalScore,
+          ...(mode === 'daily' ? { date } : {}),
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -45,6 +60,12 @@ export function RoundSummary({ score, total, totalScore, results, onPlayAgain }:
         setSubmitState('error');
       } else {
         setSubmitState('done');
+        if (mode === 'daily') {
+          fetch(`/api/leaderboard?date=${date}`)
+            .then((r) => (r.ok ? r.json() : []))
+            .then(setDailyLeaderboard)
+            .catch(() => {});
+        }
       }
     } catch {
       setErrorMsg('Network error.');
@@ -63,7 +84,9 @@ export function RoundSummary({ score, total, totalScore, results, onPlayAgain }:
       {/* Score header */}
       <div className="term-border bg-[#060c06]">
         <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5 flex items-center justify-between">
-          <span className="text-[#00aa28] text-xs tracking-widest">SESSION_COMPLETE</span>
+          <span className="text-[#00aa28] text-xs tracking-widest">
+            {mode === 'daily' ? 'DAILY_COMPLETE' : 'SESSION_COMPLETE'}
+          </span>
           <span className="text-[#003a0e] text-xs font-mono">ANALYST_TERMINAL</span>
         </div>
         <div className="px-3 py-5 text-center space-y-2">
@@ -175,11 +198,31 @@ export function RoundSummary({ score, total, totalScore, results, onPlayAgain }:
         </div>
       </div>
 
+      {mode === 'daily' && dailyLeaderboard.length > 0 && (
+        <div className="term-border bg-[#060c06]">
+          <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5 flex items-center justify-between">
+            <span className="text-[#00aa28] text-xs tracking-widest">DAILY_LEADERBOARD</span>
+            <span className="text-[#003a0e] text-xs font-mono">{date}</span>
+          </div>
+          <div className="divide-y divide-[rgba(0,255,65,0.08)]">
+            {dailyLeaderboard.slice(0, 10).map((entry, i) => (
+              <div key={i} className="flex items-center gap-3 px-3 py-1.5">
+                <span className={`text-[10px] font-mono w-4 shrink-0 ${i === 0 ? 'text-[#ffaa00]' : 'text-[#003a0e]'}`}>
+                  {i + 1}
+                </span>
+                <span className="text-[#00aa28] text-xs font-mono flex-1 truncate">{entry.name}</span>
+                <span className="text-[#00ff41] text-xs font-mono font-bold glow">{entry.score}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <button
         onClick={onPlayAgain}
         className="w-full py-4 term-border-bright text-[#00ff41] font-mono font-bold tracking-widest text-sm hover:bg-[rgba(0,255,65,0.08)] active:scale-95 transition-all glow"
       >
-        [ RUN AGAIN ]
+        {mode === 'daily' ? '[ BACK TO TERMINAL ]' : '[ RUN AGAIN ]'}
       </button>
 
     </div>
