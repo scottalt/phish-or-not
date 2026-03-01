@@ -6,35 +6,40 @@ interface Props {
   onStart: () => void;
 }
 
-const BOOT_LINES = [
-  '> PHISH_OR_NOT THREAT ANALYZER',
-  '> SOC TRAINING MODULE v2.0',
-  '> ─────────────────────────────',
-  '> LOADING THREAT DATABASE......',
-  '> PHISHING SAMPLES: 40 LOADED',
-  '> CONFIDENCE SCORING: ENABLED',
-  '> STREAK DETECTION: ONLINE',
-  '> ─────────────────────────────',
-  '> SYSTEM READY.',
+// bright=true → phosphor green + glow (separators, READY line)
+const BOOT_LINES: { text: string; bright: boolean }[] = [
+  { text: '> PHISH_OR_NOT THREAT ANALYZER', bright: false },
+  { text: '> SOC TRAINING MODULE v2.0',     bright: false },
+  { text: '> \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500', bright: true  },
+  { text: '> LOADING THREAT DATABASE......', bright: false },
+  { text: '> PHISHING SAMPLES: 40 LOADED',  bright: false },
+  { text: '> CONFIDENCE SCORING: ENABLED',  bright: false },
+  { text: '> STREAK DETECTION: ONLINE',     bright: false },
+  { text: '> \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500', bright: true  },
+  { text: '> SYSTEM READY.',                bright: true  },
 ];
 
 export function StartScreen({ onStart }: Props) {
-  const [visibleLines, setVisibleLines] = useState<string[]>([]);
+  const [visibleCount, setVisibleCount] = useState(0);
   const [showButton, setShowButton] = useState(false);
 
   useEffect(() => {
-    let i = 0;
     const interval = setInterval(() => {
-      if (i < BOOT_LINES.length) {
-        setVisibleLines((prev) => [...prev, BOOT_LINES[i]]);
-        i++;
-      } else {
+      setVisibleCount((prev) => {
+        if (prev < BOOT_LINES.length) return prev + 1;
         clearInterval(interval);
-        setTimeout(() => setShowButton(true), 300);
-      }
+        return prev;
+      });
     }, 220);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (visibleCount === BOOT_LINES.length) {
+      const t = setTimeout(() => setShowButton(true), 300);
+      return () => clearTimeout(t);
+    }
+  }, [visibleCount]);
 
   return (
     <div className="w-full max-w-sm px-4 flex flex-col gap-6">
@@ -45,19 +50,17 @@ export function StartScreen({ onStart }: Props) {
           <span className="text-[#00aa28] text-xs">■ □ □</span>
         </div>
         <div className="px-3 py-4 min-h-48 space-y-1">
-          {visibleLines.map((line, i) => (
+          {BOOT_LINES.slice(0, visibleCount).map((line, i) => (
             <div
               key={i}
               className={`anim-fade-in text-xs font-mono leading-relaxed ${
-                line.includes('─') || line.includes('READY')
-                  ? 'text-[#00ff41]'
-                  : 'text-[#00aa28]'
-              } ${line.includes('READY') ? 'glow' : ''}`}
+                line.bright ? 'text-[#00ff41] glow' : 'text-[#00aa28]'
+              }`}
             >
-              {line}
+              {line.text}
             </div>
           ))}
-          {!showButton && visibleLines.length < BOOT_LINES.length && (
+          {!showButton && visibleCount < BOOT_LINES.length && (
             <span className="cursor" />
           )}
         </div>
