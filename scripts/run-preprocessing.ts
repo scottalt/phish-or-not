@@ -92,12 +92,25 @@ async function main() {
       continue;
     }
 
+    if (!card.raw_body) {
+      console.error(`  Skipping ${card.id}: raw_body is null`);
+      failed++;
+      continue;
+    }
+
+    const rawType = card.inferred_type;
+    if (rawType !== 'email' && rawType !== 'sms') {
+      console.error(`  Skipping ${card.id}: invalid inferred_type "${rawType}"`);
+      failed++;
+      continue;
+    }
+
     const input: RawEmailInput = {
       rawFrom: card.raw_from ?? 'unknown',
       rawSubject: card.raw_subject ?? null,
       rawBody: card.raw_body,
       isPhishing: card.is_phishing ?? false,
-      type: card.inferred_type as 'email' | 'sms',
+      type: rawType,
     };
 
     try {
