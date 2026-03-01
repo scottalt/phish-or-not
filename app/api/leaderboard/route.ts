@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { redis } from '@/lib/redis';
 
 const KEY = 'leaderboard';
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 const BAD_WORDS = [
   'fuck', 'shit', 'cunt', 'nigger', 'nigga', 'faggot', 'fag', 'retard',
@@ -16,6 +17,9 @@ function isClean(name: string): boolean {
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const date = searchParams.get('date');
+  if (date && !DATE_RE.test(date)) {
+    return NextResponse.json({ error: 'Invalid date' }, { status: 400 });
+  }
   const key = date ? `leaderboard:daily:${date}` : KEY;
 
   const results = await redis.zrange(key, 0, 19, {
@@ -36,6 +40,9 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const { name, score, date } = await req.json();
+    if (date && (typeof date !== 'string' || !DATE_RE.test(date))) {
+      return NextResponse.json({ error: 'Invalid date' }, { status: 400 });
+    }
     const key = date ? `leaderboard:daily:${date}` : KEY;
 
     if (!name || typeof name !== 'string') {
@@ -60,7 +67,8 @@ export async function POST(req: Request) {
     await redis.zadd(key, { score, member });
 
     if (date) {
-      await redis.expire(key, 60 * 60 * 24 * 7);
+      const expireAt = Math.floor(new Date(`${date}T00:00:00Z`).getTime() / 1000) + 7 * 24 * 60 * 60;
+      await redis.expireat(key, expireAt);
     }
 
     return NextResponse.json({ ok: true });
