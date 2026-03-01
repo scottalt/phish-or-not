@@ -4,8 +4,8 @@
   "description": "Can you spot a phishing attempt? A retro security awareness game.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#0f172a",
+  "background_color": "#060c06",
+  "theme_color": "#060c06",
   "orientation": "portrait",
   "icons": [
     {
