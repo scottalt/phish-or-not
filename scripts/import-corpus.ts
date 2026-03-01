@@ -179,10 +179,14 @@ async function main() {
   }
 
   // Update batch counts
-  await supabase
+  const { error: updateError } = await supabase
     .from('import_batches')
     .update({ raw_count: imported + skipped, processed_count: 0 })
     .eq('batch_id', batchId);
+
+  if (updateError) {
+    console.warn('Failed to update batch counts:', updateError.message);
+  }
 
   console.log(`\nImport complete: ${imported} inserted, ${skipped} skipped`);
   console.log(`Batch ID: ${batchId}`);
