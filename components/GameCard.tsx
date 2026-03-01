@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { motion, useMotionValue, useTransform, useAnimation } from 'framer-motion';
+import { useState, useRef } from 'react';
+import { useDrag } from '@use-gesture/react';
 import type { Card, Answer, Confidence } from '@/lib/types';
 
 const SWIPE_THRESHOLD = 80;
+const FLY_DISTANCE = 650;
 
 interface Props {
   card: Card;
@@ -20,6 +21,10 @@ const CONFIDENCE_OPTIONS: { value: Confidence; label: string; multiplier: string
   { value: 'likely',   label: 'LIKELY',   multiplier: '2x', color: 'text-[#ffaa00] border-[rgba(255,170,0,0.5)]' },
   { value: 'certain',  label: 'CERTAIN',  multiplier: '3x', color: 'text-[#00ff41] border-[rgba(0,255,65,0.8)]'  },
 ];
+
+function clamp(val: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, val));
+}
 
 function analystFace(streak: number): string {
   if (streak >= 6) return '[^_^]';
@@ -74,81 +79,73 @@ function SMSDisplay({ card }: { card: Card }) {
 }
 
 export function GameCard({ card, onAnswer, questionNumber, total, streak, totalScore }: Props) {
-  const controls = useAnimation();
-  const x = useMotionValue(0);
-  const rotate = useTransform(x, [-250, 250], [-8, 8]);
-  const phishingOpacity = useTransform(x, [-SWIPE_THRESHOLD, -20], [1, 0]);
-  const legitOpacity = useTransform(x, [20, SWIPE_THRESHOLD], [0, 1]);
-
   const [confidence, setConfidence] = useState<Confidence | null>(null);
+  const [dragX, setDragX] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const [flying, setFlying] = useState(false);
+  const answered = useRef(false);
 
-  useEffect(() => {
-    x.set(0);
-    setConfidence(null);
-    controls.set({ opacity: 0, scale: 0.9, y: 16 });
-    controls.start({
-      opacity: 1,
-      scale: 1,
-      y: 0,
-      transition: { type: 'spring', stiffness: 300, damping: 24 },
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [card.id]);
-
-  async function flyOff(direction: 'left' | 'right') {
-    const targetX = direction === 'left' ? -600 : 600;
-    await controls.start({
-      x: targetX,
-      opacity: 0,
-      rotate: direction === 'left' ? -12 : 12,
-      transition: { duration: 0.2, ease: [0.36, 0.66, 0.04, 1] },
-    });
+  function fly(direction: 'left' | 'right', conf: Confidence) {
+    if (answered.current) return;
+    answered.current = true;
+    setFlying(true);
+    setDragX(direction === 'left' ? -FLY_DISTANCE : FLY_DISTANCE);
+    setTimeout(() => {
+      onAnswer(direction === 'left' ? 'phishing' : 'legit', conf);
+    }, 220);
   }
 
-  async function handleDragEnd(_: unknown, info: { offset: { x: number }; velocity: { x: number } }) {
-    if (!confidence) return;
-    const { offset, velocity } = info;
-    if (offset.x < -SWIPE_THRESHOLD || velocity.x < -500) {
-      await flyOff('left');
-      onAnswer('phishing', confidence);
-    } else if (offset.x > SWIPE_THRESHOLD || velocity.x > 500) {
-      await flyOff('right');
-      onAnswer('legit', confidence);
-    } else {
-      controls.start({
-        x: 0,
-        rotate: 0,
-        transition: { type: 'spring', stiffness: 350, damping: 28 },
-      });
-    }
+  const bind = useDrag(
+    ({ down, movement: [mx], velocity: [vx], direction: [dx] }) => {
+      if (!confidence || answered.current) return;
+      if (down) {
+        setDragging(true);
+        setDragX(mx);
+      } else {
+        setDragging(false);
+        const shouldFly = Math.abs(mx) > SWIPE_THRESHOLD || Math.abs(vx) > 0.5;
+        if (shouldFly) {
+          fly(dx > 0 ? 'right' : 'left', confidence);
+        } else {
+          setDragX(0);
+        }
+      }
+    },
+    { filterTaps: true, axis: 'x' }
+  );
+
+  function handleButton(answer: Answer) {
+    if (!confidence || answered.current) return;
+    fly(answer === 'phishing' ? 'left' : 'right', confidence);
   }
 
-  async function handleButton(answer: Answer) {
-    if (!confidence) return;
-    await flyOff(answer === 'phishing' ? 'left' : 'right');
-    onAnswer(answer, confidence);
-  }
-
+  const rotate = dragX / 22;
+  const phishingOpacity = clamp(-dragX / SWIPE_THRESHOLD, 0, 1);
+  const legitOpacity = clamp(dragX / SWIPE_THRESHOLD, 0, 1);
   const progress = ((questionNumber - 1) / total) * 100;
   const streakAtBonus = streak > 0 && streak % 3 === 0;
 
+  const cardTransition = flying
+    ? 'transform 0.22s ease-in, opacity 0.22s ease-in'
+    : dragging
+    ? 'none'
+    : 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)';
+
   return (
     <div className="flex flex-col items-center gap-4 w-full max-w-sm px-4">
-      {/* HUD bar */}
+      {/* HUD */}
       <div className="w-full flex items-center justify-between text-xs font-mono">
         <div className="flex items-center gap-3">
           <span className="text-[#00aa28]">
             Q<span className="text-[#00ff41] glow">{questionNumber}</span>/{total}
           </span>
-          <span
-            className={`text-xs px-2 py-0.5 border font-mono ${
-              card.difficulty === 'easy'
-                ? 'text-[#00ff41] border-[rgba(0,255,65,0.4)]'
-                : card.difficulty === 'medium'
-                ? 'text-[#ffaa00] border-[rgba(255,170,0,0.4)]'
-                : 'text-[#ff3333] border-[rgba(255,51,51,0.4)]'
-            }`}
-          >
+          <span className={`text-xs px-2 py-0.5 border font-mono ${
+            card.difficulty === 'easy'
+              ? 'text-[#00ff41] border-[rgba(0,255,65,0.4)]'
+              : card.difficulty === 'medium'
+              ? 'text-[#ffaa00] border-[rgba(255,170,0,0.4)]'
+              : 'text-[#ff3333] border-[rgba(255,51,51,0.4)]'
+          }`}>
             {card.difficulty.toUpperCase()}
           </span>
         </div>
@@ -171,7 +168,6 @@ export function GameCard({ card, onAnswer, questionNumber, total, streak, totalS
         />
       </div>
 
-      {/* Swipe hints — only shown after confidence selected */}
       {confidence && (
         <div className="flex justify-between w-full text-xs text-[#003a0e] font-mono tracking-wider">
           <span>← PHISHING</span>
@@ -181,42 +177,40 @@ export function GameCard({ card, onAnswer, questionNumber, total, streak, totalS
 
       {/* Card */}
       <div className="relative w-full">
+        {/* Stamps */}
         {confidence && (
           <>
-            <motion.div
-              style={{ opacity: phishingOpacity }}
+            <div
               className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center"
+              style={{ opacity: phishingOpacity }}
             >
               <div className="border-2 border-[#ff3333] px-3 py-1 -rotate-12 bg-[rgba(255,51,51,0.08)]">
                 <span className="text-[#ff3333] text-lg font-black tracking-widest glow-red">PHISHING</span>
               </div>
-            </motion.div>
-            <motion.div
-              style={{ opacity: legitOpacity }}
+            </div>
+            <div
               className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center"
+              style={{ opacity: legitOpacity }}
             >
               <div className="border-2 border-[#00ff41] px-3 py-1 rotate-12 bg-[rgba(0,255,65,0.08)]">
                 <span className="text-[#00ff41] text-lg font-black tracking-widest glow">LEGIT</span>
               </div>
-            </motion.div>
+            </div>
           </>
         )}
 
-        <motion.div
-          drag={confidence ? 'x' : false}
-          dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.12}
-          style={{ x, rotate }}
-          animate={controls}
-          onDragEnd={handleDragEnd}
-          className={confidence ? 'cursor-grab active:cursor-grabbing' : ''}
+        <div
+          {...(confidence ? bind() : {})}
+          className={`anim-card-entry ${confidence ? 'cursor-grab active:cursor-grabbing touch-none' : ''}`}
+          style={{
+            transform: `translateX(${dragX}px) rotate(${rotate}deg)`,
+            opacity: flying ? 0 : 1,
+            transition: cardTransition,
+            willChange: 'transform',
+          }}
         >
-          {card.type === 'email' ? (
-            <EmailDisplay card={card} />
-          ) : (
-            <SMSDisplay card={card} />
-          )}
-        </motion.div>
+          {card.type === 'email' ? <EmailDisplay card={card} /> : <SMSDisplay card={card} />}
+        </div>
       </div>
 
       {/* Confidence selector */}
@@ -242,7 +236,7 @@ export function GameCard({ card, onAnswer, questionNumber, total, streak, totalS
         <div className="w-full space-y-2">
           <div className="text-xs text-[#00aa28] font-mono text-center tracking-widest">
             CONFIDENCE: <span className="text-[#00ff41] glow">{confidence.toUpperCase()}</span>
-            {' '}·{' '}
+            {' · '}
             {confidence === 'certain' ? '3x' : confidence === 'likely' ? '2x' : '1x'} PTS
             <button
               onClick={() => setConfidence(null)}
