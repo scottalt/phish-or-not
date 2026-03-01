@@ -1,125 +1,154 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import type { RoundResult } from '@/lib/types';
 
 interface Props {
   result: RoundResult;
+  streak: number;
+  totalScore: number;
   onNext: () => void;
   questionNumber: number;
   total: number;
 }
 
-export function FeedbackCard({ result, onNext, questionNumber, total }: Props) {
-  const { card, correct, userAnswer } = result;
+const CONFIDENCE_LABEL = { guessing: 'GUESSING', likely: 'LIKELY', certain: 'CERTAIN' };
+const CONFIDENCE_MULTI = { guessing: '1x', likely: '2x', certain: '3x' };
+
+export function FeedbackCard({ result, streak, totalScore, onNext, questionNumber, total }: Props) {
+  const { card, correct, userAnswer, confidence, pointsEarned } = result;
   const wasPhishing = card.isPhishing;
+  const streakMilestone = streak > 0 && streak % 3 === 0;
+
+  const [showFlash, setShowFlash] = useState(true);
+
+  useEffect(() => {
+    const t = setTimeout(() => setShowFlash(false), 600);
+    return () => clearTimeout(t);
+  }, []);
+
+  const headline = correct
+    ? wasPhishing
+      ? 'THREAT NEUTRALIZED'
+      : 'ASSET CLEARED'
+    : wasPhishing
+    ? 'BREACH DETECTED'
+    : 'FALSE POSITIVE';
+
+  const headlineColor = correct ? 'text-[#00ff41]' : 'text-[#ff3333]';
+  const headlineGlow = correct ? 'glow' : 'glow-red';
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ type: 'spring', stiffness: 280, damping: 24 }}
-      className="w-full max-w-sm px-4 flex flex-col gap-5"
-    >
-      {/* Result header */}
-      <div
-        className={`rounded-2xl px-5 py-4 border ${
-          correct
-            ? 'bg-green-500/10 border-green-500/30'
-            : 'bg-red-500/10 border-red-500/30'
-        }`}
-      >
-        <div className="flex items-center gap-3 mb-2">
-          <span className="text-2xl">{correct ? '✓' : '✗'}</span>
-          <div>
-            <div
-              className={`text-lg font-black tracking-wide ${
-                correct ? 'text-green-400' : 'text-red-400'
-              }`}
-            >
-              {correct ? 'Correct' : 'Wrong'}
-            </div>
-            <div className="text-slate-400 text-xs">
-              {questionNumber} of {total}
-            </div>
-          </div>
-        </div>
-
-        <div className="text-slate-300 text-sm leading-relaxed">
-          {wasPhishing ? (
-            <>
-              This was a{' '}
-              <span className="text-red-400 font-semibold">phishing</span> attempt.
-              {!correct && ' You marked it as legit.'}
-            </>
-          ) : (
-            <>
-              This was a{' '}
-              <span className="text-green-400 font-semibold">legitimate</span> message.
-              {!correct && ' You marked it as phishing.'}
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Explanation */}
-      <div className="bg-slate-800/60 rounded-2xl px-5 py-4 border border-slate-700/50">
-        <div className="text-slate-400 text-xs uppercase tracking-wider mb-2 font-semibold">
-          Explanation
-        </div>
-        <p className="text-slate-200 text-sm leading-relaxed">{card.explanation}</p>
-      </div>
-
-      {/* Clues (only for phishing) */}
-      {wasPhishing && card.clues.length > 0 && (
-        <div className="bg-slate-800/60 rounded-2xl px-5 py-4 border border-slate-700/50">
-          <div className="text-slate-400 text-xs uppercase tracking-wider mb-3 font-semibold">
-            Red flags
-          </div>
-          <ul className="space-y-2">
-            {card.clues.map((clue, i) => (
-              <li key={i} className="flex gap-2 text-sm text-slate-300">
-                <span className="text-red-400 shrink-0 mt-0.5">▸</span>
-                <span>{clue}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+    <div className="w-full max-w-sm px-4 relative">
+      {/* Flash overlay */}
+      {showFlash && (
+        <div
+          className={`fixed inset-0 pointer-events-none z-50 ${
+            correct ? 'bg-[rgba(0,255,65,0.07)] clear-overlay' : 'bg-[rgba(255,0,0,0.12)] breach-overlay'
+          }`}
+        />
       )}
 
-      {/* Sender info for context */}
-      <div className="bg-slate-800/40 rounded-xl px-4 py-3 border border-slate-700/30">
-        <div className="text-slate-500 text-xs mb-1">Sender</div>
-        <div className="text-slate-300 text-sm font-mono break-all">{card.from}</div>
-        {card.subject && (
-          <>
-            <div className="text-slate-500 text-xs mt-2 mb-1">Subject</div>
-            <div className="text-slate-300 text-sm">{card.subject}</div>
-          </>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 26 }}
+        className="flex flex-col gap-4"
+      >
+        {/* Result header */}
+        <div className={`term-border bg-[#060c06] ${correct ? 'border-[rgba(0,255,65,0.6)]' : 'border-[rgba(255,51,51,0.6)]'}`}>
+          <div className={`border-b px-3 py-2 flex items-center justify-between ${correct ? 'border-[rgba(0,255,65,0.4)]' : 'border-[rgba(255,51,51,0.4)]'}`}>
+            <span className={`text-xs font-mono tracking-widest ${correct ? 'text-[#00aa28]' : 'text-[#aa2222]'}`}>
+              ANALYSIS_RESULT
+            </span>
+            <span className="text-xs font-mono text-[#003a0e]">Q{questionNumber}/{total}</span>
+          </div>
+          <div className="px-3 py-4 text-center space-y-1">
+            <div className={`text-2xl font-black font-mono tracking-widest ${headlineColor} ${headlineGlow}`}>
+              {headline}
+            </div>
+            <div className="text-xs font-mono text-[#00aa28]">
+              {wasPhishing
+                ? `This was a PHISHING attempt. You said: ${userAnswer.toUpperCase()}.`
+                : `This was LEGIT. You said: ${userAnswer.toUpperCase()}.`}
+            </div>
+          </div>
+
+          {/* Points earned */}
+          <div className={`border-t px-3 py-2 flex items-center justify-between ${correct ? 'border-[rgba(0,255,65,0.25)]' : 'border-[rgba(255,51,51,0.25)]'}`}>
+            <span className="text-xs font-mono text-[#00aa28]">
+              CONFIDENCE: <span className="text-[#00ff41]">{CONFIDENCE_LABEL[confidence]}</span>
+              {' '}({CONFIDENCE_MULTI[confidence]})
+            </span>
+            <span className={`text-sm font-black font-mono ${correct ? 'text-[#00ff41] glow' : 'text-[#003a0e]'}`}>
+              +{pointsEarned} PTS
+            </span>
+          </div>
+
+          {streakMilestone && (
+            <div className="border-t border-[rgba(0,255,65,0.25)] px-3 py-1.5 text-center">
+              <span className="text-xs font-mono text-[#ffaa00] glow-amber">
+                ★ STREAK BONUS x{streak / 3} — +50 PTS INCLUDED ★
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Score bar */}
+        <div className="term-border bg-[#060c06] px-3 py-2 flex items-center justify-between text-xs font-mono">
+          <span className="text-[#00aa28]">TOTAL SCORE</span>
+          <span className="text-[#00ff41] font-black text-sm glow">{totalScore} PTS</span>
+          <span className="text-[#00aa28]">STREAK: <span className="text-[#00ff41]">{streak}</span></span>
+        </div>
+
+        {/* Explanation */}
+        <div className="term-border bg-[#060c06]">
+          <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5">
+            <span className="text-[#00aa28] text-xs tracking-widest">ANALYST_NOTES</span>
+          </div>
+          <p className="px-3 py-3 text-xs text-[#00aa28] leading-relaxed font-mono">{card.explanation}</p>
+        </div>
+
+        {/* Red flags — phishing only */}
+        {wasPhishing && card.clues.length > 0 && (
+          <div className="term-border bg-[#060c06] border-[rgba(255,51,51,0.3)]">
+            <div className="border-b border-[rgba(255,51,51,0.3)] px-3 py-1.5">
+              <span className="text-[#aa2222] text-xs tracking-widest">RED_FLAGS_DETECTED</span>
+            </div>
+            <ul className="px-3 py-3 space-y-2">
+              {card.clues.map((clue, i) => (
+                <li key={i} className="flex gap-2 text-xs text-[#00aa28] font-mono">
+                  <span className="text-[#ff3333] shrink-0">▸</span>
+                  <span>{clue}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
-      </div>
 
-      {/* Difficulty badge + next */}
-      <div className="flex items-center justify-between">
-        <span
-          className={`text-xs px-3 py-1 rounded-full font-medium uppercase tracking-wider border ${
-            card.difficulty === 'easy'
-              ? 'text-green-400 bg-green-500/10 border-green-500/20'
-              : card.difficulty === 'medium'
-              ? 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20'
-              : 'text-red-400 bg-red-500/10 border-red-500/20'
-          }`}
-        >
-          {card.difficulty}
-        </span>
+        {/* Sender recap */}
+        <div className="term-border bg-[#060c06] px-3 py-2 space-y-1">
+          <div className="flex gap-2 text-xs font-mono">
+            <span className="text-[#003a0e] w-10 shrink-0">FROM:</span>
+            <span className="text-[#00aa28] break-all">{card.from}</span>
+          </div>
+          {card.subject && (
+            <div className="flex gap-2 text-xs font-mono">
+              <span className="text-[#003a0e] w-10 shrink-0">SUBJ:</span>
+              <span className="text-[#00aa28]">{card.subject}</span>
+            </div>
+          )}
+        </div>
 
+        {/* Next button */}
         <button
           onClick={onNext}
-          className="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-bold rounded-xl transition-all tracking-wide"
+          className="w-full py-4 term-border-bright text-[#00ff41] font-mono font-bold tracking-widest text-sm hover:bg-[rgba(0,255,65,0.08)] active:bg-[rgba(0,255,65,0.15)] transition-all glow"
         >
-          {questionNumber === total ? 'See Results' : 'Next →'}
+          {questionNumber === total ? '[ VIEW RESULTS ]' : '[ NEXT TRANSMISSION ]'}
         </button>
-      </div>
-    </motion.div>
+      </motion.div>
+    </div>
   );
 }

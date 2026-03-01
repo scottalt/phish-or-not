@@ -1,44 +1,52 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, useMotionValue, useTransform, useAnimation } from 'framer-motion';
-import type { Card, Answer } from '@/lib/types';
+import type { Card, Answer, Confidence } from '@/lib/types';
 
 const SWIPE_THRESHOLD = 80;
 
 interface Props {
   card: Card;
-  onAnswer: (answer: Answer) => void;
+  onAnswer: (answer: Answer, confidence: Confidence) => void;
   questionNumber: number;
   total: number;
+  streak: number;
+  totalScore: number;
+}
+
+const CONFIDENCE_OPTIONS: { value: Confidence; label: string; multiplier: string; color: string }[] = [
+  { value: 'guessing', label: 'GUESSING', multiplier: '1x', color: 'text-[#00aa28] border-[rgba(0,255,65,0.25)]' },
+  { value: 'likely',   label: 'LIKELY',   multiplier: '2x', color: 'text-[#ffaa00] border-[rgba(255,170,0,0.5)]' },
+  { value: 'certain',  label: 'CERTAIN',  multiplier: '3x', color: 'text-[#00ff41] border-[rgba(0,255,65,0.8)]'  },
+];
+
+function analystFace(streak: number): string {
+  if (streak >= 6) return '[^_^]';
+  if (streak >= 3) return '[o_o]';
+  return '[·_·]';
 }
 
 function EmailDisplay({ card }: { card: Card }) {
   return (
-    <div className="bg-white rounded-2xl overflow-hidden shadow-2xl select-none">
-      {/* Email chrome */}
-      <div className="bg-slate-100 px-4 py-3 border-b border-slate-200">
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-3 h-3 rounded-full bg-red-400" />
-          <div className="w-3 h-3 rounded-full bg-yellow-400" />
-          <div className="w-3 h-3 rounded-full bg-green-400" />
-          <span className="ml-2 text-xs text-slate-400 font-mono">INBOX</span>
-        </div>
-        <div className="space-y-1">
-          <div className="flex gap-2 text-xs">
-            <span className="text-slate-400 w-12 shrink-0">FROM</span>
-            <span className="text-slate-700 font-mono break-all">{card.from}</span>
-          </div>
-          {card.subject && (
-            <div className="flex gap-2 text-xs">
-              <span className="text-slate-400 w-12 shrink-0">SUBJ</span>
-              <span className="text-slate-800 font-semibold">{card.subject}</span>
-            </div>
-          )}
-        </div>
+    <div className="term-border bg-[#060c06] select-none">
+      <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-2 flex items-center justify-between">
+        <span className="text-[#00aa28] text-xs tracking-widest">INCOMING_EMAIL</span>
+        <span className="text-[#003a0e] text-xs">■ □ □</span>
       </div>
-      {/* Email body */}
-      <div className="px-4 py-4 text-sm text-slate-700 leading-relaxed whitespace-pre-wrap max-h-72 overflow-y-auto font-mono">
+      <div className="px-3 py-2 border-b border-[rgba(0,255,65,0.2)] space-y-1">
+        <div className="flex gap-2 text-xs">
+          <span className="text-[#00aa28] w-10 shrink-0">FROM:</span>
+          <span className="text-[#00ff41] font-mono break-all">{card.from}</span>
+        </div>
+        {card.subject && (
+          <div className="flex gap-2 text-xs">
+            <span className="text-[#00aa28] w-10 shrink-0">SUBJ:</span>
+            <span className="text-[#00ff41] font-mono">{card.subject}</span>
+          </div>
+        )}
+      </div>
+      <div className="px-3 py-3 text-xs text-[#00aa28] leading-relaxed whitespace-pre-wrap max-h-52 overflow-y-auto font-mono">
         {card.body}
       </div>
     </div>
@@ -47,45 +55,42 @@ function EmailDisplay({ card }: { card: Card }) {
 
 function SMSDisplay({ card }: { card: Card }) {
   return (
-    <div className="bg-slate-800 rounded-2xl overflow-hidden shadow-2xl select-none">
-      {/* SMS chrome */}
-      <div className="bg-slate-900 px-4 py-3 border-b border-slate-700 flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-slate-600 flex items-center justify-center text-slate-300 text-xs font-bold">
-          ?
-        </div>
-        <div>
-          <div className="text-white text-sm font-medium">{card.from}</div>
-          <div className="text-slate-400 text-xs">Text Message</div>
+    <div className="term-border bg-[#060c06] select-none">
+      <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-2 flex items-center justify-between">
+        <span className="text-[#00aa28] text-xs tracking-widest">INCOMING_SMS</span>
+        <span className="text-[#003a0e] text-xs">■ □ □</span>
+      </div>
+      <div className="px-3 py-2 border-b border-[rgba(0,255,65,0.2)]">
+        <div className="flex gap-2 text-xs">
+          <span className="text-[#00aa28] w-10 shrink-0">FROM:</span>
+          <span className="text-[#00ff41] font-mono">{card.from}</span>
         </div>
       </div>
-      {/* SMS body */}
-      <div className="px-4 py-5">
-        <div className="bg-slate-700 rounded-2xl rounded-tl-sm px-4 py-3 text-sm text-slate-100 leading-relaxed whitespace-pre-wrap max-h-64 overflow-y-auto">
-          {card.body}
-        </div>
-        <div className="text-right mt-2 text-xs text-slate-500">
-          {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-        </div>
+      <div className="px-3 py-3 text-xs text-[#00aa28] leading-relaxed whitespace-pre-wrap max-h-52 overflow-y-auto font-mono">
+        {card.body}
       </div>
     </div>
   );
 }
 
-export function GameCard({ card, onAnswer, questionNumber, total }: Props) {
+export function GameCard({ card, onAnswer, questionNumber, total, streak, totalScore }: Props) {
   const controls = useAnimation();
   const x = useMotionValue(0);
-  const rotate = useTransform(x, [-250, 250], [-12, 12]);
+  const rotate = useTransform(x, [-250, 250], [-8, 8]);
   const phishingOpacity = useTransform(x, [-SWIPE_THRESHOLD, -20], [1, 0]);
   const legitOpacity = useTransform(x, [20, SWIPE_THRESHOLD], [0, 1]);
 
+  const [confidence, setConfidence] = useState<Confidence | null>(null);
+
   useEffect(() => {
     x.set(0);
-    controls.set({ opacity: 0, scale: 0.88, y: 20 });
+    setConfidence(null);
+    controls.set({ opacity: 0, scale: 0.9, y: 16 });
     controls.start({
       opacity: 1,
       scale: 1,
       y: 0,
-      transition: { type: 'spring', stiffness: 280, damping: 22 },
+      transition: { type: 'spring', stiffness: 300, damping: 24 },
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [card.id]);
@@ -95,19 +100,20 @@ export function GameCard({ card, onAnswer, questionNumber, total }: Props) {
     await controls.start({
       x: targetX,
       opacity: 0,
-      rotate: direction === 'left' ? -15 : 15,
-      transition: { duration: 0.22, ease: [0.36, 0.66, 0.04, 1] },
+      rotate: direction === 'left' ? -12 : 12,
+      transition: { duration: 0.2, ease: [0.36, 0.66, 0.04, 1] },
     });
   }
 
   async function handleDragEnd(_: unknown, info: { offset: { x: number }; velocity: { x: number } }) {
+    if (!confidence) return;
     const { offset, velocity } = info;
     if (offset.x < -SWIPE_THRESHOLD || velocity.x < -500) {
       await flyOff('left');
-      onAnswer('phishing');
+      onAnswer('phishing', confidence);
     } else if (offset.x > SWIPE_THRESHOLD || velocity.x > 500) {
       await flyOff('right');
-      onAnswer('legit');
+      onAnswer('legit', confidence);
     } else {
       controls.start({
         x: 0,
@@ -118,66 +124,92 @@ export function GameCard({ card, onAnswer, questionNumber, total }: Props) {
   }
 
   async function handleButton(answer: Answer) {
+    if (!confidence) return;
     await flyOff(answer === 'phishing' ? 'left' : 'right');
-    onAnswer(answer);
+    onAnswer(answer, confidence);
   }
 
   const progress = ((questionNumber - 1) / total) * 100;
+  const streakAtBonus = streak > 0 && streak % 3 === 0;
 
   return (
-    <div className="flex flex-col items-center gap-6 w-full max-w-sm px-4">
-      {/* Progress */}
-      <div className="w-full">
-        <div className="flex justify-between text-xs text-slate-400 mb-2">
-          <span>Question {questionNumber} of {total}</span>
-          <span className="uppercase tracking-wider text-slate-500">
-            {card.difficulty}
+    <div className="flex flex-col items-center gap-4 w-full max-w-sm px-4">
+      {/* HUD bar */}
+      <div className="w-full flex items-center justify-between text-xs font-mono">
+        <div className="flex items-center gap-3">
+          <span className="text-[#00aa28]">
+            Q<span className="text-[#00ff41] glow">{questionNumber}</span>/{total}
+          </span>
+          <span
+            className={`text-xs px-2 py-0.5 border font-mono ${
+              card.difficulty === 'easy'
+                ? 'text-[#00ff41] border-[rgba(0,255,65,0.4)]'
+                : card.difficulty === 'medium'
+                ? 'text-[#ffaa00] border-[rgba(255,170,0,0.4)]'
+                : 'text-[#ff3333] border-[rgba(255,51,51,0.4)]'
+            }`}
+          >
+            {card.difficulty.toUpperCase()}
           </span>
         </div>
-        <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-indigo-500 rounded-full transition-all duration-300"
-            style={{ width: `${progress}%` }}
-          />
+        <div className="flex items-center gap-3">
+          <span className={`text-[#00aa28] ${streakAtBonus ? 'glow text-[#00ff41]' : ''}`}>
+            STREAK:<span className="text-[#00ff41]">{streak}</span>
+          </span>
+          <span className="text-[#00aa28]">
+            PTS:<span className="text-[#00ff41] glow">{totalScore}</span>
+          </span>
+          <span className="text-[#003a0e] font-mono text-sm">{analystFace(streak)}</span>
         </div>
       </div>
 
-      {/* Swipe hints */}
-      <div className="flex justify-between w-full text-xs text-slate-600 font-medium tracking-wider">
-        <span>← PHISHING</span>
-        <span>LEGIT →</span>
+      {/* Progress bar */}
+      <div className="w-full h-px bg-[#003a0e] relative overflow-hidden">
+        <div
+          className="absolute left-0 top-0 h-full bg-[#00ff41] transition-all duration-300"
+          style={{ width: `${progress}%`, boxShadow: '0 0 6px rgba(0,255,65,0.8)' }}
+        />
       </div>
+
+      {/* Swipe hints — only shown after confidence selected */}
+      {confidence && (
+        <div className="flex justify-between w-full text-xs text-[#003a0e] font-mono tracking-wider">
+          <span>← PHISHING</span>
+          <span>LEGIT →</span>
+        </div>
+      )}
 
       {/* Card */}
       <div className="relative w-full">
-        {/* Phishing stamp overlay */}
-        <motion.div
-          style={{ opacity: phishingOpacity }}
-          className="absolute inset-0 z-10 rounded-2xl pointer-events-none flex items-center justify-center"
-        >
-          <div className="border-4 border-red-500 rounded-lg px-3 py-1 rotate-[-14deg] bg-red-500/10">
-            <span className="text-red-500 text-xl font-black tracking-widest">PHISHING</span>
-          </div>
-        </motion.div>
+        {confidence && (
+          <>
+            <motion.div
+              style={{ opacity: phishingOpacity }}
+              className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center"
+            >
+              <div className="border-2 border-[#ff3333] px-3 py-1 -rotate-12 bg-[rgba(255,51,51,0.08)]">
+                <span className="text-[#ff3333] text-lg font-black tracking-widest glow-red">PHISHING</span>
+              </div>
+            </motion.div>
+            <motion.div
+              style={{ opacity: legitOpacity }}
+              className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center"
+            >
+              <div className="border-2 border-[#00ff41] px-3 py-1 rotate-12 bg-[rgba(0,255,65,0.08)]">
+                <span className="text-[#00ff41] text-lg font-black tracking-widest glow">LEGIT</span>
+              </div>
+            </motion.div>
+          </>
+        )}
 
-        {/* Legit stamp overlay */}
         <motion.div
-          style={{ opacity: legitOpacity }}
-          className="absolute inset-0 z-10 rounded-2xl pointer-events-none flex items-center justify-center"
-        >
-          <div className="border-4 border-green-500 rounded-lg px-3 py-1 rotate-[14deg] bg-green-500/10">
-            <span className="text-green-500 text-xl font-black tracking-widest">LEGIT</span>
-          </div>
-        </motion.div>
-
-        <motion.div
-          drag="x"
+          drag={confidence ? 'x' : false}
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.12}
           style={{ x, rotate }}
           animate={controls}
           onDragEnd={handleDragEnd}
-          className="cursor-grab active:cursor-grabbing"
+          className={confidence ? 'cursor-grab active:cursor-grabbing' : ''}
         >
           {card.type === 'email' ? (
             <EmailDisplay card={card} />
@@ -187,21 +219,54 @@ export function GameCard({ card, onAnswer, questionNumber, total }: Props) {
         </motion.div>
       </div>
 
-      {/* Buttons */}
-      <div className="flex gap-4 w-full">
-        <button
-          onClick={() => handleButton('phishing')}
-          className="flex-1 py-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 font-bold tracking-wide hover:bg-red-500/20 hover:border-red-500/50 active:scale-95 transition-all"
-        >
-          PHISHING
-        </button>
-        <button
-          onClick={() => handleButton('legit')}
-          className="flex-1 py-4 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-400 font-bold tracking-wide hover:bg-green-500/20 hover:border-green-500/50 active:scale-95 transition-all"
-        >
-          LEGIT
-        </button>
-      </div>
+      {/* Confidence selector */}
+      {!confidence ? (
+        <div className="w-full space-y-2">
+          <div className="text-xs text-[#00aa28] font-mono text-center tracking-widest">
+            — SET CONFIDENCE BEFORE ANSWERING —
+          </div>
+          <div className="flex gap-2">
+            {CONFIDENCE_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setConfidence(opt.value)}
+                className={`flex-1 py-3 term-border font-mono text-xs tracking-wider transition-all active:scale-95 hover:bg-[rgba(0,255,65,0.06)] flex flex-col items-center gap-0.5 ${opt.color}`}
+              >
+                <span>{opt.label}</span>
+                <span className="text-[10px] opacity-60">{opt.multiplier} PTS</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="w-full space-y-2">
+          <div className="text-xs text-[#00aa28] font-mono text-center tracking-widest">
+            CONFIDENCE: <span className="text-[#00ff41] glow">{confidence.toUpperCase()}</span>
+            {' '}·{' '}
+            {confidence === 'certain' ? '3x' : confidence === 'likely' ? '2x' : '1x'} PTS
+            <button
+              onClick={() => setConfidence(null)}
+              className="ml-3 text-[#003a0e] hover:text-[#00aa28] transition-colors"
+            >
+              [change]
+            </button>
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={() => handleButton('phishing')}
+              className="flex-1 py-4 border border-[rgba(255,51,51,0.5)] text-[#ff3333] font-mono font-bold tracking-widest text-sm hover:bg-[rgba(255,51,51,0.1)] active:scale-95 transition-all glow-red"
+            >
+              PHISHING
+            </button>
+            <button
+              onClick={() => handleButton('legit')}
+              className="flex-1 py-4 border border-[rgba(0,255,65,0.5)] text-[#00ff41] font-mono font-bold tracking-widest text-sm hover:bg-[rgba(0,255,65,0.1)] active:scale-95 transition-all glow"
+            >
+              LEGIT
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

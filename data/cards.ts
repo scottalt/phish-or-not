@@ -513,8 +513,366 @@ Track at usps.com/track
     explanation:
       "Legitimate USPS tracking SMS. Sent from 28777 (ATUSPS — the official USPS short code), includes a real 22-digit tracking number, and links only to usps.com. No payment request, no urgency tactics.",
   },
+
+  // ===== PHISHING - EASY (additional) =====
+  {
+    id: 'p-easy-005',
+    type: 'email',
+    difficulty: 'easy',
+    isPhishing: true,
+    from: 'billing@netflixaccounts.info',
+    subject: 'Action Required: Your Netflix Payment Failed',
+    body: `Dear Netflix Member,
+
+We were unable to process your payment for this billing cycle. Your account will be suspended within 24 hours unless you update your payment method.
+
+Update Payment Now:
+http://netflix-billing-update.com/payment?id=NF8472910
+
+To avoid any service interruption, please act immediately.
+
+Netflix Support`,
+    clues: [
+      'Domain is "netflixaccounts.info" — Netflix emails come from netflix.com',
+      'Generic greeting "Dear Netflix Member" — Netflix uses your name',
+      'Link goes to netflix-billing-update.com, not netflix.com',
+      '24-hour suspension threat creates false urgency',
+    ],
+    explanation:
+      "Netflix phishing is extremely common. The real Netflix domain is netflix.com and they address you by your account name. Payment issues are managed through your account settings at netflix.com — not via emailed links.",
+  },
+  {
+    id: 'p-easy-006',
+    type: 'sms',
+    difficulty: 'easy',
+    isPhishing: true,
+    from: '+1 (312) 874-9021',
+    body: `Google Alert: Your account was signed in from a new device in Romania. If this wasn't you, secure your account immediately:
+
+goog-account-verify.com/secure
+
+Reply STOP to opt out.`,
+    clues: [
+      'Domain is "goog-account-verify.com" — Google security alerts come from accounts.google.com',
+      'Real Google alerts are sent via email to your Gmail, not random SMS',
+      'Sent from a 10-digit number, not a Google short code',
+      '"Reply STOP" is designed to appear like a legitimate alert service',
+    ],
+    explanation:
+      "Google does not send security alerts via SMS to random numbers. Real sign-in alerts go to your Gmail or through the Google app. The 'goog-' prefix is meant to look familiar at a glance.",
+  },
+
+  // ===== PHISHING - MEDIUM (additional) =====
+  {
+    id: 'p-med-005',
+    type: 'email',
+    difficulty: 'medium',
+    isPhishing: true,
+    from: 'hr-payroll@acmecorp-hr.net',
+    subject: 'Action Required: Update Your Direct Deposit Information',
+    body: `Human Resources — Payroll Department
+
+We are migrating to a new payroll system and require all employees to verify their direct deposit banking information by end of business Friday.
+
+Update your banking details here:
+https://acmecorp-hr.net/payroll/update
+
+Employees who do not update by the deadline will experience a delay in their next paycheck.
+
+HR Payroll Team
+Acme Corporation`,
+    clues: [
+      'Domain is "acmecorp-hr.net" — check your actual company domain',
+      'Legitimate HR payroll changes go through your internal HRIS system (Workday, ADP, etc.), not a link',
+      'End-of-week deadline creates urgency without justification',
+      'Threat of delayed paycheck pressures quick action without verification',
+    ],
+    explanation:
+      "Payroll diversion is a high-value BEC attack. Attackers spoof or compromise HR addresses and redirect employee direct deposits to attacker-controlled accounts. Always verify payroll changes through your official HR system or by calling HR directly.",
+  },
+  {
+    id: 'p-med-006',
+    type: 'email',
+    difficulty: 'medium',
+    isPhishing: true,
+    from: 'noreply@docusign-secure.net',
+    subject: 'You have a pending document awaiting your signature',
+    body: `DocuSign Electronic Signature
+
+Hello,
+
+A document has been shared with you for electronic signature. This document requires your signature before the deadline.
+
+Document: Contractor Agreement — Final
+Sent by: Legal Department
+
+REVIEW DOCUMENT →
+docusign-secure.net/sign/doc?id=AB7291C
+
+This link expires in 72 hours.
+
+DocuSign, Inc.`,
+    clues: [
+      'Domain is "docusign-secure.net" — legitimate DocuSign emails come from docusign.net or docusign.com',
+      'No sender name or organization — just "Legal Department"',
+      'No Envelope ID included (real DocuSign emails always include one)',
+      '"docusign-secure.net" — adding "secure" to a domain is a common phishing tactic',
+    ],
+    explanation:
+      "DocuSign phishing is common because people are conditioned to click signature links quickly. Real DocuSign emails come from docusign.net or docusign.com and always include a specific Envelope ID and the full name of the sending organization.",
+  },
+
+  // ===== PHISHING - HARD (additional) =====
+  {
+    id: 'p-hard-003',
+    type: 'email',
+    difficulty: 'hard',
+    isPhishing: true,
+    from: 'noreply@github.com',
+    subject: '[GitHub] Please verify your email address',
+    body: `Hey scottalt,
+
+Please verify your email address to continue using GitHub.
+
+Verify email address →
+https://github-email-verify.com/verify?token=3k9mXpL2qR8
+
+If you didn't request this, you can ignore this email.
+
+Thanks,
+The GitHub Team`,
+    clues: [
+      'The link goes to "github-email-verify.com" — not github.com',
+      'Real GitHub verification links go to github.com/users/confirm_email/...',
+      "The sender display name shows noreply@github.com but check the actual header — it's spoofed",
+      "Unexpected verification request you didn't initiate",
+    ],
+    explanation:
+      "This is hard because the 'from' looks like GitHub. But the link domain is github-email-verify.com — completely different from github.com. GitHub's own verification emails link to github.com paths. Always hover over links before clicking.",
+  },
+  {
+    id: 'p-hard-004',
+    type: 'email',
+    difficulty: 'hard',
+    isPhishing: true,
+    from: 'invoices@delta-tech-supplies.com',
+    subject: 'Invoice #INV-2026-0394 — Updated Banking Details',
+    body: `Hi,
+
+Please find attached Invoice #INV-2026-0394 for $12,840.00 related to the Q1 hardware order.
+
+Please note: Our banking details have recently changed. Please update your records and process this payment to our new account:
+
+Bank: First National Commercial Bank
+Account Name: Delta Tech Supplies LLC
+Account Number: 7749302841
+Routing: 026013576
+
+Please disregard previous banking details. Contact us if you have any questions.
+
+Regards,
+Accounts Receivable
+Delta Tech Supplies`,
+    clues: [
+      'Unsolicited change of banking details mid-relationship is a classic vendor fraud signal',
+      'No verification mechanism offered — just "trust us"',
+      'The email asks you to discard previously verified banking info',
+      'No invoice attachment or verifiable order reference beyond the invoice number',
+    ],
+    explanation:
+      "Vendor payment fraud: attackers compromise or spoof a known supplier's email and redirect payments to attacker accounts. Always verify banking detail changes via a known phone number from your records — not from the email itself.",
+  },
+  {
+    id: 'p-hard-005',
+    type: 'email',
+    difficulty: 'hard',
+    isPhishing: true,
+    from: 'it-helpdesk@yourdomain-support.com',
+    subject: 'Ticket #HD-48291: Remote Session Required to Complete Security Patch',
+    body: `IT Helpdesk — Ticket #HD-48291
+
+Hi,
+
+We are rolling out a critical security patch (MS-2026-0312) to all endpoints. Your device has been flagged as pending.
+
+To complete the update without disrupting your work, our technician will need remote access to your machine.
+
+Please call our helpdesk line to schedule the session:
+1-800-555-0284
+
+Alternatively, download the remote access tool here:
+https://yourdomain-support.com/patch/remote-agent.exe
+
+Ticket will auto-close in 48 hours if no action taken.
+
+IT Helpdesk`,
+    clues: [
+      'Domain "yourdomain-support.com" is external — your IT helpdesk uses an internal domain',
+      'Legitimate patches are deployed silently via MDM/SCCM — IT does not email you to schedule them',
+      'Asking you to download a remote access .exe from an external link is a major red flag',
+      'The callback number is unverified — could connect to the attacker',
+    ],
+    explanation:
+      "Tech support social engineering. Real IT teams deploy patches via management tools — they do not email employees and ask them to download remote access software. Calling the provided number connects you to the attacker, not your IT team.",
+  },
+
+  // ===== LEGIT - EASY (additional) =====
+  {
+    id: 'l-easy-003',
+    type: 'email',
+    difficulty: 'easy',
+    isPhishing: false,
+    from: 'no-reply@accounts.google.com',
+    subject: 'Security alert: New sign-in to your Google Account',
+    body: `New sign-in
+scott@example.com
+
+Your Google Account was just signed in to from a new Windows device.
+
+If this was you, you don't need to do anything.
+
+If this wasn't you, your account may be compromised. Check your Google Account.
+
+You received this email to let you know about important changes to your Google Account and services.`,
+    clues: [],
+    explanation:
+      'Legitimate Google security alert. Comes from no-reply@accounts.google.com, addresses your specific account, contains no clickable links asking for credentials, and no urgency tactics. Google sends these as informational notices.',
+  },
+  {
+    id: 'l-easy-004',
+    type: 'email',
+    difficulty: 'easy',
+    isPhishing: false,
+    from: 'no-reply@spotify.com',
+    subject: 'Your Spotify receipt',
+    body: `Your receipt
+
+Scott A.
+scott@example.com
+
+Spotify Premium Individual
+Feb 28, 2026
+
+Amount charged: $11.99
+Payment: Visa ···· 3847
+
+Next billing date: Mar 28, 2026
+
+Questions? Visit spotify.com/account
+
+Thanks for being a Premium member.`,
+    clues: [],
+    explanation:
+      'Legitimate Spotify billing receipt. Comes from no-reply@spotify.com, uses your name, shows your masked payment card, a specific billing amount, and links only to spotify.com. No credential requests.',
+  },
+
+  // ===== LEGIT - MEDIUM (additional) =====
+  {
+    id: 'l-med-005',
+    type: 'email',
+    difficulty: 'medium',
+    isPhishing: false,
+    from: 'notifications@slack.com',
+    subject: 'Scott, you have unread messages in SFISSA Slack',
+    body: `Hi Scott,
+
+You have unread messages waiting in SFISSA:
+
+#general — 4 new messages
+#events — 2 new messages
+@Mike Rivera mentioned you in #general
+
+View messages in Slack →
+
+You're receiving this because you have email notifications enabled.
+Manage notification preferences`,
+    clues: [],
+    explanation:
+      "Legitimate Slack notification. Comes from notifications@slack.com, addresses you by name, references your specific workspace and real channel names, and links to the Slack app. No credential requests or urgency.",
+  },
+  {
+    id: 'l-med-006',
+    type: 'sms',
+    difficulty: 'medium',
+    isPhishing: false,
+    from: 'Twilio Verify',
+    body: `Your Coinbase verification code is: 847291
+
+This code expires in 10 minutes. Do not share this code with anyone, including Coinbase support.`,
+    clues: [],
+    explanation:
+      "Legitimate 2FA SMS from Coinbase via Twilio. The alphanumeric sender ID is identifiable, the message explicitly says do not share the code (including with support), and there are no links. You only receive this when you initiate a login.",
+  },
+
+  // ===== LEGIT - HARD (additional) =====
+  {
+    id: 'l-hard-005',
+    type: 'email',
+    difficulty: 'hard',
+    isPhishing: false,
+    from: 'aws-billing-information@amazon.com',
+    subject: 'Your AWS bill is ready',
+    body: `Amazon Web Services
+
+Hello Scott Altiparmak,
+
+Your AWS bill for February 2026 is now available.
+
+Account ID: 847291038475
+Total amount due: $143.72
+Payment method: Visa ···· 4921
+Payment date: March 1, 2026
+
+Services:
+EC2 (us-east-1):    $87.14
+S3:                 $12.40
+Route 53:           $9.00
+CloudFront:         $35.18
+
+View your invoice in the AWS Billing Console:
+https://console.aws.amazon.com/billing
+
+AWS — Amazon Web Services`,
+    clues: [],
+    explanation:
+      'Legitimate AWS billing email. Comes from aws-billing-information@amazon.com, includes your full name and account ID, itemizes specific service charges, and links only to console.aws.amazon.com. AWS billing emails never ask for payment via a separate link.',
+  },
+  {
+    id: 'l-hard-006',
+    type: 'email',
+    difficulty: 'hard',
+    isPhishing: false,
+    from: 'noreply@notify.cloudflare.com',
+    subject: "Action required: Your domain scottaltiparmak.com's SSL certificate",
+    body: `Cloudflare
+
+Hi Scott,
+
+This is a reminder that the SSL/TLS certificate for scottaltiparmak.com is managed by Cloudflare and is set to auto-renew.
+
+No action is required on your part. This notification is for your records.
+
+Certificate details:
+Domain: scottaltiparmak.com
+Issuer: Cloudflare, Inc.
+Expiry: May 14, 2026
+Auto-renew: Enabled
+
+Manage your SSL settings in the Cloudflare dashboard:
+https://dash.cloudflare.com
+
+Cloudflare, Inc.`,
+    clues: [],
+    explanation:
+      'Legitimate Cloudflare notification. Comes from noreply@notify.cloudflare.com (Cloudflare\'s sending domain), references your specific domain, explicitly states "no action required," and links only to dash.cloudflare.com. No credential requests.',
+  },
 ];
 
 export function getShuffledDeck(size: number): Card[] {
-  return [...CARDS].sort(() => Math.random() - 0.5).slice(0, size);
+  const deck = [...CARDS];
+  for (let i = deck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+  return deck.slice(0, size);
 }
