@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { useDrag } from '@use-gesture/react';
 import type { Card, Answer, Confidence } from '@/lib/types';
 
 const SWIPE_THRESHOLD = 80;
@@ -29,7 +28,7 @@ function clamp(val: number, min: number, max: number) {
 function analystFace(streak: number): string {
   if (streak >= 6) return '[^_^]';
   if (streak >= 3) return '[o_o]';
-  return '[·_·]';
+  return '[._.]';
 }
 
 function EmailDisplay({ card }: { card: Card }) {
@@ -83,7 +82,12 @@ export function GameCard({ card, onAnswer, questionNumber, total, streak, totalS
   const [dragX, setDragX] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [flying, setFlying] = useState(false);
+
   const answered = useRef(false);
+  const startX = useRef(0);
+  const lastX = useRef(0);
+  const lastTime = useRef(0);
+  const velocity = useRef(0);
 
   function fly(direction: 'left' | 'right', conf: Confidence) {
     if (answered.current) return;
@@ -92,27 +96,43 @@ export function GameCard({ card, onAnswer, questionNumber, total, streak, totalS
     setDragX(direction === 'left' ? -FLY_DISTANCE : FLY_DISTANCE);
     setTimeout(() => {
       onAnswer(direction === 'left' ? 'phishing' : 'legit', conf);
-    }, 220);
+    }, 230);
   }
 
-  const bind = useDrag(
-    ({ down, movement: [mx], velocity: [vx], direction: [dx] }) => {
-      if (!confidence || answered.current) return;
-      if (down) {
-        setDragging(true);
-        setDragX(mx);
-      } else {
-        setDragging(false);
-        const shouldFly = Math.abs(mx) > SWIPE_THRESHOLD || Math.abs(vx) > 0.5;
-        if (shouldFly) {
-          fly(dx > 0 ? 'right' : 'left', confidence);
-        } else {
-          setDragX(0);
-        }
-      }
-    },
-    { filterTaps: true, axis: 'x' }
-  );
+  function handlePointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    if (!confidence || answered.current) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    startX.current = e.clientX;
+    lastX.current = e.clientX;
+    lastTime.current = Date.now();
+    velocity.current = 0;
+    setDragging(true);
+  }
+
+  function handlePointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    if (!dragging || !confidence || answered.current) return;
+    const now = Date.now();
+    const dt = now - lastTime.current;
+    if (dt > 0) {
+      velocity.current = (e.clientX - lastX.current) / dt;
+    }
+    lastX.current = e.clientX;
+    lastTime.current = now;
+    setDragX(e.clientX - startX.current);
+  }
+
+  function handlePointerUp() {
+    if (!dragging || !confidence || answered.current) return;
+    setDragging(false);
+    const dx = dragX;
+    const vx = velocity.current;
+    if (Math.abs(dx) > SWIPE_THRESHOLD || Math.abs(vx) > 0.5) {
+      fly(dx > 0 || vx > 0 ? 'right' : 'left', confidence);
+    } else {
+      setDragX(0);
+    }
+    velocity.current = 0;
+  }
 
   function handleButton(answer: Answer) {
     if (!confidence || answered.current) return;
@@ -126,7 +146,7 @@ export function GameCard({ card, onAnswer, questionNumber, total, streak, totalS
   const streakAtBonus = streak > 0 && streak % 3 === 0;
 
   const cardTransition = flying
-    ? 'transform 0.22s ease-in, opacity 0.22s ease-in'
+    ? 'transform 0.23s ease-in, opacity 0.23s ease-in'
     : dragging
     ? 'none'
     : 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)';
@@ -177,7 +197,6 @@ export function GameCard({ card, onAnswer, questionNumber, total, streak, totalS
 
       {/* Card */}
       <div className="relative w-full">
-        {/* Stamps */}
         {confidence && (
           <>
             <div
@@ -200,8 +219,11 @@ export function GameCard({ card, onAnswer, questionNumber, total, streak, totalS
         )}
 
         <div
-          {...(confidence ? bind() : {})}
-          className={`anim-card-entry ${confidence ? 'cursor-grab active:cursor-grabbing touch-none' : ''}`}
+          onPointerDown={confidence ? handlePointerDown : undefined}
+          onPointerMove={confidence ? handlePointerMove : undefined}
+          onPointerUp={confidence ? handlePointerUp : undefined}
+          onPointerCancel={confidence ? handlePointerUp : undefined}
+          className={`anim-card-entry touch-none ${confidence ? 'cursor-grab active:cursor-grabbing' : ''}`}
           style={{
             transform: `translateX(${dragX}px) rotate(${rotate}deg)`,
             opacity: flying ? 0 : 1,
@@ -213,7 +235,7 @@ export function GameCard({ card, onAnswer, questionNumber, total, streak, totalS
         </div>
       </div>
 
-      {/* Confidence selector */}
+      {/* Controls */}
       {!confidence ? (
         <div className="w-full space-y-2">
           <div className="text-xs text-[#00aa28] font-mono text-center tracking-widest">
@@ -239,7 +261,7 @@ export function GameCard({ card, onAnswer, questionNumber, total, streak, totalS
             {' · '}
             {confidence === 'certain' ? '3x' : confidence === 'likely' ? '2x' : '1x'} PTS
             <button
-              onClick={() => setConfidence(null)}
+              onClick={() => { if (!answered.current) setConfidence(null); }}
               className="ml-3 text-[#003a0e] hover:text-[#00aa28] transition-colors"
             >
               [change]
