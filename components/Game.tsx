@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { getShuffledDeck, getDailyDeck } from '@/data/cards';
 import { GameCard } from './GameCard';
 import { FeedbackCard } from './FeedbackCard';
 import { RoundSummary } from './RoundSummary';
 import { StartScreen } from './StartScreen';
-import type { Card, Answer, Confidence, RoundResult, GameMode } from '@/lib/types';
+import type { Card, Answer, Confidence, RoundResult, GameMode, AnswerEvent, SessionPayload } from '@/lib/types';
 import { useSoundEnabled } from '@/lib/useSoundEnabled';
 import { playCorrect, playWrong, playStreak } from '@/lib/sounds';
 
@@ -19,7 +19,7 @@ const CONFIDENCE_MULTIPLIER: Record<Confidence, number> = {
 };
 const STREAK_BONUS = 50;
 
-type GamePhase = 'start' | 'playing' | 'feedback' | 'summary' | 'daily_complete';
+type GamePhase = 'start' | 'playing' | 'feedback' | 'summary' | 'daily_complete' | 'loading';
 
 export function Game() {
   const [phase, setPhase] = useState<GamePhase>('start');
@@ -32,6 +32,9 @@ export function Game() {
   const [mode, setMode] = useState<GameMode>('freeplay');
   const [dailyResult, setDailyResult] = useState<{ score: number; totalScore: number } | null>(null);
   const { soundEnabled, toggleSound } = useSoundEnabled();
+  const sessionId = useRef<string>('');
+  const sessionStartedAt = useRef<string>('');
+  const [correctCount, setCorrectCount] = useState(0);
 
   function getToday(): string {
     const d = new Date();
@@ -42,7 +45,24 @@ export function Game() {
     return `daily_${getToday()}`;
   }
 
+  function generateSessionId(): string {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+      const r = Math.random() * 16 | 0;
+      return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+    });
+  }
+
+  function getDeviceType(): 'mobile' | 'tablet' | 'desktop' {
+    const w = window.innerWidth;
+    if (w < 768) return 'mobile';
+    if (w < 1024) return 'tablet';
+    return 'desktop';
+  }
+
   function startRound(newMode: GameMode = 'freeplay') {
+    sessionId.current = generateSessionId();
+    sessionStartedAt.current = new Date().toISOString();
+
     if (newMode === 'daily') {
       const stored = localStorage.getItem(getDailyStorageKey());
       if (stored) {
@@ -56,17 +76,39 @@ export function Game() {
         return;
       }
     }
+
     setMode(newMode);
-    setDeck(newMode === 'daily' ? getDailyDeck() : getShuffledDeck(ROUND_SIZE));
     setCurrentIndex(0);
     setResults([]);
     setLastResult(null);
     setStreak(0);
     setTotalScore(0);
-    setPhase('playing');
+    setCorrectCount(0);
+
+    if (newMode === 'research') {
+      setPhase('loading' as GamePhase);
+      fetch('/api/cards/research')
+        .then((r) => r.json())
+        .then((cards: Card[]) => {
+          if (!cards.length) { setPhase('start'); return; }
+          const shuffled = [...cards].sort(() => Math.random() - 0.5).slice(0, ROUND_SIZE);
+          setDeck(shuffled);
+          setPhase('playing');
+        })
+        .catch(() => setPhase('start'));
+    } else {
+      setDeck(newMode === 'daily' ? getDailyDeck() : getShuffledDeck(ROUND_SIZE));
+      setPhase('playing');
+    }
   }
 
-  function handleAnswer(answer: Answer, confidence: Confidence) {
+  function handleAnswer(answer: Answer, confidence: Confidence, timing?: {
+    timeFromRenderMs: number;
+    timeFromConfidenceMs: number | null;
+    confidenceSelectionTimeMs: number | null;
+    scrollDepthPct: number;
+    answerMethod: 'swipe' | 'button';
+  }) {
     const card = deck[currentIndex];
     const correct = (answer === 'phishing') === card.isPhishing;
 
@@ -80,12 +122,70 @@ export function Game() {
     setLastResult(result);
     setResults((prev) => [...prev, result]);
     setStreak(newStreak);
+    const newCorrectCount = correct ? correctCount + 1 : correctCount;
+    setCorrectCount(newCorrectCount);
     setTotalScore((prev) => prev + pointsEarned);
 
     if (soundEnabled) {
       if (streakBonus > 0) playStreak();
       else if (correct) playCorrect();
       else playWrong();
+    }
+
+    // Log answer event (fire and forget — never block the game)
+    if (typeof window !== 'undefined') {
+      const researchCard = card as Card & Record<string, unknown>;
+      const answerEvent: AnswerEvent = {
+        sessionId: sessionId.current,
+        cardId: card.id,
+        cardSource: (researchCard.cardSource as 'generated' | 'real') ?? 'generated',
+        isPhishing: card.isPhishing,
+        technique: (researchCard.technique as string | null) ?? null,
+        secondaryTechnique: (researchCard.secondaryTechnique as string | null) ?? null,
+        isGenaiSuspected: (researchCard.isGenaiSuspected as boolean | null) ?? null,
+        genaiConfidence: (researchCard.genaiConfidence as string | null) ?? null,
+        grammarQuality: (researchCard.grammarQuality as number | null) ?? null,
+        proseFluency: (researchCard.proseFluency as number | null) ?? null,
+        personalizationLevel: (researchCard.personalizationLevel as number | null) ?? null,
+        contextualCoherence: (researchCard.contextualCoherence as number | null) ?? null,
+        difficulty: card.difficulty,
+        type: card.type,
+        userAnswer: answer,
+        correct,
+        confidence,
+        timeFromRenderMs: timing?.timeFromRenderMs ?? null,
+        timeFromConfidenceMs: timing?.timeFromConfidenceMs ?? null,
+        confidenceSelectionTimeMs: timing?.confidenceSelectionTimeMs ?? null,
+        scrollDepthPct: timing?.scrollDepthPct ?? 0,
+        answerMethod: timing?.answerMethod ?? 'button',
+        answerOrdinal: currentIndex + 1,
+        streakAtAnswerTime: streak,
+        correctCountAtTime: newCorrectCount,
+        gameMode: mode,
+        isDailyChallenge: mode === 'daily',
+        datasetVersion: (researchCard.datasetVersion as string | null) ?? null,
+      };
+
+      const sessionPayload: SessionPayload = {
+        sessionId: sessionId.current,
+        gameMode: mode,
+        isDailyChallenge: mode === 'daily',
+        startedAt: sessionStartedAt.current,
+        completedAt: null,
+        cardsAnswered: currentIndex + 1,
+        finalScore: null,
+        finalRank: null,
+        deviceType: getDeviceType(),
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+        referrer: document.referrer,
+      };
+
+      fetch('/api/answers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: answerEvent, session: sessionPayload }),
+      }).catch(() => {});
     }
 
     setPhase('feedback');
@@ -110,6 +210,14 @@ export function Game() {
 
   if (phase === 'start') {
     return <StartScreen onStart={startRound} />;
+  }
+
+  if (phase === ('loading' as GamePhase)) {
+    return (
+      <div className="flex items-center justify-center min-h-[200px]">
+        <span className="text-[#00aa28] font-mono text-xs tracking-widest">LOADING RESEARCH DATA...</span>
+      </div>
+    );
   }
 
   if (phase === 'summary') {
