@@ -7,8 +7,8 @@ function getUrl() {
 }
 
 function getAnonKey() {
-  const key = process.env.SUPABASE_ANON_KEY;
-  if (!key) throw new Error('SUPABASE_ANON_KEY is not set');
+  const key = process.env.SUPABASE_PUBLISHABLE_KEY;
+  if (!key) throw new Error('SUPABASE_PUBLISHABLE_KEY is not set');
   return key;
 }
 
