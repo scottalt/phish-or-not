@@ -219,6 +219,11 @@ export function RoundSummary({ score, total, totalScore, results, mode, date, on
                   {i + 1}
                 </span>
                 <span className="text-[#00aa28] text-xs font-mono flex-1 truncate">{entry.name}</span>
+                {(() => { const r = getRank(entry.score); return (
+                  <span className={`text-[9px] font-mono shrink-0 ${r.glowClass}`} style={{ color: r.color }}>
+                    {r.label}
+                  </span>
+                ); })()}
                 <span className="text-[#00ff41] text-xs font-mono font-bold glow">{entry.score}</span>
               </div>
             ))}
