@@ -120,7 +120,7 @@ body::after {
   to { width: 100%; }
 }
 
-/* Entry animations (CSS-only, no framer-motion) */
+/* Entry animations */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -131,12 +131,21 @@ body::after {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes cardEntry {
+  from { opacity: 0; transform: scale(0.92) translateY(12px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);    }
+}
+
 .anim-fade-in {
   animation: fadeIn 0.15s ease forwards;
 }
 
 .anim-fade-in-up {
   animation: fadeInUp 0.35s ease forwards;
+}
+
+.anim-card-entry {
+  animation: cardEntry 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 /* Prevent text selection during swipe */
