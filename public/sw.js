@@ -1,4 +1,4 @@
-const CACHE = 'phish-or-not-v1';
+const CACHE = 'retro-phish-v1';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
