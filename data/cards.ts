@@ -26,6 +26,12 @@ PayPal Security Team`,
       'Generic greeting "Dear Valued Customer" — PayPal uses your name',
       'Link points to paypal-account-restore.net, not paypal.com',
     ],
+    highlights: [
+      'Dear Valued Customer',
+      'temporarily suspended',
+      'http://paypal-account-restore.net/verify?token=8x2mK9pL',
+      'permanent account closure',
+    ],
     explanation:
       "Classic impersonation. The sender swapped the lowercase 'l' for the number '1' in the domain. PayPal always addresses you by name and links only to paypal.com.",
   },
@@ -45,6 +51,11 @@ Offer expires in 2 hours. Reply STOP to unsubscribe.`,
       'Fake urgency: "expires in 2 hours"',
       'Domain is "amzn-giftwinner.com" not amazon.com',
       'Unknown phone number, not an Amazon short code',
+    ],
+    highlights: [
+      'CONGRATULATIONS!',
+      'amzn-giftwinner.com/claim/GC847291',
+      'expires in 2 hours',
     ],
     explanation:
       "If you didn't enter a contest, you didn't win one. The 'Reply STOP' text is designed to look legitimate. The link leads to a credential harvesting or malware page.",
@@ -73,6 +84,11 @@ U.S. Department of the Treasury`,
       'Asks you to submit banking information via a link',
       'Fake urgency: "5-day forfeiture" threat',
     ],
+    highlights: [
+      'verify your banking information',
+      'https://irs-gov-refund.com/claim?ref=TX-2025-84721',
+      'Failure to claim within 5 days will result in forfeiture of funds',
+    ],
     explanation:
       'The IRS does not email taxpayers to initiate contact — they send letters. The real IRS domain is irs.gov. Refunds are processed through your already-filed return, not via a link.',
   },
@@ -88,6 +104,10 @@ U.S. Department of the Treasury`,
       "Unsolicited code you didn't request",
       'Callback number you were not given before — could be a vishing setup',
       'Real banks send codes from short codes, not full 10-digit numbers',
+    ],
+    highlights: [
+      '[Bank]',
+      'call us at 1-800-555-0192',
     ],
     explanation:
       "This is a precursor to a vishing attack. The fraudster triggers a real password reset, sends you the code, then calls pretending to be the bank asking for it to 'verify your identity.'",
@@ -119,6 +139,10 @@ Microsoft 365 Support`,
       'The link contains "microsoft" as a subdomain but the real domain is microsoft-support-center.net',
       "No personalization — doesn't mention your name or organization",
     ],
+    highlights: [
+      'expire in 24 hours',
+      'https://m365-password-update.microsoft-support-center.net/renew',
+    ],
     explanation:
       'Subdomain trick: m365-password-update.microsoft-support-center.net looks official at a glance, but the actual domain is microsoft-support-center.net. Microsoft sends password notices from microsoft.com domains.',
   },
@@ -138,6 +162,10 @@ $0.30 address validation fee required.`,
       'USPS does not text payment requests via link',
       'Small fee ($0.30) is designed to seem too cheap to question — they want your card details',
       'Sent from a full phone number, not the official USPS short code 28777',
+    ],
+    highlights: [
+      'usps-redelivery.net/update/940011',
+      '$0.30 address validation fee required',
     ],
     explanation:
       "USPS smishing is extremely common. The small fee is a hook — the goal is your payment card details, not $0.30. USPS sends tracking texts from 28777 (ATUSPS), not random numbers.",
@@ -166,6 +194,11 @@ Chase Online Security`,
       'The "Verify Identity" link goes to the same fake domain',
       'Creating fear about a fake transaction to prompt immediate action',
     ],
+    highlights: [
+      'suspicious charge of $284.99',
+      'verify your identity immediately',
+      'secure-chasealert.com/verify',
+    ],
     explanation:
       "Chase's real domain is chase.com. Your real bank's fraud team calls you — they don't send links to re-enter credentials. If you get a fraud alert, log in directly via your bank's app or website.",
   },
@@ -178,7 +211,7 @@ Chase Online Security`,
     subject: 'Your Zoom account has been temporarily suspended',
     body: `Zoom Security Notice
 
-Your Zoom account (scott@example.com) has been temporarily suspended due to a violation of our Terms of Service.
+Your Zoom account (alex@example.com) has been temporarily suspended due to a violation of our Terms of Service.
 
 To appeal this decision and restore access within 24 hours, please verify your identity:
 
@@ -192,6 +225,12 @@ Zoom Trust & Safety`,
       'Vague "Terms of Service violation" with no specifics — designed to cause anxiety',
       'Urgent 24-hour restoration window',
       'Support email is on the same fake domain',
+    ],
+    highlights: [
+      'violation of our Terms of Service',
+      'zoom-security-update.com/restore',
+      'restore access within 24 hours',
+      'support@zoom-security-update.com',
     ],
     explanation:
       "Zoom phishing targeting your credentials. Real Zoom communications come from @zoom.us domains. The vague violation reason is intentional — it makes you anxious without giving details you could verify.",
@@ -225,6 +264,11 @@ Michael (sent from my personal email while traveling)`,
       'Classic BEC pattern: travel excuse + urgent wire + new vendor',
       'Pressure to act within an hour with no documentation or purchase order',
     ],
+    highlights: [
+      "please don't call",
+      'wire transfer of $47,500',
+      'can you get this done in the next hour?',
+    ],
     explanation:
       "Business Email Compromise (BEC). The attacker impersonates an executive, creates urgency, and blocks verbal verification. Always verify wire transfers via a known phone number — never by replying to the email.",
   },
@@ -234,15 +278,15 @@ Michael (sent from my personal email while traveling)`,
     difficulty: 'hard',
     isPhishing: true,
     from: 'events@linkedin-notifications.net',
-    subject: 'Scott, your talk at SFISSA is getting attention',
-    body: `Hi Scott,
+    subject: 'Alex, your talk at SFISSA is getting attention',
+    body: `Hi Alex,
 
 Your recent presentation at the South Florida ISSA chapter generated significant interest. Several members have asked us to share your slides.
 
 We've created a shared link on our platform for easy access:
 
 View & Download Your Slides →
-linkedin-notifications.net/slides/sfissa-scott-a
+linkedin-notifications.net/slides/sfissa-alex-c
 
 You can also see who viewed your content from this link. The link expires in 48 hours.
 
@@ -252,6 +296,11 @@ LinkedIn Events Team`,
       'Uses specific personal details scraped from your public LinkedIn profile',
       '"See who viewed your content" is curiosity bait',
       'Fake 48-hour urgency',
+    ],
+    highlights: [
+      'linkedin-notifications.net/slides/sfissa-alex-c',
+      'See who viewed your content',
+      'The link expires in 48 hours',
     ],
     explanation:
       "Spear phishing using OSINT. The attacker found your SFISSA involvement on LinkedIn and crafted a targeted message. LinkedIn notifications come from @linkedin.com — this domain leads to a credential harvesting page.",
@@ -265,7 +314,7 @@ LinkedIn Events Team`,
     isPhishing: false,
     from: 'shipment-tracking@amazon.com',
     subject: 'Your package is on the way',
-    body: `Hello Scott,
+    body: `Hello Alex,
 
 Your order has shipped and is on its way.
 
@@ -313,7 +362,7 @@ Thanks for riding with Uber!`,
     isPhishing: false,
     from: 'noreply@github.com',
     subject: '[GitHub] A new public key was added to your account',
-    body: `Hey scottalt,
+    body: `Hey jrivera,
 
 A new public key was added to your GitHub account.
 
@@ -337,7 +386,7 @@ https://github.com/settings/keys
     from: 'no_reply@email.apple.com',
     subject: 'Your receipt from Apple',
     body: `Receipt
-Apple ID: scott@example.com
+Apple ID: alex@example.com
 Billed to: Visa ···· 4921
 Date: 26 Feb 2026
 
@@ -361,14 +410,14 @@ Apple`,
     difficulty: 'medium',
     isPhishing: false,
     from: 'dse@docusign.net',
-    subject: 'Scott Altiparmak, please DocuSign this document',
+    subject: 'Alex Chen, please DocuSign this document',
     body: `Please DocuSign this document
 
-Hello Scott Altiparmak,
+Hello Alex Chen,
 
 Innovative Security Partners has sent you a document to review and sign.
 
-Document: 2026 Consulting Agreement — ISP / S. Altiparmak
+Document: 2026 Consulting Agreement — ISP / A. Chen
 Envelope ID: 3F7A2D-9841B-C3D1E-74829
 
 REVIEW DOCUMENT
@@ -386,8 +435,8 @@ Do Not Share: This email contains a secure link to DocuSign. Please do not share
     difficulty: 'medium',
     isPhishing: false,
     from: 'jobs-noreply@linkedin.com',
-    subject: 'Scott, 3 new jobs match your profile',
-    body: `Hi Scott,
+    subject: 'Alex, 3 new jobs match your profile',
+    body: `Hi Alex,
 
 Based on your profile, these jobs may interest you:
 
@@ -538,6 +587,11 @@ Netflix Support`,
       'Link goes to netflix-billing-update.com, not netflix.com',
       '24-hour suspension threat creates false urgency',
     ],
+    highlights: [
+      'Dear Netflix Member',
+      'suspended within 24 hours',
+      'http://netflix-billing-update.com/payment?id=NF8472910',
+    ],
     explanation:
       "Netflix phishing is extremely common. The real Netflix domain is netflix.com and they address you by your account name. Payment issues are managed through your account settings at netflix.com — not via emailed links.",
   },
@@ -557,6 +611,9 @@ Reply STOP to opt out.`,
       'Real Google alerts are sent via email to your Gmail, not random SMS',
       'Sent from a 10-digit number, not a Google short code',
       '"Reply STOP" is designed to appear like a legitimate alert service',
+    ],
+    highlights: [
+      'goog-account-verify.com/secure',
     ],
     explanation:
       "Google does not send security alerts via SMS to random numbers. Real sign-in alerts go to your Gmail or through the Google app. The 'goog-' prefix is meant to look familiar at a glance.",
@@ -586,6 +643,11 @@ Acme Corporation`,
       'Legitimate HR payroll changes go through your internal HRIS system (Workday, ADP, etc.), not a link',
       'End-of-week deadline creates urgency without justification',
       'Threat of delayed paycheck pressures quick action without verification',
+    ],
+    highlights: [
+      'by end of business Friday',
+      'https://acmecorp-hr.net/payroll/update',
+      'delay in their next paycheck',
     ],
     explanation:
       "Payroll diversion is a high-value BEC attack. Attackers spoof or compromise HR addresses and redirect employee direct deposits to attacker-controlled accounts. Always verify payroll changes through your official HR system or by calling HR directly.",
@@ -618,6 +680,11 @@ DocuSign, Inc.`,
       'No Envelope ID included (real DocuSign emails always include one)',
       '"docusign-secure.net" — adding "secure" to a domain is a common phishing tactic',
     ],
+    highlights: [
+      'Hello,',
+      'Legal Department',
+      'docusign-secure.net/sign/doc?id=AB7291C',
+    ],
     explanation:
       "DocuSign phishing is common because people are conditioned to click signature links quickly. Real DocuSign emails come from docusign.net or docusign.com and always include a specific Envelope ID and the full name of the sending organization.",
   },
@@ -630,7 +697,7 @@ DocuSign, Inc.`,
     isPhishing: true,
     from: 'noreply@github.com',
     subject: '[GitHub] Please verify your email address',
-    body: `Hey scottalt,
+    body: `Hey jrivera,
 
 Please verify your email address to continue using GitHub.
 
@@ -646,6 +713,9 @@ The GitHub Team`,
       'Real GitHub verification links go to github.com/users/confirm_email/...',
       "The sender display name shows noreply@github.com but check the actual header — it's spoofed",
       "Unexpected verification request you didn't initiate",
+    ],
+    highlights: [
+      'https://github-email-verify.com/verify?token=3k9mXpL2qR8',
     ],
     explanation:
       "This is hard because the 'from' looks like GitHub. But the link domain is github-email-verify.com — completely different from github.com. GitHub's own verification emails link to github.com paths. Always hover over links before clicking.",
@@ -678,6 +748,11 @@ Delta Tech Supplies`,
       'No verification mechanism offered — just "trust us"',
       'The email asks you to discard previously verified banking info',
       'No invoice attachment or verifiable order reference beyond the invoice number',
+    ],
+    highlights: [
+      'Our banking details have recently changed',
+      'Please disregard previous banking details',
+      'Account Number: 7749302841',
     ],
     explanation:
       "Vendor payment fraud: attackers compromise or spoof a known supplier's email and redirect payments to attacker accounts. Always verify banking detail changes via a known phone number from your records — not from the email itself.",
@@ -712,6 +787,11 @@ IT Helpdesk`,
       'Asking you to download a remote access .exe from an external link is a major red flag',
       'The callback number is unverified — could connect to the attacker',
     ],
+    highlights: [
+      'https://yourdomain-support.com/patch/remote-agent.exe',
+      'download the remote access tool',
+      '1-800-555-0284',
+    ],
     explanation:
       "Tech support social engineering. Real IT teams deploy patches via management tools — they do not email employees and ask them to download remote access software. Calling the provided number connects you to the attacker, not your IT team.",
   },
@@ -725,7 +805,7 @@ IT Helpdesk`,
     from: 'no-reply@accounts.google.com',
     subject: 'Security alert: New sign-in to your Google Account',
     body: `New sign-in
-scott@example.com
+alex@example.com
 
 Your Google Account was just signed in to from a new Windows device.
 
@@ -747,8 +827,8 @@ You received this email to let you know about important changes to your Google A
     subject: 'Your Spotify receipt',
     body: `Your receipt
 
-Scott A.
-scott@example.com
+Alex C.
+alex@example.com
 
 Spotify Premium Individual
 Feb 28, 2026
@@ -773,8 +853,8 @@ Thanks for being a Premium member.`,
     difficulty: 'medium',
     isPhishing: false,
     from: 'notifications@slack.com',
-    subject: 'Scott, you have unread messages in SFISSA Slack',
-    body: `Hi Scott,
+    subject: 'Alex, you have unread messages in SFISSA Slack',
+    body: `Hi Alex,
 
 You have unread messages waiting in SFISSA:
 
@@ -814,7 +894,7 @@ This code expires in 10 minutes. Do not share this code with anyone, including C
     subject: 'Your AWS bill is ready',
     body: `Amazon Web Services
 
-Hello Scott Altiparmak,
+Hello Alex Chen,
 
 Your AWS bill for February 2026 is now available.
 
@@ -843,17 +923,17 @@ AWS — Amazon Web Services`,
     difficulty: 'hard',
     isPhishing: false,
     from: 'noreply@notify.cloudflare.com',
-    subject: "Action required: Your domain scottaltiparmak.com's SSL certificate",
+    subject: "Action required: Your domain alexchen.io's SSL certificate",
     body: `Cloudflare
 
 Hi Scott,
 
-This is a reminder that the SSL/TLS certificate for scottaltiparmak.com is managed by Cloudflare and is set to auto-renew.
+This is a reminder that the SSL/TLS certificate for alexchen.io is managed by Cloudflare and is set to auto-renew.
 
 No action is required on your part. This notification is for your records.
 
 Certificate details:
-Domain: scottaltiparmak.com
+Domain: alexchen.io
 Issuer: Cloudflare, Inc.
 Expiry: May 14, 2026
 Auto-renew: Enabled
