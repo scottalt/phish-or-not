@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import type { GameMode } from '@/lib/types';
 
 interface LeaderboardEntry {
   name: string;
@@ -8,7 +9,7 @@ interface LeaderboardEntry {
 }
 
 interface Props {
-  onStart: () => void;
+  onStart: (mode: GameMode) => void;
 }
 
 // bright=true → phosphor green + glow (separators, READY line)
@@ -28,11 +29,18 @@ export function StartScreen({ onStart }: Props) {
   const [visibleCount, setVisibleCount] = useState(0);
   const [showButton, setShowButton] = useState(false);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [dailyLeaderboard, setDailyLeaderboard] = useState<LeaderboardEntry[]>([]);
 
   const fetchLeaderboard = useCallback(async () => {
+    const d = new Date();
+    const today = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
     try {
-      const res = await fetch('/api/leaderboard');
-      if (res.ok) setLeaderboard(await res.json());
+      const [globalRes, dailyRes] = await Promise.all([
+        fetch('/api/leaderboard'),
+        fetch(`/api/leaderboard?date=${today}`),
+      ]);
+      if (globalRes.ok) setLeaderboard(await globalRes.json());
+      if (dailyRes.ok) setDailyLeaderboard(await dailyRes.json());
     } catch {
       // silently fail
     }
@@ -59,6 +67,8 @@ export function StartScreen({ onStart }: Props) {
       return () => clearTimeout(t);
     }
   }, [visibleCount]);
+
+  const dateLabel = new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit' }).toUpperCase();
 
   return (
     <div className="w-full max-w-sm px-4 flex flex-col gap-6">
@@ -124,17 +134,52 @@ export function StartScreen({ onStart }: Props) {
             ))}
           </div>
 
+          {/* Daily challenge button - featured */}
           <button
-            onClick={onStart}
+            onClick={() => onStart('daily')}
             className="w-full py-4 term-border-bright text-[#00ff41] font-mono font-bold tracking-widest text-sm hover:bg-[rgba(0,255,65,0.08)] active:bg-[rgba(0,255,65,0.15)] transition-all glow"
           >
-            [ INITIALIZE SESSION ]
+            [ DAILY CHALLENGE — {dateLabel} ]
+          </button>
+
+          {/* Daily leaderboard */}
+          {dailyLeaderboard.length > 0 && (
+            <div className="term-border bg-[#060c06]">
+              <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5 flex items-center justify-between">
+                <span className="text-[#00aa28] text-xs tracking-widest">DAILY_TOP_ANALYSTS</span>
+                <span className="text-[#003a0e] text-xs font-mono">{dateLabel}</span>
+              </div>
+              <div className="divide-y divide-[rgba(0,255,65,0.08)]">
+                {dailyLeaderboard.slice(0, 10).map((entry, i) => (
+                  <div key={i} className="flex items-center gap-3 px-3 py-1.5">
+                    <span className={`text-[10px] font-mono w-4 shrink-0 ${i === 0 ? 'text-[#ffaa00]' : 'text-[#003a0e]'}`}>
+                      {i + 1}
+                    </span>
+                    <span className="text-[#00aa28] text-xs font-mono flex-1 truncate">
+                      {entry.name}
+                    </span>
+                    <span className="text-[#00ff41] text-xs font-mono font-bold glow">
+                      {entry.score}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Freeplay button - secondary */}
+          <button
+            onClick={() => onStart('freeplay')}
+            className="w-full py-3 term-border text-[#00aa28] font-mono font-bold tracking-widest text-xs hover:bg-[rgba(0,255,65,0.05)] active:scale-95 transition-all"
+          >
+            [ FREEPLAY ]
           </button>
 
           <p className="text-[#003a0e] text-xs text-center font-mono">
             10 questions per round · email + SMS · randomized
           </p>
 
+          {/* Global leaderboard */}
           {leaderboard.length > 0 && (
             <div className="term-border bg-[#060c06]">
               <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5 flex items-center justify-between">

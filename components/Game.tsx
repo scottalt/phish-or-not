@@ -1,12 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { getShuffledDeck } from '@/data/cards';
+import { getShuffledDeck, getDailyDeck } from '@/data/cards';
 import { GameCard } from './GameCard';
 import { FeedbackCard } from './FeedbackCard';
 import { RoundSummary } from './RoundSummary';
 import { StartScreen } from './StartScreen';
-import type { Card, Answer, Confidence, RoundResult } from '@/lib/types';
+import type { Card, Answer, Confidence, RoundResult, GameMode } from '@/lib/types';
 
 const ROUND_SIZE = 10;
 const BASE_POINTS = 100;
@@ -17,7 +17,7 @@ const CONFIDENCE_MULTIPLIER: Record<Confidence, number> = {
 };
 const STREAK_BONUS = 50;
 
-type GamePhase = 'start' | 'playing' | 'feedback' | 'summary';
+type GamePhase = 'start' | 'playing' | 'feedback' | 'summary' | 'daily_complete';
 
 export function Game() {
   const [phase, setPhase] = useState<GamePhase>('start');
@@ -27,9 +27,34 @@ export function Game() {
   const [lastResult, setLastResult] = useState<RoundResult | null>(null);
   const [streak, setStreak] = useState(0);
   const [totalScore, setTotalScore] = useState(0);
+  const [mode, setMode] = useState<GameMode>('freeplay');
+  const [dailyResult, setDailyResult] = useState<{ score: number; totalScore: number } | null>(null);
 
-  function startRound() {
-    setDeck(getShuffledDeck(ROUND_SIZE));
+  function getToday(): string {
+    const d = new Date();
+    return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+  }
+
+  function getDailyStorageKey(): string {
+    return `daily_${getToday()}`;
+  }
+
+  function startRound(newMode: GameMode = 'freeplay') {
+    if (newMode === 'daily') {
+      const stored = localStorage.getItem(getDailyStorageKey());
+      if (stored) {
+        try {
+          setDailyResult(JSON.parse(stored));
+        } catch {
+          setDailyResult(null);
+        }
+        setMode('daily');
+        setPhase('daily_complete');
+        return;
+      }
+    }
+    setMode(newMode);
+    setDeck(newMode === 'daily' ? getDailyDeck() : getShuffledDeck(ROUND_SIZE));
     setCurrentIndex(0);
     setResults([]);
     setLastResult(null);
@@ -59,6 +84,13 @@ export function Game() {
   function handleNext() {
     const nextIndex = currentIndex + 1;
     if (nextIndex >= ROUND_SIZE) {
+      if (mode === 'daily') {
+        const correctCount = results.filter((r) => r.correct).length;
+        localStorage.setItem(
+          getDailyStorageKey(),
+          JSON.stringify({ score: correctCount, totalScore })
+        );
+      }
       setPhase('summary');
     } else {
       setCurrentIndex(nextIndex);
@@ -77,8 +109,36 @@ export function Game() {
         total={ROUND_SIZE}
         totalScore={totalScore}
         results={results}
-        onPlayAgain={startRound}
+        mode={mode}
+        date={getToday()}
+        onPlayAgain={() => startRound('freeplay')}
       />
+    );
+  }
+
+  if (phase === 'daily_complete') {
+    return (
+      <div className="anim-fade-in-up w-full max-w-sm px-4 flex flex-col gap-4">
+        <div className="term-border bg-[#060c06]">
+          <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5 flex items-center justify-between">
+            <span className="text-[#00aa28] text-xs tracking-widest">DAILY_CHALLENGE</span>
+            <span className="text-[#003a0e] text-xs font-mono">{getToday()}</span>
+          </div>
+          <div className="px-3 py-6 text-center space-y-2">
+            <div className="text-xs font-mono text-[#00aa28] tracking-widest">ALREADY_DEPLOYED</div>
+            <div className="text-4xl font-black font-mono text-[#00ff41] glow">
+              {dailyResult?.totalScore ?? 0}
+            </div>
+            <div className="text-xs font-mono text-[#00aa28]">Come back tomorrow.</div>
+          </div>
+        </div>
+        <button
+          onClick={() => setPhase('start')}
+          className="w-full py-4 term-border text-[#00aa28] font-mono font-bold tracking-widest text-sm hover:bg-[rgba(0,255,65,0.05)] active:scale-95 transition-all"
+        >
+          [ BACK TO TERMINAL ]
+        </button>
+      </div>
     );
   }
 
