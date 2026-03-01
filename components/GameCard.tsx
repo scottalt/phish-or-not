@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import type { Card, Answer, Confidence } from '@/lib/types';
 
-const SWIPE_THRESHOLD = 80;
+const SWIPE_THRESHOLD = 75;
 const FLY_DISTANCE = 650;
+const SPRING_STIFFNESS = 320;
+const SPRING_DAMPING = 24;
 
 interface Props {
   card: Card;
@@ -79,59 +81,127 @@ function SMSDisplay({ card }: { card: Card }) {
 
 export function GameCard({ card, onAnswer, questionNumber, total, streak, totalScore }: Props) {
   const [confidence, setConfidence] = useState<Confidence | null>(null);
+  // dragX drives stamp opacity — updated during drag via React state
   const [dragX, setDragX] = useState(0);
-  const [dragging, setDragging] = useState(false);
   const [flying, setFlying] = useState(false);
 
-  const answered = useRef(false);
-  const startX = useRef(0);
-  const lastX = useRef(0);
-  const lastTime = useRef(0);
-  const velocity = useRef(0);
+  const answered   = useRef(false);
+  const dragging   = useRef(false);
+  const startX     = useRef(0);
+  const posX       = useRef(0);          // current position (mirrors dragX but as a ref)
+  const rafId      = useRef<number>(0);
+  const cardRef    = useRef<HTMLDivElement>(null);
+  const phishRef   = useRef<HTMLDivElement>(null);
+  const legitRef   = useRef<HTMLDivElement>(null);
+
+  // Rolling velocity window (last N pointer samples)
+  const velSamples = useRef<{ dx: number; dt: number }[]>([]);
+  const lastPtr    = useRef<{ x: number; t: number }>({ x: 0, t: 0 });
+
+  // Apply transform + stamp opacities directly to the DOM (no React re-render per frame)
+  function applyTransform(x: number) {
+    if (!cardRef.current) return;
+    cardRef.current.style.transform = `translateX(${x}px) rotate(${x / 22}deg)`;
+    const po = clamp(-x / SWIPE_THRESHOLD, 0, 1);
+    const lo = clamp(x  / SWIPE_THRESHOLD, 0, 1);
+    if (phishRef.current) phishRef.current.style.opacity = String(po);
+    if (legitRef.current) legitRef.current.style.opacity = String(lo);
+  }
+
+  // Spring snap-back using rAF — no React re-renders during animation
+  const springBack = useCallback((fromX: number) => {
+    cancelAnimationFrame(rafId.current);
+    let pos = fromX;
+    let vel = 0;
+    const dt = 1 / 60;
+
+    function step() {
+      const acc = -SPRING_STIFFNESS * pos - SPRING_DAMPING * vel;
+      vel += acc * dt;
+      pos += vel * dt;
+      applyTransform(pos);
+
+      if (Math.abs(pos) < 0.4 && Math.abs(vel) < 0.4) {
+        applyTransform(0);
+        setDragX(0);  // sync React state once animation settles
+      } else {
+        rafId.current = requestAnimationFrame(step);
+      }
+    }
+
+    rafId.current = requestAnimationFrame(step);
+  }, []);
 
   function fly(direction: 'left' | 'right', conf: Confidence) {
     if (answered.current) return;
     answered.current = true;
+    cancelAnimationFrame(rafId.current);
     setFlying(true);
-    setDragX(direction === 'left' ? -FLY_DISTANCE : FLY_DISTANCE);
-    setTimeout(() => {
-      onAnswer(direction === 'left' ? 'phishing' : 'legit', conf);
-    }, 230);
+    // CSS transition takes over for the fly-off
+    setTimeout(() => onAnswer(direction === 'left' ? 'phishing' : 'legit', conf), 230);
+  }
+
+  function getVelocity(): number {
+    const samples = velSamples.current;
+    if (samples.length === 0) return 0;
+    const totalDt = samples.reduce((s, v) => s + v.dt, 0);
+    const totalDx = samples.reduce((s, v) => s + v.dx, 0);
+    return totalDt > 0 ? totalDx / totalDt : 0;
   }
 
   function handlePointerDown(e: React.PointerEvent<HTMLDivElement>) {
     if (!confidence || answered.current) return;
+    cancelAnimationFrame(rafId.current);
     e.currentTarget.setPointerCapture(e.pointerId);
     startX.current = e.clientX;
-    lastX.current = e.clientX;
-    lastTime.current = Date.now();
-    velocity.current = 0;
-    setDragging(true);
+    posX.current = 0;
+    dragging.current = true;
+    velSamples.current = [];
+    lastPtr.current = { x: e.clientX, t: e.timeStamp };
+    if (cardRef.current) cardRef.current.style.transition = 'none';
   }
 
   function handlePointerMove(e: React.PointerEvent<HTMLDivElement>) {
-    if (!dragging || !confidence || answered.current) return;
-    const now = Date.now();
-    const dt = now - lastTime.current;
-    if (dt > 0) {
-      velocity.current = (e.clientX - lastX.current) / dt;
+    if (!dragging.current || !confidence || answered.current) return;
+
+    // Rolling velocity — keep last ~80ms of samples
+    const dt = e.timeStamp - lastPtr.current.t;
+    const dx = e.clientX - lastPtr.current.x;
+    velSamples.current.push({ dx, dt });
+    const cutoff = e.timeStamp - 80;
+    // trim old samples inline
+    let i = 0;
+    let elapsed = 0;
+    for (let j = velSamples.current.length - 1; j >= 0; j--) {
+      elapsed += velSamples.current[j].dt;
+      if (elapsed > 80) { i = j + 1; break; }
     }
-    lastX.current = e.clientX;
-    lastTime.current = now;
-    setDragX(e.clientX - startX.current);
+    velSamples.current = velSamples.current.slice(i);
+    lastPtr.current = { x: e.clientX, t: e.timeStamp };
+
+    const x = e.clientX - startX.current;
+    posX.current = x;
+    applyTransform(x);
+    setDragX(x);  // keep React state in sync for stamp re-renders
   }
 
   function handlePointerUp() {
-    if (!dragging || !confidence || answered.current) return;
-    setDragging(false);
-    const dx = dragX;
-    const vx = velocity.current;
-    if (Math.abs(dx) > SWIPE_THRESHOLD || Math.abs(vx) > 0.5) {
-      fly(dx > 0 || vx > 0 ? 'right' : 'left', confidence);
+    if (!dragging.current || !confidence || answered.current) return;
+    dragging.current = false;
+
+    const x = posX.current;
+    const vx = getVelocity();  // px/ms
+    velSamples.current = [];
+
+    const shouldFly = Math.abs(x) > SWIPE_THRESHOLD || Math.abs(vx) > 0.4;
+
+    if (shouldFly) {
+      fly(x > 0 || vx > 0 ? 'right' : 'left', confidence);
     } else {
-      setDragX(0);
+      // Restore transition then spring back
+      if (cardRef.current) cardRef.current.style.transition = '';
+      springBack(x);
     }
-    velocity.current = 0;
   }
 
   function handleButton(answer: Answer) {
@@ -139,17 +209,12 @@ export function GameCard({ card, onAnswer, questionNumber, total, streak, totalS
     fly(answer === 'phishing' ? 'left' : 'right', confidence);
   }
 
-  const rotate = dragX / 22;
-  const phishingOpacity = clamp(-dragX / SWIPE_THRESHOLD, 0, 1);
-  const legitOpacity = clamp(dragX / SWIPE_THRESHOLD, 0, 1);
   const progress = ((questionNumber - 1) / total) * 100;
   const streakAtBonus = streak > 0 && streak % 3 === 0;
 
-  const cardTransition = flying
-    ? 'transform 0.23s ease-in, opacity 0.23s ease-in'
-    : dragging
-    ? 'none'
-    : 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)';
+  // Stamp opacity driven by React dragX state (updated during drag and reset after spring)
+  const phishingOpacity = clamp(-dragX / SWIPE_THRESHOLD, 0, 1);
+  const legitOpacity    = clamp(dragX  / SWIPE_THRESHOLD, 0, 1);
 
   return (
     <div className="flex flex-col items-center gap-4 w-full max-w-sm px-4">
@@ -160,11 +225,9 @@ export function GameCard({ card, onAnswer, questionNumber, total, streak, totalS
             Q<span className="text-[#00ff41] glow">{questionNumber}</span>/{total}
           </span>
           <span className={`text-xs px-2 py-0.5 border font-mono ${
-            card.difficulty === 'easy'
-              ? 'text-[#00ff41] border-[rgba(0,255,65,0.4)]'
-              : card.difficulty === 'medium'
-              ? 'text-[#ffaa00] border-[rgba(255,170,0,0.4)]'
-              : 'text-[#ff3333] border-[rgba(255,51,51,0.4)]'
+            card.difficulty === 'easy'   ? 'text-[#00ff41] border-[rgba(0,255,65,0.4)]' :
+            card.difficulty === 'medium' ? 'text-[#ffaa00] border-[rgba(255,170,0,0.4)]' :
+                                           'text-[#ff3333] border-[rgba(255,51,51,0.4)]'
           }`}>
             {card.difficulty.toUpperCase()}
           </span>
@@ -173,9 +236,7 @@ export function GameCard({ card, onAnswer, questionNumber, total, streak, totalS
           <span className={`text-[#00aa28] ${streakAtBonus ? 'glow text-[#00ff41]' : ''}`}>
             STREAK:<span className="text-[#00ff41]">{streak}</span>
           </span>
-          <span className="text-[#00aa28]">
-            PTS:<span className="text-[#00ff41] glow">{totalScore}</span>
-          </span>
+          <span className="text-[#00aa28]">PTS:<span className="text-[#00ff41] glow">{totalScore}</span></span>
           <span className="text-[#003a0e] font-mono text-sm">{analystFace(streak)}</span>
         </div>
       </div>
@@ -197,9 +258,11 @@ export function GameCard({ card, onAnswer, questionNumber, total, streak, totalS
 
       {/* Card */}
       <div className="relative w-full">
+        {/* Stamp overlays — driven by dragX React state */}
         {confidence && (
           <>
             <div
+              ref={phishRef}
               className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center"
               style={{ opacity: phishingOpacity }}
             >
@@ -208,6 +271,7 @@ export function GameCard({ card, onAnswer, questionNumber, total, streak, totalS
               </div>
             </div>
             <div
+              ref={legitRef}
               className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center"
               style={{ opacity: legitOpacity }}
             >
@@ -219,15 +283,16 @@ export function GameCard({ card, onAnswer, questionNumber, total, streak, totalS
         )}
 
         <div
+          ref={cardRef}
           onPointerDown={confidence ? handlePointerDown : undefined}
           onPointerMove={confidence ? handlePointerMove : undefined}
           onPointerUp={confidence ? handlePointerUp : undefined}
           onPointerCancel={confidence ? handlePointerUp : undefined}
           className={`anim-card-entry touch-none ${confidence ? 'cursor-grab active:cursor-grabbing' : ''}`}
           style={{
-            transform: `translateX(${dragX}px) rotate(${rotate}deg)`,
+            transform: 'translateX(0px) rotate(0deg)',
             opacity: flying ? 0 : 1,
-            transition: cardTransition,
+            transition: flying ? 'transform 0.23s ease-in, opacity 0.23s ease-in' : '',
             willChange: 'transform',
           }}
         >
@@ -261,7 +326,7 @@ export function GameCard({ card, onAnswer, questionNumber, total, streak, totalS
             {' · '}
             {confidence === 'certain' ? '3x' : confidence === 'likely' ? '2x' : '1x'} PTS
             <button
-              onClick={() => { if (!answered.current) setConfidence(null); }}
+              onClick={() => { if (!answered.current) { setConfidence(null); setDragX(0); } }}
               className="ml-3 text-[#003a0e] hover:text-[#00aa28] transition-colors"
             >
               [change]
