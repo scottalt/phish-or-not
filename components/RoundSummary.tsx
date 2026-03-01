@@ -6,99 +6,113 @@ import type { RoundResult } from '@/lib/types';
 interface Props {
   score: number;
   total: number;
+  totalScore: number;
   results: RoundResult[];
   onPlayAgain: () => void;
 }
 
-function getTier(score: number, total: number): { label: string; color: string; sub: string } {
+function getTier(score: number, total: number): { label: string; sub: string; color: string } {
   const pct = score / total;
-  if (pct === 1) return { label: 'Perfect', color: 'text-indigo-400', sub: "You caught everything. Clean sweep." };
-  if (pct >= 0.8) return { label: 'Sharp', color: 'text-green-400', sub: 'Strong instincts. A couple slipped through.' };
-  if (pct >= 0.6) return { label: 'Cautious', color: 'text-yellow-400', sub: 'Decent, but a few got you. Review the red flags.' };
-  if (pct >= 0.4) return { label: 'Hooked', color: 'text-orange-400', sub: "You took the bait more than once. Keep practicing." };
-  return { label: 'Caught', color: 'text-red-400', sub: "The phishers won this round. Study up." };
+  if (pct === 1) return { label: 'PERFECT_SCORE', color: 'text-[#00ff41]', sub: 'Zero breaches. Clean sweep.' };
+  if (pct >= 0.8) return { label: 'SHARP_ANALYST', color: 'text-[#00ff41]', sub: 'Strong instincts. A couple slipped through.' };
+  if (pct >= 0.6) return { label: 'NEEDS_CALIBRATION', color: 'text-[#ffaa00]', sub: 'Decent, but a few got past you.' };
+  if (pct >= 0.4) return { label: 'HOOKED', color: 'text-[#ff3333]', sub: 'You took the bait more than once.' };
+  return { label: 'COMPROMISED', color: 'text-[#ff3333]', sub: 'The phishers owned you this round.' };
 }
 
-export function RoundSummary({ score, total, results, onPlayAgain }: Props) {
+const CONFIDENCE_LABEL: Record<string, string> = { guessing: 'G', likely: 'L', certain: 'C' };
+
+export function RoundSummary({ score, total, totalScore, results, onPlayAgain }: Props) {
   const tier = getTier(score, total);
   const phishingCaught = results.filter((r) => r.card.isPhishing && r.correct).length;
   const legitCorrect = results.filter((r) => !r.card.isPhishing && r.correct).length;
   const phishingTotal = results.filter((r) => r.card.isPhishing).length;
   const legitTotal = results.filter((r) => !r.card.isPhishing).length;
+  const maxPossible = results.reduce((acc, r) => acc + 300, 0); // 10 × 3x × 100
+  const efficiency = Math.round((totalScore / maxPossible) * 100);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ type: 'spring', stiffness: 260, damping: 22 }}
-      className="w-full max-w-sm px-4 flex flex-col gap-5"
+      transition={{ type: 'spring', stiffness: 260, damping: 24 }}
+      className="w-full max-w-sm px-4 flex flex-col gap-4"
     >
-      {/* Score hero */}
-      <div className="text-center py-4">
-        <div className="text-7xl font-black text-white mb-1">
-          {score}
-          <span className="text-3xl text-slate-500 font-light">/{total}</span>
+      {/* Score header */}
+      <div className="term-border bg-[#060c06]">
+        <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5 flex items-center justify-between">
+          <span className="text-[#00aa28] text-xs tracking-widest">SESSION_COMPLETE</span>
+          <span className="text-[#003a0e] text-xs font-mono">ANALYST_TERMINAL</span>
         </div>
-        <div className={`text-2xl font-black tracking-wide mb-1 ${tier.color}`}>
-          {tier.label}
+        <div className="px-3 py-5 text-center space-y-2">
+          <div className="text-xs font-mono text-[#00aa28] tracking-widest">ACCURACY RATING</div>
+          <div className="text-6xl font-black font-mono text-[#00ff41] glow">
+            {score}<span className="text-2xl text-[#003a0e]">/{total}</span>
+          </div>
+          <div className={`text-sm font-black font-mono tracking-widest ${tier.color}`}>
+            {tier.label}
+          </div>
+          <div className="text-xs font-mono text-[#00aa28]">{tier.sub}</div>
         </div>
-        <div className="text-slate-400 text-sm">{tier.sub}</div>
+        <div className="border-t border-[rgba(0,255,65,0.25)] px-3 py-2 flex items-center justify-between">
+          <div className="text-center">
+            <div className="text-lg font-black font-mono text-[#00ff41] glow">{totalScore}</div>
+            <div className="text-[10px] font-mono text-[#003a0e]">TOTAL PTS</div>
+          </div>
+          <div className="text-center">
+            <div className="text-lg font-black font-mono text-[#ffaa00]">{efficiency}%</div>
+            <div className="text-[10px] font-mono text-[#003a0e]">EFFICIENCY</div>
+          </div>
+          <div className="text-center">
+            <div className="text-lg font-black font-mono text-[#00ff41]">{maxPossible}</div>
+            <div className="text-[10px] font-mono text-[#003a0e]">MAX POSSIBLE</div>
+          </div>
+        </div>
       </div>
 
       {/* Breakdown */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-red-500/10 border border-red-500/20 rounded-2xl px-4 py-4 text-center">
-          <div className="text-red-400 text-2xl font-black">
-            {phishingCaught}/{phishingTotal}
-          </div>
-          <div className="text-slate-400 text-xs mt-1 uppercase tracking-wider">
-            Phishing caught
-          </div>
+        <div className="term-border bg-[#060c06] border-[rgba(255,51,51,0.3)] text-center px-3 py-3">
+          <div className="text-[#ff3333] text-2xl font-black font-mono">{phishingCaught}/{phishingTotal}</div>
+          <div className="text-[10px] font-mono text-[#00aa28] mt-1 tracking-wider">PHISHING CAUGHT</div>
         </div>
-        <div className="bg-green-500/10 border border-green-500/20 rounded-2xl px-4 py-4 text-center">
-          <div className="text-green-400 text-2xl font-black">
-            {legitCorrect}/{legitTotal}
-          </div>
-          <div className="text-slate-400 text-xs mt-1 uppercase tracking-wider">
-            Legit correct
-          </div>
+        <div className="term-border bg-[#060c06] border-[rgba(0,255,65,0.3)] text-center px-3 py-3">
+          <div className="text-[#00ff41] text-2xl font-black font-mono glow">{legitCorrect}/{legitTotal}</div>
+          <div className="text-[10px] font-mono text-[#00aa28] mt-1 tracking-wider">LEGIT CLEARED</div>
         </div>
       </div>
 
-      {/* Results list */}
-      <div className="bg-slate-800/60 rounded-2xl border border-slate-700/50 overflow-hidden">
-        <div className="px-4 py-3 border-b border-slate-700/50">
-          <span className="text-slate-400 text-xs uppercase tracking-wider font-semibold">
-            Round breakdown
-          </span>
+      {/* Round breakdown table */}
+      <div className="term-border bg-[#060c06]">
+        <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5">
+          <span className="text-[#00aa28] text-xs tracking-widest">ROUND_LOG</span>
         </div>
-        <div className="divide-y divide-slate-700/30">
+        <div className="divide-y divide-[rgba(0,255,65,0.1)]">
           {results.map((r, i) => (
-            <div key={r.card.id} className="flex items-center gap-3 px-4 py-2.5">
-              <span
-                className={`text-sm font-bold w-5 text-center ${
-                  r.correct ? 'text-green-400' : 'text-red-400'
-                }`}
-              >
+            <div key={r.card.id} className="flex items-center gap-2 px-3 py-2">
+              <span className={`text-xs font-mono font-bold w-4 ${r.correct ? 'text-[#00ff41]' : 'text-[#ff3333]'}`}>
                 {r.correct ? '✓' : '✗'}
               </span>
               <div className="flex-1 min-w-0">
-                <div className="text-slate-300 text-xs truncate">
+                <div className="text-[#00aa28] text-xs font-mono truncate">
                   {r.card.subject ?? r.card.from}
                 </div>
-                <div className="text-slate-500 text-xs">
-                  {r.card.isPhishing ? 'Phishing' : 'Legit'} · {r.card.difficulty}
+                <div className="text-[#003a0e] text-[10px] font-mono">
+                  {r.card.isPhishing ? 'PHISH' : 'LEGIT'} · {r.card.difficulty.toUpperCase()}
                 </div>
               </div>
-              <span
-                className={`text-xs px-2 py-0.5 rounded-full border ${
-                  r.card.isPhishing
-                    ? 'text-red-400 bg-red-500/10 border-red-500/20'
-                    : 'text-green-400 bg-green-500/10 border-green-500/20'
-                }`}
-              >
-                {r.card.isPhishing ? '⚠' : '✓'}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className={`text-[10px] font-mono px-1 border ${
+                  r.confidence === 'certain' ? 'text-[#00ff41] border-[rgba(0,255,65,0.4)]'
+                  : r.confidence === 'likely' ? 'text-[#ffaa00] border-[rgba(255,170,0,0.4)]'
+                  : 'text-[#00aa28] border-[rgba(0,255,65,0.2)]'
+                }`}>
+                  {CONFIDENCE_LABEL[r.confidence]}
+                </span>
+                <span className={`text-xs font-mono font-bold ${r.correct ? 'text-[#00ff41]' : 'text-[#003a0e]'}`}>
+                  +{r.pointsEarned}
+                </span>
+              </div>
             </div>
           ))}
         </div>
@@ -107,13 +121,13 @@ export function RoundSummary({ score, total, results, onPlayAgain }: Props) {
       {/* Play again */}
       <button
         onClick={onPlayAgain}
-        className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-black rounded-2xl transition-all tracking-wide text-lg"
+        className="w-full py-4 term-border-bright text-[#00ff41] font-mono font-bold tracking-widest text-sm hover:bg-[rgba(0,255,65,0.08)] active:scale-95 transition-all glow"
       >
-        Play Again
+        [ RUN AGAIN ]
       </button>
 
-      <p className="text-center text-slate-600 text-xs">
-        Built by Scott Altiparmak · scottaltiparmak.com
+      <p className="text-center text-[#003a0e] text-xs font-mono">
+        scottaltiparmak.com
       </p>
     </motion.div>
   );

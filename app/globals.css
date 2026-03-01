@@ -1,27 +1,136 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0f172a;
-  --foreground: #f1f5f9;
+  --phosphor: #00ff41;
+  --phosphor-dim: #00aa28;
+  --phosphor-bright: #80ffaa;
+  --phosphor-muted: #003a0e;
+  --terminal-bg: #060c06;
+  --red-alert: #ff3333;
+  --amber: #ffaa00;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --color-background: var(--terminal-bg);
+  --color-foreground: var(--phosphor);
+  --font-sans: var(--font-geist-mono);
   --font-mono: var(--font-geist-mono);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), system-ui, sans-serif;
+  background: var(--terminal-bg);
+  color: var(--phosphor);
+  font-family: var(--font-geist-mono), 'Courier New', monospace;
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* CRT scanlines */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.05) 2px,
+    rgba(0, 0, 0, 0.05) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* CRT vignette */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.6) 100%);
+  pointer-events: none;
+  z-index: 9998;
+}
+
+/* Phosphor glow */
+.glow {
+  text-shadow: 0 0 8px rgba(0, 255, 65, 0.9), 0 0 20px rgba(0, 255, 65, 0.5);
+}
+
+.glow-red {
+  text-shadow: 0 0 8px rgba(255, 51, 51, 0.9), 0 0 20px rgba(255, 51, 51, 0.5);
+}
+
+.glow-amber {
+  text-shadow: 0 0 8px rgba(255, 170, 0, 0.9), 0 0 20px rgba(255, 170, 0, 0.5);
+}
+
+/* Blinking cursor */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.cursor {
+  display: inline-block;
+  width: 0.55em;
+  height: 1em;
+  background: var(--phosphor);
+  vertical-align: text-bottom;
+  animation: blink 1s step-end infinite;
+  box-shadow: 0 0 8px rgba(0, 255, 65, 0.9);
+  margin-left: 2px;
+}
+
+/* CRT screen flicker */
+@keyframes flicker {
+  0%, 18%, 22%, 25%, 53%, 57%, 100% { opacity: 1; }
+  20%, 24%, 55% { opacity: 0.94; }
+}
+
+.crt {
+  animation: flicker 14s infinite;
+}
+
+/* Breach screen flash */
+@keyframes breach-flash {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  60% { opacity: 0.7; }
+  100% { opacity: 0; }
+}
+
+.breach-overlay {
+  animation: breach-flash 0.5s ease-out forwards;
+}
+
+/* Threat neutralized flash */
+@keyframes clear-flash {
+  0% { opacity: 0; }
+  20% { opacity: 0.6; }
+  100% { opacity: 0; }
+}
+
+.clear-overlay {
+  animation: clear-flash 0.4s ease-out forwards;
+}
+
+/* Progress bar fill */
+@keyframes fill {
+  from { width: 0%; }
+  to { width: 100%; }
 }
 
 /* Prevent text selection during swipe */
 .cursor-grab, .cursor-grab * {
   user-select: none;
   -webkit-user-select: none;
+}
+
+/* Terminal border */
+.term-border {
+  border: 1px solid rgba(0, 255, 65, 0.35);
+}
+
+.term-border-bright {
+  border: 1px solid rgba(0, 255, 65, 0.7);
 }
