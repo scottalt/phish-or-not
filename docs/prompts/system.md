@@ -9,6 +9,7 @@ Rules:
 - Grammar and spelling must be perfect in all emails
 - Body length: 60–250 words for email, 20–80 words for SMS
 - Vary industry context, sender role, and scenario across cards in the same batch — do not repeat the same context
+- Address the recipient by a realistic fictional first name in the greeting when natural for that email type (e.g., "Hi Marcus," or "Dear Jennifer,") — this applies to both phishing and legitimate emails
 
 Output format — always return a valid JSON object with a "cards" array:
 {
