@@ -109,6 +109,8 @@ export function StartScreen({ onStart }: Props) {
                 ['[3]', 'Classify: PHISHING or LEGIT'],
                 ['[4]', 'More confidence + correct = more points'],
                 ['[5]', '3-streak bonus: +50 pts per milestone'],
+                ['[6]', 'Tap [HEADERS] on emails to inspect SPF/DKIM/DMARC and Reply-To'],
+                ['[7]', 'Tap highlighted URLs to inspect the real destination'],
               ].map(([tag, desc]) => (
                 <div key={tag} className="flex gap-3 text-xs">
                   <span className="text-[#00ff41] shrink-0 glow">{tag}</span>
