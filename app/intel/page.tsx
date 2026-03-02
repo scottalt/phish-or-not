@@ -257,22 +257,24 @@ export default async function IntelPage() {
                   <span className="text-[#00aa28] text-xs tracking-widest">MEDIAN_DECISION_TIME</span>
                 </div>
                 <div className="px-3 py-3 space-y-2">
-                  {data.medianTimeByTechnique.map(({ technique, medianMs }) => {
-                    const maxMs = Math.max(...data.medianTimeByTechnique!.map((t) => t.medianMs));
-                    const pct = Math.round((medianMs / maxMs) * 100);
-                    const secs = (medianMs / 1000).toFixed(1);
-                    return (
-                      <div key={technique} className="space-y-0.5">
-                        <div className="flex justify-between text-[10px] font-mono">
-                          <span className="text-[#00aa28] truncate">{technique}</span>
-                          <span className="text-[#00ff41] shrink-0 ml-2">{secs}s</span>
+                  {(() => {
+                    const maxMs = Math.max(...data.medianTimeByTechnique.map((t) => t.medianMs));
+                    return data.medianTimeByTechnique.map(({ technique, medianMs }) => {
+                      const pct = Math.round((medianMs / maxMs) * 100);
+                      const secs = (medianMs / 1000).toFixed(1);
+                      return (
+                        <div key={technique} className="space-y-0.5">
+                          <div className="flex justify-between text-[10px] font-mono">
+                            <span className="text-[#00aa28] truncate">{technique}</span>
+                            <span className="text-[#00ff41] shrink-0 ml-2">{secs}s</span>
+                          </div>
+                          <div className="h-1 bg-[#003a0e] w-full">
+                            <div className="h-full bg-[#00aa28]" style={{ width: `${pct}%` }} />
+                          </div>
                         </div>
-                        <div className="h-1 bg-[#003a0e] w-full">
-                          <div className="h-full bg-[#00aa28]" style={{ width: `${pct}%` }} />
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    });
+                  })()}
                   <p className="text-[#003a0e] text-[10px] font-mono pt-1">Faster decisions may indicate higher confidence — or less investigation.</p>
                 </div>
               </div>
