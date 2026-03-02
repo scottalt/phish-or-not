@@ -19,6 +19,8 @@ interface StagingCard {
   suggested_highlights: string[] | null;
   suggested_clues: string[] | null;
   suggested_explanation: string | null;
+  suggested_auth_status: string | null;
+  suggested_reply_to: string | null;
   grammar_quality: number | null;
   prose_fluency: number | null;
   personalization_level: number | null;
@@ -50,6 +52,7 @@ export default function ReviewPage() {
   const [difficulty, setDifficulty] = useState('medium');
   const [isPhishing, setIsPhishing] = useState(true);
   const [authStatus, setAuthStatus] = useState<'verified' | 'unverified' | 'fail'>('fail');
+  const [replyTo, setReplyTo] = useState('');
   const [reviewNotes, setReviewNotes] = useState('');
 
   const fetchNext = useCallback(async () => {
@@ -70,7 +73,9 @@ export default function ReviewPage() {
         const phishing = next.is_phishing ?? true;
         setDifficulty(diff);
         setIsPhishing(phishing);
-        setAuthStatus(!phishing ? 'verified' : ['easy', 'medium'].includes(diff) ? 'fail' : 'unverified');
+        const derivedAuth = !phishing ? 'verified' : ['easy', 'medium'].includes(diff) ? 'fail' : 'unverified';
+        setAuthStatus((next.suggested_auth_status as 'verified' | 'unverified' | 'fail' | null) ?? derivedAuth);
+        setReplyTo(next.suggested_reply_to ?? '');
         setReviewNotes('');
         cardLoadTime.current = Date.now();
       }
@@ -125,6 +130,7 @@ export default function ReviewPage() {
             ai_model: card.ai_model,
             ai_preprocessing_version: card.ai_preprocessing_version,
             auth_status: authStatus,
+            reply_to: replyTo.trim() || null,
           } : null,
         }),
       });
@@ -269,6 +275,15 @@ export default function ReviewPage() {
               <option value="unverified">UNVERIFIED</option>
               <option value="fail">AUTH: FAIL</option>
             </select>
+
+            {isPhishing && ['hard', 'extreme'].includes(difficulty) && (
+              <input
+                value={replyTo}
+                onChange={(e) => setReplyTo(e.target.value)}
+                className="w-full bg-transparent border border-[rgba(0,255,65,0.2)] text-[#00ff41] font-mono text-xs px-2 py-1 focus:outline-none focus:border-[rgba(0,255,65,0.6)]"
+                placeholder="REPLY-TO (optional, hard/extreme only)"
+              />
+            )}
 
             <textarea value={reviewNotes} onChange={(e) => setReviewNotes(e.target.value)}
               placeholder="Review notes (optional)"
