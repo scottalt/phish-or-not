@@ -324,13 +324,6 @@ export function GameCard({ card, onAnswer, questionNumber, total, streak, totalS
           <span className="text-[#00aa28]">
             Q<span className="text-[#00ff41] glow">{questionNumber}</span>/{total}
           </span>
-          <span className={`text-xs px-2 py-0.5 border font-mono ${
-            card.difficulty === 'easy'   ? 'text-[#00ff41] border-[rgba(0,255,65,0.4)]' :
-            card.difficulty === 'medium' ? 'text-[#ffaa00] border-[rgba(255,170,0,0.4)]' :
-                                           'text-[#ff3333] border-[rgba(255,51,51,0.4)]'
-          }`}>
-            {card.difficulty.toUpperCase()}
-          </span>
         </div>
         <div className="flex items-center gap-3">
           <span className={`text-[#00aa28] ${streakAtBonus ? 'glow text-[#00ff41]' : ''}`}>
