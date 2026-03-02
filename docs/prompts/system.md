@@ -25,7 +25,8 @@ Output format — always return a valid JSON object with a "cards" array:
       "highlights": ["exact phrase to mark as notable", "another phrase"],
       "clues": ["security analyst note about this phrase — one clue per highlight, same index order", "note about another element"],
       "explanation": "One clear paragraph explaining why this is or is not phishing and what the key indicators are.",
-      "authStatus": "verified"
+      "authStatus": "verified",
+      "replyTo": "attacker@gmail.com"
     }
   ]
 }
@@ -55,3 +56,12 @@ Legitimate cards:
 - Major company senders (Google, Microsoft, Apple, Amazon, banks, large retailers): always "verified"
 - Small businesses, nonprofits, community orgs, individual professionals: "unverified" (NONE) — common for smaller senders without IT infrastructure. Aim for ~20% of legit cards in a batch.
 - Misconfigured senders (rare, realistic): "fail" — use sparingly, ~2-5% of legit cards
+
+For replyTo — include this field only on hard/extreme phishing cards where a mismatched Reply-To is realistic. Omit it (do not include the key) on all other cards.
+
+Hard/extreme phishing replyTo rules:
+- If authStatus is "verified" (attacker-controlled domain): always include a replyTo — the attacker reads replies at a personal/free email address. E.g. FROM uses acmecorp-global.com but replyTo is a Gmail/Hotmail/ProtonMail address.
+- If authStatus is "unverified": include replyTo on roughly half the cards — some attackers redirect replies even when headers fail.
+- replyTo must be a plausible personal/free-provider address: gmail.com, hotmail.com, outlook.com, protonmail.com, yahoo.com
+- It must be clearly different from the FROM domain — that mismatch is the forensic signal
+- For legitimate cards and easy/medium phishing: omit replyTo entirely

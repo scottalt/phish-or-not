@@ -81,6 +81,8 @@ interface GeneratedCard {
   highlights: string[];
   clues: string[];
   explanation: string;
+  authStatus?: string;
+  replyTo?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -397,6 +399,8 @@ async function main() {
       suggested_highlights: card.highlights,
       suggested_clues: card.clues,
       suggested_explanation: card.explanation,
+      suggested_auth_status: card.authStatus ?? null,
+      suggested_reply_to: card.replyTo ?? null,
       ai_provider: generator.provider,
       ai_model: generator.modelId,
       ai_preprocessing_version: GENERATION_VERSION,
