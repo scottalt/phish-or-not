@@ -1,23 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdminClient } from '@/lib/supabase';
 
-// GET — fetch next pending card for review
+// GET — fetch next pending card for review (random order)
 export async function GET() {
   const supabase = getSupabaseAdminClient();
-  const { data, error } = await supabase
-    .from('cards_staging')
-    .select('*')
-    .eq('status', 'pending')
-    .order('created_at', { ascending: true })
-    .limit(1)
-    .single();
-
-  if (error) return NextResponse.json({ card: null, pendingCount: 0 });
 
   const { count } = await supabase
     .from('cards_staging')
     .select('*', { count: 'exact', head: true })
     .eq('status', 'pending');
+
+  if (!count) return NextResponse.json({ card: null, pendingCount: 0 });
+
+  const randomOffset = Math.floor(Math.random() * count);
+
+  const { data, error } = await supabase
+    .from('cards_staging')
+    .select('*')
+    .eq('status', 'pending')
+    .range(randomOffset, randomOffset)
+    .single();
+
+  if (error) return NextResponse.json({ card: null, pendingCount: 0 });
 
   return NextResponse.json({ card: data, pendingCount: count ?? 0 });
 }
