@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 import { getSupabaseAdminClient } from '@/lib/supabase';
 import type { PlayerProfile } from '@/lib/types';
 
-async function getAuthId(req: NextRequest): Promise<string | null> {
+async function getAuthId(): Promise<string | null> {
   const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -36,7 +36,7 @@ function toProfile(row: Record<string, unknown>): PlayerProfile {
 
 // GET /api/player — returns the signed-in player's profile
 export async function GET(req: NextRequest) {
-  const authId = await getAuthId(req);
+  const authId = await getAuthId();
   if (!authId) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
   const admin = getSupabaseAdminClient();
@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
 
 // POST /api/player — update display_name
 export async function POST(req: NextRequest) {
-  const authId = await getAuthId(req);
+  const authId = await getAuthId();
   if (!authId) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
   const body = await req.json();
