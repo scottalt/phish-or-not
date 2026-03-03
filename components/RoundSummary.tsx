@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { RoundResult, GameMode } from '@/lib/types';
 import { getRank } from '@/lib/rank';
 import { updateWeaknessHistory, getWeakPoints } from '@/lib/weakness-tracker';
@@ -15,6 +15,7 @@ interface Props {
   results: RoundResult[];
   mode: GameMode;
   date: string;
+  sessionId: string;
   onPlayAgain: () => void;
 }
 
@@ -29,7 +30,7 @@ function getTier(score: number, total: number): { label: string; sub: string; co
 
 const CONFIDENCE_LABEL: Record<string, string> = { guessing: 'G', likely: 'L', certain: 'C' };
 
-export function RoundSummary({ score, total, totalScore, results, mode, date, onPlayAgain }: Props) {
+export function RoundSummary({ score, total, totalScore, results, mode, date, sessionId, onPlayAgain }: Props) {
   const tier = getTier(score, total);
   const rank = getRank(totalScore);
   const [name, setName] = useState('');
@@ -43,6 +44,7 @@ export function RoundSummary({ score, total, totalScore, results, mode, date, on
   const [xpResult, setXpResult] = useState<{
     xpEarned: number; level: number; levelUp: boolean; graduated: boolean;
   } | null>(null);
+  const xpFired = useRef(false);
 
   useEffect(() => {
     if (mode !== 'research') return;
@@ -68,19 +70,19 @@ export function RoundSummary({ score, total, totalScore, results, mode, date, on
   const xpEarned = getXpForRound(correctCount, total, mode);
 
   useEffect(() => {
-    if (!signedIn) return;
+    if (!signedIn || xpFired.current) return;
+    xpFired.current = true;
     fetch('/api/player/xp', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ xpEarned, score: totalScore, gameMode: mode, sessionCompleted: true }),
+      body: JSON.stringify({ xpEarned, score: totalScore, gameMode: mode, sessionCompleted: true, sessionId }),
     })
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (data) { setXpResult(data); refreshProfile(); }
       })
       .catch(() => {});
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // fire once on mount
+  }, [signedIn]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

@@ -16,7 +16,7 @@ async function getAuthId(): Promise<string | null> {
 }
 
 // PATCH /api/player/xp
-// Body: { xpEarned: number; score: number; gameMode: string; sessionCompleted: boolean }
+// Body: { xpEarned: number; score: number; gameMode: string; sessionCompleted: boolean; sessionId: string }
 export async function PATCH(req: NextRequest) {
   const authId = await getAuthId();
   if (!authId) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
@@ -26,17 +26,23 @@ export async function PATCH(req: NextRequest) {
   const score = Number(body.score) || 0;
   const gameMode = String(body.gameMode ?? 'freeplay');
   const sessionCompleted = Boolean(body.sessionCompleted);
+  const sessionId = typeof body.sessionId === 'string' ? body.sessionId.slice(0, 64) : null;
 
   const admin = getSupabaseAdminClient();
   const { data: player, error: fetchErr } = await admin
     .from('players')
-    .select('id, xp, level, total_sessions, research_sessions_completed, research_graduated, personal_best_score')
+    .select('id, xp, level, total_sessions, research_sessions_completed, research_graduated, personal_best_score, last_xp_session_id')
     .eq('auth_id', authId)
     .single();
 
   if (fetchErr || !player) return NextResponse.json({ error: 'Player not found' }, { status: 404 });
 
   const p = player as Record<string, unknown>;
+
+  // Dedup: reject if this session's XP has already been awarded
+  if (sessionId && p.last_xp_session_id === sessionId) {
+    return NextResponse.json({ error: 'XP already awarded for this session' }, { status: 409 });
+  }
   const newXp = (p.xp as number) + xpEarned;
   const newLevel = getLevelFromXp(newXp);
   const levelUp = newLevel > (p.level as number);
@@ -58,6 +64,7 @@ export async function PATCH(req: NextRequest) {
     research_sessions_completed: newResearchSessions,
     research_graduated: nowGraduated,
     personal_best_score: newBest,
+    ...(sessionId ? { last_xp_session_id: sessionId } : {}),
     updated_at: new Date().toISOString(),
   }).eq('auth_id', authId);
   if (updateErr) return NextResponse.json({ error: 'Failed to update player' }, { status: 500 });

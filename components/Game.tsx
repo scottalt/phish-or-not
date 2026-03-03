@@ -337,6 +337,7 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
         results={results}
         mode={mode}
         date={getToday()}
+        sessionId={sessionId.current}
         onPlayAgain={() => setPhase('start')}
       />
     );
