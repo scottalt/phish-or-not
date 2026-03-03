@@ -101,6 +101,8 @@ export interface SessionPayload {
   referrer: string;
 }
 
+export type PlayerBackground = 'other' | 'technical' | 'infosec' | 'prefer_not_to_say';
+
 export interface PlayerProfile {
   id: string;
   authId: string;
@@ -111,4 +113,5 @@ export interface PlayerProfile {
   researchSessionsCompleted: number;
   researchGraduated: boolean;
   personalBestScore: number;
+  background: PlayerBackground | null;
 }
