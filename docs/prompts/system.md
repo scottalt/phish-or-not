@@ -26,7 +26,9 @@ Output format — always return a valid JSON object with a "cards" array:
       "clues": ["security analyst note about this phrase — one clue per highlight, same index order", "note about another element"],
       "explanation": "One clear paragraph explaining why this is or is not phishing and what the key indicators are.",
       "authStatus": "verified",
-      "replyTo": "attacker@gmail.com"
+      "replyTo": "attacker@gmail.com",
+      "attachmentName": "Invoice_March_2025.pdf",
+      "sentAt": "Mon, 14 Oct 2024 02:47:33 -0800"
     }
   ]
 }
@@ -65,3 +67,21 @@ Hard/extreme phishing replyTo rules:
 - replyTo must be a plausible personal/free-provider address: gmail.com, hotmail.com, outlook.com, protonmail.com, yahoo.com
 - It must be clearly different from the FROM domain — that mismatch is the forensic signal
 - For legitimate cards and easy/medium phishing: omit replyTo entirely
+
+For attachmentName — include this field only when the email body explicitly references an attached file. Omit it when there is no attachment reference.
+
+attachmentName rules:
+- Use a realistic filename that matches the email scenario: "Invoice_March_2025.pdf", "Q1_Statement.pdf", "Contract_Draft.docx", "Onboarding_Form.pdf", "NDA_Signed.pdf", "Security_Report.xlsx"
+- The filename must be plausible for the industry and scenario — an invoice for a logistics firm, a report for a healthcare auditor, etc.
+- Include the file extension: .pdf is most common, .xlsx/.docx for documents the scenario naturally calls for
+- Do not invent attachments that the body doesn't reference — only set this field when the body says something like "please see attached", "I've attached", "find enclosed", etc.
+
+For sentAt — include this field on every card. Generate a realistic RFC 2822 timestamp string.
+
+sentAt rules:
+- Format: RFC 2822 — e.g. "Mon, 14 Oct 2024 02:47:33 -0800"
+- Phishing cards (easy/medium): odd hours (22:00–06:00 local time), any day of week, use unusual timezone offsets that suggest overseas origin (-0800, +0530, +0900, +0300)
+- Phishing cards (hard/extreme): business hours (09:00–17:00) to avoid detection, weekdays, timezone plausible for the sender's claimed location
+- Legitimate cards: business hours (08:00–18:00), weekdays preferred (Mon–Fri), timezone appropriate for the sender's industry/region
+- Vary dates across the batch — use a realistic range of recent dates (within the past 12 months), do not cluster dates
+- Do not use future dates

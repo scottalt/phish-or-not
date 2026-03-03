@@ -21,6 +21,8 @@ interface StagingCard {
   suggested_explanation: string | null;
   suggested_auth_status: string | null;
   suggested_reply_to: string | null;
+  suggested_attachment_name: string | null;
+  suggested_sent_at: string | null;
   grammar_quality: number | null;
   prose_fluency: number | null;
   personalization_level: number | null;
@@ -53,7 +55,23 @@ export default function ReviewPage() {
   const [isPhishing, setIsPhishing] = useState(true);
   const [authStatus, setAuthStatus] = useState<'verified' | 'unverified' | 'fail'>('fail');
   const [replyTo, setReplyTo] = useState('');
+  const [attachmentName, setAttachmentName] = useState('');
   const [reviewNotes, setReviewNotes] = useState('');
+
+  function suggestAttachmentName(body: string): string {
+    const b = body.toLowerCase();
+    const hasRef = /\b(attach[a-z]*|enclosed|find the|see the file|\.pdf|\.xlsx|\.docx|\.csv|\.zip)\b/.test(b);
+    if (!hasRef) return '';
+    if (/invoice/.test(b)) return 'Invoice_March_2025.pdf';
+    if (/statement/.test(b)) return 'Statement_March_2025.pdf';
+    if (/contract/.test(b)) return 'Contract_Draft.pdf';
+    if (/report/.test(b)) return 'Report_Q1_2025.pdf';
+    if (/form/.test(b)) return 'Form.pdf';
+    if (/receipt/.test(b)) return 'Receipt.pdf';
+    if (/resume|curriculum vitae|\bcv\b/.test(b)) return 'Resume.pdf';
+    if (/spreadsheet|\.xlsx/.test(b)) return 'Report.xlsx';
+    return 'Document.pdf';
+  }
 
   const fetchNext = useCallback(async () => {
     setLoading(true);
@@ -76,6 +94,7 @@ export default function ReviewPage() {
         const derivedAuth = !phishing ? 'verified' : ['easy', 'medium'].includes(diff) ? 'fail' : 'unverified';
         setAuthStatus((next.suggested_auth_status as 'verified' | 'unverified' | 'fail' | null) ?? derivedAuth);
         setReplyTo(next.suggested_reply_to ?? '');
+        setAttachmentName(next.suggested_attachment_name ?? suggestAttachmentName(next.processed_body ?? next.raw_body ?? ''));
         setReviewNotes('');
         cardLoadTime.current = Date.now();
       }
@@ -131,6 +150,8 @@ export default function ReviewPage() {
             ai_preprocessing_version: card.ai_preprocessing_version,
             auth_status: authStatus,
             reply_to: replyTo.trim() || null,
+            attachment_name: attachmentName.trim() || null,
+            suggested_sent_at: card.suggested_sent_at ?? null,
           } : null,
         }),
       });
@@ -284,6 +305,13 @@ export default function ReviewPage() {
                 placeholder="REPLY-TO (optional, hard/extreme only)"
               />
             )}
+
+            <input
+              value={attachmentName}
+              onChange={(e) => setAttachmentName(e.target.value)}
+              className="w-full bg-transparent border border-[rgba(0,255,65,0.2)] text-[#00ff41] font-mono text-xs px-2 py-1 focus:outline-none focus:border-[rgba(0,255,65,0.6)]"
+              placeholder="ATTACHMENT (e.g. Invoice_March_2025.pdf — blank = none)"
+            />
 
             <textarea value={reviewNotes} onChange={(e) => setReviewNotes(e.target.value)}
               placeholder="Review notes (optional)"

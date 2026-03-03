@@ -18,6 +18,8 @@ export interface Card {
   technique?: string | null;
   authStatus: AuthStatus;
   replyTo?: string;
+  attachmentName?: string;
+  sentAt?: string;
 }
 
 export interface RoundResult {
@@ -79,7 +81,7 @@ export interface AnswerEvent {
   authStatusSignal: AuthStatus;  // card.authStatus — denormalized for analytics
   hasReplyTo: boolean;           // card.replyTo is present (mismatched reply-to)
   hasUrl: boolean;               // card body contains at least one URL
-  hasAttachment: boolean;        // card references an attachment (future use, always false for now)
+  hasAttachment: boolean;        // card.attachmentName is set
 }
 
 // Session payload sent alongside each answer event
