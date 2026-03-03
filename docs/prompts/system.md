@@ -85,3 +85,15 @@ sentAt rules:
 - Legitimate cards: business hours (08:00–18:00), weekdays preferred (Mon–Fri), timezone appropriate for the sender's industry/region
 - Vary dates across the batch — use a realistic range of recent dates (within the past 12 months), do not cluster dates
 - Do not use future dates
+
+For links in card bodies — use the [display text](actual url) format for ALL cards that contain URLs:
+
+Phishing cards:
+- easy: display text is the raw suspicious URL or barely dressed (e.g. paypa1-secure.net/login) — the link itself is a tell
+- medium: display text is plausible but imperfect (e.g. paypal.com.secure-login.net or "Verify your account now") — slightly off but not obvious
+- hard/extreme: display text is completely convincing (e.g. paypal.com/verify or "Click here to confirm your details") — indistinguishable from a real email. The URL inspector is the only reveal.
+
+Legitimate cards:
+- display text should reflect what a real email from that sender would show: the real domain path, a descriptive phrase like "View your statement", or a shortened URL. The actual URL must be the same legitimate URL — no mismatch.
+
+Always use [display](url) format. Never leave a raw URL exposed in the body.
