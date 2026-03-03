@@ -6,6 +6,7 @@ import { getRank } from '@/lib/rank';
 import { updateWeaknessHistory, getWeakPoints } from '@/lib/weakness-tracker';
 import { usePlayer } from '@/lib/usePlayer';
 import { LevelMeter } from './LevelMeter';
+import { AuthFlow } from './AuthFlow';
 import { getXpForRound } from '@/lib/xp';
 
 interface Props {
@@ -33,18 +34,17 @@ const CONFIDENCE_LABEL: Record<string, string> = { guessing: 'G', likely: 'L', c
 export function RoundSummary({ score, total, totalScore, results, mode, date, sessionId, onPlayAgain }: Props) {
   const tier = getTier(score, total);
   const rank = getRank(totalScore);
-  const [name, setName] = useState('');
   const [submitState, setSubmitState] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
-  const [errorMsg, setErrorMsg] = useState('');
   const [globalLeaderboard, setGlobalLeaderboard] = useState<{ name: string; score: number }[]>([]);
   const [dailyLeaderboard, setDailyLeaderboard] = useState<{ name: string; score: number }[]>([]);
   const [leaderboardTab, setLeaderboardTab] = useState<'daily' | 'global'>('global');
   const [weakPoints, setWeakPoints] = useState<{ technique: string; missRate: number; missed: number; attempts: number }[]>([]);
-  const { profile, signedIn, refreshProfile } = usePlayer();
+  const { profile, signedIn, refreshProfile, signInWithEmail } = usePlayer();
   const [xpResult, setXpResult] = useState<{
     xpEarned: number; level: number; levelUp: boolean; graduated: boolean;
   } | null>(null);
   const xpFired = useRef(false);
+  const leaderboardFired = useRef(false);
 
   useEffect(() => {
     if (mode !== 'research') return;
@@ -84,40 +84,34 @@ export function RoundSummary({ score, total, totalScore, results, mode, date, se
       .catch(() => {});
   }, [signedIn]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!name.trim() || submitState === 'loading') return;
-    setSubmitState('loading');
-    setErrorMsg('');
-    try {
-      const res = await fetch('/api/leaderboard', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: name.trim(),
-          score: totalScore,
-          ...(mode === 'daily' ? { date } : {}),
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setErrorMsg(data.error ?? 'Submission failed.');
-        setSubmitState('error');
-      } else {
-        setSubmitState('done');
-        Promise.all([
-          fetch('/api/leaderboard').then((r) => (r.ok ? r.json() : [])),
-          fetch(`/api/leaderboard?date=${date}`).then((r) => (r.ok ? r.json() : [])),
-        ]).then(([global, daily]) => {
-          setGlobalLeaderboard(global);
-          setDailyLeaderboard(daily);
-        }).catch(() => {});
-      }
-    } catch {
-      setErrorMsg('Network error.');
-      setSubmitState('error');
-    }
-  }
+  useEffect(() => {
+    if (!signedIn || !profile?.displayName || leaderboardFired.current) return;
+    leaderboardFired.current = true;
+    fetch('/api/leaderboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: profile.displayName,
+        score: totalScore,
+        ...(mode === 'daily' ? { date } : {}),
+      }),
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data) {
+          setSubmitState('done');
+          Promise.all([
+            fetch('/api/leaderboard').then(r => r.ok ? r.json() : []),
+            fetch(`/api/leaderboard?date=${date}`).then(r => r.ok ? r.json() : []),
+          ]).then(([global, daily]) => {
+            setGlobalLeaderboard(global);
+            setDailyLeaderboard(daily);
+          }).catch(() => {});
+        }
+      })
+      .catch(() => {});
+  }, [signedIn, profile?.displayName]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const phishingCaught = results.filter((r) => r.card.isPhishing && r.correct).length;
   const legitCorrect = results.filter((r) => !r.card.isPhishing && r.correct).length;
   const phishingTotal = results.filter((r) => r.card.isPhishing).length;
@@ -256,39 +250,36 @@ export function RoundSummary({ score, total, totalScore, results, mode, date, se
       )}
 
       {/* Leaderboard submission */}
-      <div className="term-border bg-[#060c06]">
-        <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5">
-          <span className="text-[#00aa28] text-xs tracking-widest">SUBMIT_TO_LEADERBOARD</span>
+      {signedIn ? (
+        <div className="term-border bg-[#060c06]">
+          <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5">
+            <span className="text-[#00aa28] text-xs tracking-widest">SUBMIT_TO_LEADERBOARD</span>
+          </div>
+          <div className="px-3 py-3">
+            {submitState === 'done' ? (
+              <div className="text-[#00ff41] text-xs font-mono text-center glow py-1">
+                SCORE LOGGED. GL HF.
+              </div>
+            ) : (
+              <div className="text-[#003a0e] text-[10px] font-mono text-center py-1">
+                SUBMITTING...
+              </div>
+            )}
+          </div>
         </div>
-        <div className="px-3 py-3">
-          {submitState === 'done' ? (
-            <div className="text-[#00ff41] text-xs font-mono text-center glow py-1">
-              SCORE LOGGED. GL HF.
+      ) : (
+        <div className="term-border bg-[#060c06]">
+          <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5">
+            <span className="text-[#00aa28] text-xs tracking-widest">LEADERBOARD_ACCESS</span>
+          </div>
+          <div className="px-3 py-3 space-y-3">
+            <div className="text-[#003a0e] text-[10px] font-mono">
+              SIGN IN TO APPEAR ON FUTURE LEADERBOARDS
             </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="flex gap-2">
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => { setName(e.target.value); setSubmitState('idle'); setErrorMsg(''); }}
-                placeholder="ENTER CALLSIGN"
-                maxLength={20}
-                className="flex-1 bg-transparent border border-[rgba(0,255,65,0.3)] text-[#00ff41] font-mono text-xs px-2 py-1.5 placeholder:text-[#003a0e] focus:outline-none focus:border-[rgba(0,255,65,0.7)]"
-              />
-              <button
-                type="submit"
-                disabled={!name.trim() || submitState === 'loading'}
-                className="px-3 py-1.5 term-border text-[#00ff41] font-mono text-xs tracking-widest hover:bg-[rgba(0,255,65,0.08)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-              >
-                {submitState === 'loading' ? '...' : 'LOG'}
-              </button>
-            </form>
-          )}
-          {submitState === 'error' && (
-            <div className="text-[#ff3333] text-[10px] font-mono mt-1.5">{errorMsg}</div>
-          )}
+            <AuthFlow onSignIn={signInWithEmail} onCancel={() => {}} />
+          </div>
         </div>
-      </div>
+      )}
 
       {(globalLeaderboard.length > 0 || dailyLeaderboard.length > 0) && (
         <div className="term-border bg-[#060c06]">
