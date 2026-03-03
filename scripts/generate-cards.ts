@@ -83,6 +83,8 @@ interface GeneratedCard {
   explanation: string;
   authStatus?: string;
   replyTo?: string;
+  attachmentName?: string;
+  sentAt?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -267,6 +269,7 @@ async function main() {
   const industryArg = getArg('--industry');
   const modelArg = getArg('--model');
   const isDryRun = hasFlag('--dry-run');
+  const forceAttachment = hasFlag('--attachment');
   const count = countArg ? parseInt(countArg, 10) : 20;
 
   // Resolve industry: explicit arg, or pick one at random
@@ -319,9 +322,10 @@ async function main() {
 
   // Build user message
   const industryContext = ` All scenarios in this batch must be set in the ${industry} industry — company names, sender roles, referenced systems, and scenario contexts must reflect that industry specifically.`;
+  const attachmentContext = forceAttachment ? ' Every email in this batch must reference an attached file — the scenario must naturally involve a document, form, invoice, report, or similar attachment that the recipient is expected to open. Set attachmentName accordingly.' : '';
   const userMessage = technique
-    ? `Generate ${count} ${difficulty} difficulty phishing emails using the "${technique}" technique.${industryContext}`
-    : `Generate ${count} legitimate ${category} emails.${industryContext}`;
+    ? `Generate ${count} ${difficulty} difficulty phishing emails using the "${technique}" technique.${industryContext}${attachmentContext}`
+    : `Generate ${count} legitimate ${category} emails.${industryContext}${attachmentContext}`;
 
   // Build generator
   let generator: CardGenerator;
@@ -401,6 +405,8 @@ async function main() {
       suggested_explanation: card.explanation,
       suggested_auth_status: card.authStatus ?? null,
       suggested_reply_to: card.replyTo ?? null,
+      suggested_attachment_name: card.attachmentName ?? null,
+      suggested_sent_at: card.sentAt ?? null,
       ai_provider: generator.provider,
       ai_model: generator.modelId,
       ai_preprocessing_version: GENERATION_VERSION,

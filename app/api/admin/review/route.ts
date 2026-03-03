@@ -76,6 +76,8 @@ export async function POST(req: NextRequest) {
       ai_preprocessing_version: reviewedFields.ai_preprocessing_version,
       auth_status: authStatus,
       reply_to: reviewedFields.reply_to ?? null,
+      attachment_name: reviewedFields.attachment_name ?? null,
+      sent_at: reviewedFields.suggested_sent_at ?? null,
     });
 
     if (realError) return NextResponse.json({ error: realError.message }, { status: 500 });

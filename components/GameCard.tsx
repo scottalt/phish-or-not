@@ -106,6 +106,18 @@ function EmailDisplay({ card, onScroll, onHeadersOpened, onUrlInspected }: {
             <span className="text-[#00ff41] font-mono">{card.subject}</span>
           </div>
         )}
+        {card.sentAt && (
+          <div className="flex gap-2 text-xs">
+            <span className="text-[#00aa28] w-10 shrink-0">SENT:</span>
+            <span className="text-[#00ff41] font-mono text-[10px]">{card.sentAt}</span>
+          </div>
+        )}
+        {card.attachmentName && (
+          <div className="flex gap-2 text-xs">
+            <span className="text-[#00aa28] w-10 shrink-0">ATCH:</span>
+            <span className="text-[#ffaa00] font-mono">📎 {card.attachmentName}</span>
+          </div>
+        )}
       </div>
       {headersOpen && (
         <div className="border-b border-[rgba(0,255,65,0.2)] px-3 py-2 bg-[rgba(0,255,65,0.02)]">
