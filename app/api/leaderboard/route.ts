@@ -39,8 +39,21 @@ export async function GET(req: Request) {
     const member = results[i] as string;
     const score = results[i + 1] as number;
     const parts = member.split(':');
-    const level = parts.length >= 3 ? parseInt(parts[parts.length - 2], 10) || 1 : 1;
-    const name = parts.length >= 3 ? parts.slice(0, parts.length - 2).join(':') : parts[0];
+    let name: string;
+    let level: number;
+    if (parts.length >= 3) {
+      // Legacy format: name:level:timestamp
+      level = parseInt(parts[parts.length - 2], 10) || 1;
+      name = parts.slice(0, parts.length - 2).join(':');
+    } else if (parts.length === 2) {
+      // Current format: name:level
+      const maybeLevel = parseInt(parts[parts.length - 1], 10);
+      level = maybeLevel >= 1 && maybeLevel <= 30 ? maybeLevel : 1;
+      name = parts.slice(0, -1).join(':');
+    } else {
+      level = 1;
+      name = member;
+    }
     entries.push({ name, score, level });
   }
 
@@ -78,7 +91,13 @@ export async function POST(req: Request) {
     }
 
     const safeLevel = typeof level === 'number' && level >= 1 && level <= 30 ? level : 1;
-    const member = `${trimmed}:${safeLevel}:${Date.now()}`;
+    const member = `${trimmed}:${safeLevel}`;
+
+    // Only write if this beats the existing score for this name+level
+    const existing = await redis.zscore(key, member);
+    if (existing !== null && (existing as number) >= score) {
+      return NextResponse.json({ ok: true });
+    }
     await redis.zadd(key, { score, member });
 
     if (date) {
