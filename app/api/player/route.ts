@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { getSupabaseAdminClient } from '@/lib/supabase';
-import type { PlayerProfile } from '@/lib/types';
+import type { PlayerBackground, PlayerProfile } from '@/lib/types';
+
+const VALID_BACKGROUNDS: PlayerBackground[] = ['other', 'technical', 'infosec', 'prefer_not_to_say'];
 
 async function getAuthId(): Promise<string | null> {
   const cookieStore = await cookies();
@@ -31,6 +33,7 @@ function toProfile(row: Record<string, unknown>): PlayerProfile {
     researchSessionsCompleted: row.research_sessions_completed as number,
     researchGraduated: row.research_graduated as boolean,
     personalBestScore: row.personal_best_score as number,
+    background: (row.background as PlayerBackground | null) ?? null,
   };
 }
 
@@ -50,21 +53,34 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(toProfile(data as unknown as Record<string, unknown>));
 }
 
-// POST /api/player — update display_name
+// POST /api/player — update display_name and/or background
 export async function POST(req: NextRequest) {
   const authId = await getAuthId();
   if (!authId) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
   const body = await req.json();
-  const displayName = typeof body.displayName === 'string'
-    ? body.displayName.trim().slice(0, 20)
-    : null;
-  if (!displayName) return NextResponse.json({ error: 'Invalid display_name' }, { status: 400 });
+  const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+
+  if ('displayName' in body) {
+    const displayName = typeof body.displayName === 'string'
+      ? body.displayName.trim().slice(0, 20)
+      : null;
+    if (!displayName) return NextResponse.json({ error: 'Invalid display_name' }, { status: 400 });
+    updates.display_name = displayName;
+  }
+
+  if ('background' in body) {
+    updates.background = VALID_BACKGROUNDS.includes(body.background) ? body.background as PlayerBackground : null;
+  }
+
+  if (Object.keys(updates).length === 1) {
+    return NextResponse.json({ error: 'Nothing to update' }, { status: 400 });
+  }
 
   const admin = getSupabaseAdminClient();
   const { data, error } = await admin
     .from('players')
-    .update({ display_name: displayName, updated_at: new Date().toISOString() })
+    .update(updates)
     .eq('auth_id', authId)
     .select('*')
     .single();

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import type { GameMode } from '@/lib/types';
+import type { GameMode, PlayerBackground } from '@/lib/types';
 import { getRank } from '@/lib/rank';
 import Link from 'next/link';
 import { usePlayer } from '@/lib/usePlayer';
@@ -16,6 +16,13 @@ interface LeaderboardEntry {
 interface Props {
   onStart: (mode: GameMode) => void;
 }
+
+const BACKGROUND_OPTIONS: { value: PlayerBackground; label: string }[] = [
+  { value: 'other',            label: 'OTHER' },
+  { value: 'technical',        label: 'TECHNICAL / NON-SECURITY' },
+  { value: 'infosec',          label: 'INFOSEC / CYBERSECURITY' },
+  { value: 'prefer_not_to_say', label: 'PREFER NOT TO SAY' },
+];
 
 // bright=true → phosphor green + glow (separators, READY line)
 const BOOT_LINES: { text: string; bright: boolean }[] = [
@@ -40,6 +47,7 @@ export function StartScreen({ onStart }: Props) {
   const [callsign, setCallsign] = useState('');
   const [callsignLoading, setCallsignLoading] = useState(false);
   const [callsignError, setCallsignError] = useState('');
+  const [background, setBackground] = useState<PlayerBackground | null>(null);
   const [xpLeaderboard, setXpLeaderboard] = useState<{ display_name: string | null; xp: number; level: number; research_graduated: boolean }[]>([]);
   const [activeTab, setActiveTab] = useState<'score' | 'xp'>('score');
 
@@ -91,7 +99,7 @@ export function StartScreen({ onStart }: Props) {
       const res = await fetch('/api/player', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ displayName: name }),
+        body: JSON.stringify({ displayName: name, background }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -165,6 +173,26 @@ export function StartScreen({ onStart }: Props) {
                         {callsignLoading ? '...' : 'SET'}
                       </button>
                     </form>
+                    <div className="space-y-1.5 pt-1">
+                      <div className="text-[#003a0e] text-[10px] font-mono tracking-wider">BACKGROUND</div>
+                      <div className="text-[#003a0e] text-[9px] font-mono leading-relaxed">Helps us understand how expertise affects detection accuracy. Not stored with any personal information.</div>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {BACKGROUND_OPTIONS.map((opt) => (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => setBackground(background === opt.value ? null : opt.value)}
+                            className={`py-1.5 font-mono text-[9px] tracking-wider transition-all border ${
+                              background === opt.value
+                                ? 'text-[#00ff41] border-[rgba(0,255,65,0.8)] bg-[rgba(0,255,65,0.08)]'
+                                : 'text-[#003a0e] border-[rgba(0,255,65,0.15)] hover:text-[#00aa28] hover:border-[rgba(0,255,65,0.4)]'
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                     {callsignError && <div className="text-[#ff3333] text-[10px] font-mono">{callsignError}</div>}
                   </div>
                 </div>
