@@ -6,6 +6,7 @@ import { GameCard } from './GameCard';
 import { FeedbackCard } from './FeedbackCard';
 import { RoundSummary } from './RoundSummary';
 import { StartScreen } from './StartScreen';
+import { ResearchIntro } from './ResearchIntro';
 import type { Card, Answer, Confidence, RoundResult, GameMode, AnswerEvent, SessionPayload } from '@/lib/types';
 import { useSoundEnabled } from '@/lib/useSoundEnabled';
 import { playCorrect, playWrong, playStreak } from '@/lib/sounds';
@@ -19,7 +20,7 @@ const CONFIDENCE_MULTIPLIER: Record<Confidence, number> = {
 };
 const STREAK_BONUS = 50;
 
-type GamePhase = 'start' | 'playing' | 'feedback' | 'summary' | 'daily_complete' | 'loading';
+type GamePhase = 'start' | 'playing' | 'feedback' | 'summary' | 'daily_complete' | 'loading' | 'research_intro';
 
 export function Game() {
   const [phase, setPhase] = useState<GamePhase>('start');
@@ -98,7 +99,7 @@ export function Game() {
           }
           const shuffled = arr.slice(0, ROUND_SIZE);
           setDeck(shuffled);
-          setPhase('playing');
+          setPhase('research_intro');
         })
         .catch(() => setPhase('start'));
     } else {
@@ -231,6 +232,10 @@ export function Game() {
         <span className="text-[#00aa28] font-mono text-xs tracking-widest">LOADING RESEARCH DATA...</span>
       </div>
     );
+  }
+
+  if (phase === 'research_intro') {
+    return <ResearchIntro onBegin={() => setPhase('playing')} />;
   }
 
   if (phase === 'summary') {
