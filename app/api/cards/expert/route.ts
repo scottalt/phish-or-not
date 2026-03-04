@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { getSupabaseClient } from '@/lib/supabase';
+import { getSupabaseAdminClient } from '@/lib/supabase';
 
 export async function GET() {
-  const supabase = getSupabaseClient();
+  const supabase = getSupabaseAdminClient();
   const { data, error } = await supabase
     .from('cards_real')
     .select('*')

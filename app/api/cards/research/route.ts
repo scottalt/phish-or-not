@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getSupabaseClient } from '@/lib/supabase';
+import { getSupabaseAdminClient } from '@/lib/supabase';
 import type { ResearchCard } from '@/lib/types';
 
 // Serve a stratified deck: 1 random card per phishing technique + LEGIT_PER_ROUND legit cards.
@@ -29,7 +29,7 @@ function shuffle<T>(arr: T[]): T[] {
 
 export async function GET() {
   try {
-    const supabase = getSupabaseClient();
+    const supabase = getSupabaseAdminClient();
     const { data, error } = await supabase.from('cards_real').select('*');
 
     if (error) throw error;
