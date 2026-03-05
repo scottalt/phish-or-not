@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
-const DATASET_TARGET = 550;
+const DATASET_TARGET = 1000;
 
 const TECHNIQUES = [
   'urgency',

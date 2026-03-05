@@ -18,17 +18,17 @@ The game has two modes. **Freeplay** is a standard training mode. **Research Mod
 
 **Study question:** Which phishing techniques are humans most likely to miss when linguistic quality is no longer a reliable detection signal?
 
-**Dataset:** 550 AI-generated cards. 360 phishing across 6 techniques, 190 legitimate. All cards are AI-generated so linguistic quality is held constant as a baseline. Technique is the only independent variable.
+**Dataset:** 1,000 AI-generated cards. 690 phishing across 6 techniques, 310 legitimate. All cards are AI-generated so linguistic quality is held constant as a baseline. Technique is the only independent variable.
 
 **Six phishing techniques, equal volume, controlled difficulty:**
 
 `urgency` · `authority-impersonation` · `credential-harvest` · `hyper-personalization` · `pretexting` · `fluent-prose`
 
-Each technique has 60 cards: 15 easy, 15 medium, 15 hard, 15 extreme. Legitimate cards cover three categories: transactional (70), marketing (60), workplace (60). The dataset is frozen at v1 once 550 approved cards are reached.
+Each technique has 115 cards: 35 easy, 35 medium, 35 hard, 10 extreme. Legitimate cards cover three categories: transactional (110), marketing (100), workplace (100). The dataset is frozen at v1 once 1,000 approved cards are reached.
 
 **Research Mode deck structure:**
 
-Each Research Mode round draws 10 cards at random from the full dataset. With equal card volume per technique (60 each), technique representation balances naturally at scale. This avoids artificial deck constraints and produces a realistic sampling distribution.
+Each Research Mode round draws 10 cards at random from the full dataset. With equal card volume per technique (115 each), technique representation balances naturally at scale. This avoids artificial deck constraints and produces a realistic sampling distribution.
 
 **Data collection:**
 
@@ -111,7 +111,7 @@ Accounts use email OTP, no password. Enter your email, get a 6-digit code, enter
 2. `scripts/generate-batch.sh` generates cards via Claude API and writes to `cards_staging` with `status=pending`
 3. `/admin` review dashboard: approve, reject, or flag for follow-up
 4. Approved cards land in `cards_real` and go live immediately
-5. Dataset freezes at 550 approved cards (v1)
+5. Dataset freezes at 1,000 approved cards (v1)
 
 ---
 
