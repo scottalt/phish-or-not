@@ -201,7 +201,7 @@ export default function ApprovedPage() {
                   <span className={`shrink-0 font-black ${card.is_phishing ? 'text-[#ff3333]' : 'text-[#00ff41]'}`}>
                     {card.is_phishing ? 'PHISH' : 'LEGIT'}
                   </span>
-                  <span className={`shrink-0 w-16 ${difficultyColor[card.difficulty] ?? 'text-[#003a0e]'}`}>
+                  <span className={`shrink-0 w-16 ${card.difficulty ? (difficultyColor[card.difficulty] ?? 'text-[#003a0e]') : 'text-[#003a0e]'}`}>
                     {card.difficulty?.toUpperCase() ?? '—'}
                   </span>
                   <span className="shrink-0 w-36 text-[#00aa28] truncate">
