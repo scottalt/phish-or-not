@@ -278,7 +278,7 @@ export default function ReviewPage() {
               <span className="text-[#002a0a]"> · {AUTO_ROTATION[rotationIdx.current % AUTO_ROTATION.length] ?? 'LEGIT'}</span>
             )}
             {approvedCount !== null && (
-              <span className="text-[#003a0e]"> · {approvedCount}<span className="text-[#002a0a]">/550</span> APPROVED</span>
+              <span className="text-[#003a0e]"> · {approvedCount}<span className="text-[#002a0a]">/1000</span> APPROVED</span>
             )}
           </span>
           <span className="text-[#003a0e]">A=approve · R=reject · N=needs_review</span>

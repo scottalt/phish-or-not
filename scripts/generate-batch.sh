@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Generate all card batches for the 550-card v1 dataset
-# Target: 360 phishing (6 techniques x 3 difficulties x 20) + 190 legit (70+60+60)
+# Generate all card batches for the 1000-card v1 dataset
+# Target: 690 phishing (6 techniques x 4 difficulties x 35/10) + 310 legit (110+100+100)
 # Mix: 3 Haiku + 1 Sonnet per 20-card slot (model diversity, cost-controlled)
 # Assumes staging queue is empty. If cards_real already has approved cards in a
 # category, reduce the corresponding run count below before running.
