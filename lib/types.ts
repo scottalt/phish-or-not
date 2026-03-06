@@ -111,6 +111,7 @@ export interface PlayerProfile {
   level: number;
   totalSessions: number;
   researchSessionsCompleted: number;
+  researchAnswersSubmitted: number;
   researchGraduated: boolean;
   personalBestScore: number;
   background: PlayerBackground | null;
