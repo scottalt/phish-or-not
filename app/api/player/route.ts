@@ -22,7 +22,7 @@ async function getAuthId(): Promise<string | null> {
   return user?.id ?? null;
 }
 
-function toProfile(row: Record<string, unknown>): PlayerProfile {
+function toProfile(row: Record<string, unknown>, researchAnswersSubmitted = 0): PlayerProfile {
   return {
     id: row.id as string,
     authId: row.auth_id as string,
@@ -31,6 +31,7 @@ function toProfile(row: Record<string, unknown>): PlayerProfile {
     level: row.level as number,
     totalSessions: row.total_sessions as number,
     researchSessionsCompleted: row.research_sessions_completed as number,
+    researchAnswersSubmitted,
     researchGraduated: row.research_graduated as boolean,
     personalBestScore: row.personal_best_score as number,
     background: (row.background as PlayerBackground | null) ?? null,
@@ -58,7 +59,15 @@ export async function GET(req: NextRequest) {
       headers: { 'Cache-Control': 'no-store' },
     });
   }
-  return NextResponse.json(toProfile(data as unknown as Record<string, unknown>), {
+
+  const row = data as unknown as Record<string, unknown>;
+  const { count: researchAnswersSubmitted } = await admin
+    .from('answers')
+    .select('*', { count: 'exact', head: true })
+    .eq('player_id', row.id as string)
+    .eq('game_mode', 'research');
+
+  return NextResponse.json(toProfile(row, researchAnswersSubmitted ?? 0), {
     headers: { 'Cache-Control': 'no-store' },
   });
 }

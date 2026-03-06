@@ -356,7 +356,7 @@ export function StartScreen({ onStart }: Props) {
                 )}
                 {isResearch && profile && (
                   <p className="text-[#cc8800] text-[10px] text-center font-mono">
-                    {profile.researchSessionsCompleted * 10} of 30 answers submitted
+                    {profile.researchAnswersSubmitted} of 30 answers submitted
                   </p>
                 )}
               </>
