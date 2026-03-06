@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { RoundResult } from '@/lib/types';
+import type { RoundResult, GameMode } from '@/lib/types';
+import { XP_PER_CORRECT } from '@/lib/xp';
 import { highlightBody } from '@/lib/highlightBody';
 import { parseFrom } from '@/lib/parseFrom';
 
@@ -13,6 +14,7 @@ interface Props {
   questionNumber: number;
   total: number;
   sessionId: string;
+  mode: GameMode;
 }
 
 const CONFIDENCE_LABEL = { guessing: 'GUESSING', likely: 'LIKELY', certain: 'CERTAIN' };
@@ -38,8 +40,10 @@ function parseBodySegments(text: string): BodySegment[] {
   return segments;
 }
 
-export function FeedbackCard({ result, streak, totalScore, onNext, questionNumber, total, sessionId }: Props) {
+export function FeedbackCard({ result, streak, totalScore, onNext, questionNumber, total, sessionId, mode }: Props) {
   const { card, correct, userAnswer, confidence, pointsEarned } = result;
+  const xpMultiplier = mode === 'expert' ? 2 : 1;
+  const xpThisAnswer = correct ? XP_PER_CORRECT * xpMultiplier : 0;
   const wasPhishing = card.isPhishing;
   const streakMilestone = streak > 0 && streak % 3 === 0;
 
@@ -142,6 +146,13 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
             <span className="text-xs font-mono text-[#00aa28]">
               CONFIDENCE: <span className="text-[#00ff41]">{CONFIDENCE_LABEL[confidence]}</span>
               {' '}({CONFIDENCE_MULTI[confidence]})
+            </span>
+            <span className="text-xs font-mono">
+              {xpThisAnswer > 0 ? (
+                <span className="text-[#00ff41]">+{xpThisAnswer} XP</span>
+              ) : (
+                <span className="text-[#003a0e]">+0 XP</span>
+              )}
             </span>
             <span className={`text-sm font-black font-mono ${
               pointsEarned > 0 ? 'text-[#00ff41] glow'

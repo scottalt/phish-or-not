@@ -386,6 +386,7 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
         questionNumber={currentIndex + 1}
         total={ROUND_SIZE}
         sessionId={sessionId.current}
+        mode={mode}
       />
     );
   }
