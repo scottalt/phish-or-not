@@ -79,6 +79,7 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
   const sessionStartedAt = useRef<string>('');
   const [correctCount, setCorrectCount] = useState(0);
   const hasAutoStarted = useRef(false);
+  const isTestMode = useRef(false);
   const [flashClass, setFlashClass] = useState<string | null>(null);
 
   // Auto-start in preview mode — skip the start screen entirely
@@ -137,6 +138,11 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
     setCorrectCount(0);
 
     if (newMode === 'research' || newMode === 'preview') {
+      // Consume test mode flag — skips answer/session logging and forces tutorial
+      if (typeof window !== 'undefined') {
+        isTestMode.current = localStorage.getItem('research_flow_test') === '1';
+        if (isTestMode.current) localStorage.removeItem('research_flow_test');
+      }
       setPhase('loading' as GamePhase);
       fetch('/api/cards/research')
         .then((r) => r.json())
@@ -287,7 +293,7 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
         referrer: document.referrer,
       };
 
-      fetch('/api/answers', {
+      if (!isTestMode.current) fetch('/api/answers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ answer: answerEvent, session: sessionPayload }),
@@ -307,8 +313,8 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
           JSON.stringify({ score: correctCount, totalScore })
         );
       }
-      // Record session completion — fire and forget, skip in preview mode
-      if (typeof window !== 'undefined' && mode !== 'preview') {
+      // Record session completion — fire and forget, skip in preview/test mode
+      if (typeof window !== 'undefined' && mode !== 'preview' && !isTestMode.current) {
         fetch('/api/sessions', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -346,7 +352,7 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
     return (
       <ResearchIntro
         onBegin={() => {
-          const isFirstTime = !profile || (profile.researchAnswersSubmitted ?? 0) === 0;
+          const isFirstTime = isTestMode.current || !profile || (profile.researchAnswersSubmitted ?? 0) === 0;
           setPhase(isFirstTime ? 'tutorial' : 'playing');
         }}
       />
