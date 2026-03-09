@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 interface Stats {
@@ -30,6 +31,7 @@ interface ResearchStats {
 const POLL_INTERVAL = 10000; // 10 seconds
 
 export default function AdminPage() {
+  const router = useRouter();
   const [stats, setStats] = useState<Stats | null>(null);
   const [researchStats, setResearchStats] = useState<ResearchStats | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -242,6 +244,17 @@ export default function AdminPage() {
           >
             [ PREVIEW MODE — NO DATA WRITTEN ]
           </Link>
+          <button
+            type="button"
+            onClick={() => {
+              localStorage.removeItem('research_intro_seen');
+              localStorage.setItem('research_flow_test', '1');
+              router.push('/');
+            }}
+            className="w-full py-3 term-border border-[rgba(255,170,0,0.4)] text-[#ffaa00] font-mono text-xs tracking-widest text-center hover:bg-[rgba(255,170,0,0.05)] active:scale-95 transition-all"
+          >
+            [ TEST RESEARCH FLOW — DISCLAIMER + TUTORIAL, NO DATA WRITTEN ]
+          </button>
         </div>
       </div>
     </div>
