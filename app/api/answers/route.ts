@@ -16,7 +16,11 @@ async function getPlayerId(): Promise<string | null> {
     if (!user) return null;
     const admin = getSupabaseAdminClient();
     const { data } = await admin.from('players').select('id').eq('auth_id', user.id).single();
-    return data?.id ?? null;
+    if (data?.id) return data.id;
+    // Player record doesn't exist yet — create it so answers aren't silently lost
+    await admin.from('players').upsert({ auth_id: user.id }, { onConflict: 'auth_id', ignoreDuplicates: true });
+    const { data: created } = await admin.from('players').select('id').eq('auth_id', user.id).single();
+    return created?.id ?? null;
   } catch {
     return null;
   }
