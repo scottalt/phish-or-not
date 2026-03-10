@@ -103,33 +103,41 @@ export function RoundSummary({ score, total, totalScore, results, mode, date, se
     if (!signedIn || !profile?.displayName || leaderboardFired.current) return;
     leaderboardFired.current = true;
     setSubmitState('loading');
+
+    const payload = {
+      name: profile.displayName,
+      score: totalScore,
+      level: profile.level ?? 1,
+      sessionId,
+      ...(mode === 'daily' ? { date } : {}),
+    };
+
+    const postLeaderboard = () => fetch('/api/leaderboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const refreshBoards = () => Promise.all([
+      fetch('/api/leaderboard').then(r => r.ok ? r.json() : []),
+      fetch(`/api/leaderboard?date=${date}`).then(r => r.ok ? r.json() : []),
+    ]).then(([global, daily]) => {
+      setGlobalLeaderboard(global);
+      setDailyLeaderboard(daily);
+    }).catch(() => {});
+
     // Wait for session finalization so final_score exists in DB before leaderboard validation
     (sessionReady ?? Promise.resolve())
-      .then(() => fetch('/api/leaderboard', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: profile.displayName,
-          score: totalScore,
-          level: profile.level ?? 1,
-          sessionId,
-          ...(mode === 'daily' ? { date } : {}),
-        }),
-      }))
-      .then(r => r.ok ? r.json() : null)
+      .then(() => postLeaderboard())
+      .then(r => {
+        if (r.ok) return r.json();
+        // Retry once after 1.5s — covers slow DB propagation
+        return new Promise<Response>(resolve => setTimeout(() => resolve(postLeaderboard()), 1500))
+          .then(r2 => r2.ok ? r2.json() : null);
+      })
       .then(data => {
-        if (data) {
-          setSubmitState('done');
-          Promise.all([
-            fetch('/api/leaderboard').then(r => r.ok ? r.json() : []),
-            fetch(`/api/leaderboard?date=${date}`).then(r => r.ok ? r.json() : []),
-          ]).then(([global, daily]) => {
-            setGlobalLeaderboard(global);
-            setDailyLeaderboard(daily);
-          }).catch(() => {});
-        } else {
-          setSubmitState('error');
-        }
+        if (data) { setSubmitState('done'); refreshBoards(); }
+        else { setSubmitState('error'); }
       })
       .catch(() => { setSubmitState('error'); });
   }, [signedIn, profile?.displayName]); // eslint-disable-line react-hooks/exhaustive-deps
