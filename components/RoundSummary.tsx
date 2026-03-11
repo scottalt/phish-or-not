@@ -49,9 +49,7 @@ export function RoundSummary({ score, total, totalScore, results, mode, date, se
     }
     requestAnimationFrame(tick);
   }, [totalScore]);
-  const [globalLeaderboard, setGlobalLeaderboard] = useState<{ name: string; score: number; level?: number }[]>([]);
   const [dailyLeaderboard, setDailyLeaderboard] = useState<{ name: string; score: number; level?: number }[]>([]);
-  const [leaderboardTab, setLeaderboardTab] = useState<'daily' | 'global'>('global');
   const [weakPoints, setWeakPoints] = useState<{ technique: string; missRate: number; missed: number; attempts: number }[]>([]);
   const { profile, signedIn, refreshProfile, signInWithEmail, verifyOtp } = usePlayer();
   const rank = profile ? getRankFromLevel(profile.level) : null;
@@ -72,13 +70,10 @@ export function RoundSummary({ score, total, totalScore, results, mode, date, se
   }, [mode, results]);
 
   useEffect(() => {
-    Promise.all([
-      fetch('/api/leaderboard').then((r) => (r.ok ? r.json() : [])),
-      fetch(`/api/leaderboard?date=${date}`).then((r) => (r.ok ? r.json() : [])),
-    ]).then(([global, daily]) => {
-      setGlobalLeaderboard(global);
-      setDailyLeaderboard(daily);
-    }).catch(() => {});
+    fetch(`/api/leaderboard?date=${date}`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then(setDailyLeaderboard)
+      .catch(() => {});
   }, [date]);
 
   const correctCount = results.filter(r => r.correct).length;
@@ -118,13 +113,10 @@ export function RoundSummary({ score, total, totalScore, results, mode, date, se
       body: JSON.stringify(payload),
     });
 
-    const refreshBoards = () => Promise.all([
-      fetch('/api/leaderboard').then(r => r.ok ? r.json() : []),
-      fetch(`/api/leaderboard?date=${date}`).then(r => r.ok ? r.json() : []),
-    ]).then(([global, daily]) => {
-      setGlobalLeaderboard(global);
-      setDailyLeaderboard(daily);
-    }).catch(() => {});
+    const refreshBoards = () => fetch(`/api/leaderboard?date=${date}`)
+      .then(r => r.ok ? r.json() : [])
+      .then(setDailyLeaderboard)
+      .catch(() => {});
 
     // Wait for session finalization so final_score exists in DB before leaderboard validation
     (sessionReady ?? Promise.resolve())
@@ -321,49 +313,27 @@ export function RoundSummary({ score, total, totalScore, results, mode, date, se
         </div>
       )}
 
-      {(globalLeaderboard.length > 0 || dailyLeaderboard.length > 0) && (
+      {dailyLeaderboard.length > 0 && (
         <div className="term-border bg-[#060c06]">
-          <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5 flex items-center justify-between">
-            <span className="text-[#00aa28] text-sm tracking-widest">LEADERBOARD</span>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setLeaderboardTab('global')}
-                className={`text-sm font-mono px-2 py-0.5 transition-colors ${leaderboardTab === 'global' ? 'text-[#00ff41] border border-[rgba(0,255,65,0.4)]' : 'text-[#003a0e] hover:text-[#00aa28]'}`}
-              >
-                GLOBAL
-              </button>
-              <button
-                onClick={() => setLeaderboardTab('daily')}
-                className={`text-sm font-mono px-2 py-0.5 transition-colors ${leaderboardTab === 'daily' ? 'text-[#00ff41] border border-[rgba(0,255,65,0.4)]' : 'text-[#003a0e] hover:text-[#00aa28]'}`}
-              >
-                DAILY
-              </button>
-            </div>
+          <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5">
+            <span className="text-[#00aa28] text-sm tracking-widest">DAILY_LEADERBOARD</span>
           </div>
-          {(() => {
-            const entries = leaderboardTab === 'daily' ? dailyLeaderboard : globalLeaderboard;
-            if (entries.length === 0) return (
-              <div className="px-3 py-4 text-center text-[#003a0e] text-sm font-mono">NO DATA YET</div>
-            );
-            return (
-              <div className="divide-y divide-[rgba(0,255,65,0.08)]">
-                {entries.slice(0, 10).map((entry, i) => (
-                  <div key={i} className="flex items-center gap-3 px-3 py-1.5">
-                    <span className={`text-sm font-mono w-4 shrink-0 ${i === 0 ? 'text-[#ffaa00]' : 'text-[#003a0e]'}`}>
-                      {i + 1}
-                    </span>
-                    <span className="text-[#00aa28] text-sm font-mono flex-1 truncate">{entry.name}</span>
-                    {(() => { const r = getRankFromLevel(entry.level ?? 1); return (
-                      <span className={`text-sm font-mono shrink-0 ${r.glowClass}`} style={{ color: r.color }}>
-                        {r.label}
-                      </span>
-                    ); })()}
-                    <span className="text-[#00ff41] text-sm font-mono font-bold glow">{entry.score}</span>
-                  </div>
-                ))}
+          <div className="divide-y divide-[rgba(0,255,65,0.08)]">
+            {dailyLeaderboard.slice(0, 10).map((entry, i) => (
+              <div key={i} className="flex items-center gap-3 px-3 py-1.5">
+                <span className={`text-sm font-mono w-4 shrink-0 ${i === 0 ? 'text-[#ffaa00]' : 'text-[#003a0e]'}`}>
+                  {i + 1}
+                </span>
+                <span className="text-[#00aa28] text-sm font-mono flex-1 truncate">{entry.name}</span>
+                {(() => { const r = getRankFromLevel(entry.level ?? 1); return (
+                  <span className={`text-sm font-mono shrink-0 ${r.glowClass}`} style={{ color: r.color }}>
+                    {r.label}
+                  </span>
+                ); })()}
+                <span className="text-[#00ff41] text-sm font-mono font-bold glow">{entry.score}</span>
               </div>
-            );
-          })()}
+            ))}
+          </div>
         </div>
       )}
 
