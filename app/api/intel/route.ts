@@ -47,7 +47,7 @@ export async function GET() {
 
     const { data: answers } = await supabase
       .from('answers')
-      .select('correct, technique, is_phishing, is_genai_suspected, genai_confidence, prose_fluency, grammar_quality, confidence, time_from_render_ms, difficulty, type, card_source, headers_opened, url_inspected, auth_status, has_reply_to, has_url, players!player_id(background)')
+      .select('correct, technique, is_phishing, is_genai_suspected, genai_confidence, prose_fluency, grammar_quality, confidence, time_from_render_ms, difficulty, type, card_source, headers_opened, url_inspected, auth_status, has_reply_to, has_url, player_id, players!player_id(background)')
       .eq('game_mode', 'research');
 
     if (!answers || answers.length === 0) {
@@ -55,6 +55,7 @@ export async function GET() {
     }
 
     const total = answers.length;
+    const uniqueParticipants = new Set(answers.map((a) => a.player_id).filter(Boolean)).size;
     const phishingAnswers = answers.filter((a) => a.is_phishing);
     const legitAnswers = answers.filter((a) => !a.is_phishing);
     // Bypass rate = phishing cards that were missed (user said legit)
@@ -172,6 +173,7 @@ export async function GET() {
 
     return NextResponse.json({
       totalAnswers: total,
+      uniqueParticipants,
       phishingAnswers: phishingAnswers.length,
       legitAnswers: legitAnswers.length,
       overallBypassRate,

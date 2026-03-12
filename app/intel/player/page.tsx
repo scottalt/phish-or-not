@@ -7,25 +7,9 @@ import { useEffect, useState } from 'react';
 
 interface IntelData {
   totalAnswers: number;
-  phishingAnswers: number;
-  legitAnswers: number;
+  uniqueParticipants?: number;
   overallBypassRate: number;
-  falsePositiveRate: number;
-  byTechnique: { technique: string; total: number; bypassRate: number }[];
-  byConfidence: { confidence: string; total: number; accuracyRate: number }[];
   byBackground?: { background: string; total: number; accuracyRate: number }[];
-  toolUsage?: {
-    headersOpenedPct: number;
-    urlInspectedPct: number;
-    headersOpenedAccuracy: number | null;
-    headersNotOpenedAccuracy: number | null;
-    urlInspectedAccuracy: number | null;
-    urlNotInspectedAccuracy: number | null;
-    headersOpenedSample: number;
-    urlInspectedSample: number;
-  };
-  authTrap?: { bypassRate: number | null; sample: number };
-  medianTimeByTechnique?: { technique: string; medianMs: number; sample: number }[];
 }
 
 function StatBlock({ label, value, sub, highlight }: { label: string; value: string; sub?: string; highlight?: 'red' | 'amber' }) {
@@ -149,138 +133,26 @@ function IntelContent({ data, isAdmin }: { data: IntelData; isAdmin: boolean }) 
         </div>
 
         {/* Hero stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatBlock label="TOTAL ANSWERS" value={data.totalAnswers.toLocaleString()} />
-          <StatBlock label="PHISHING" value={data.phishingAnswers.toLocaleString()} sub="answers" />
+        <div className="grid grid-cols-3 gap-3">
+          <StatBlock label="PARTICIPANTS" value={data.uniqueParticipants?.toLocaleString() ?? '—'} sub="unique analysts" />
+          <StatBlock label="ANSWERS" value={data.totalAnswers.toLocaleString()} sub="total submitted" />
           <StatBlock label="BYPASS RATE" value={`${data.overallBypassRate}%`} sub="phishing missed" highlight={data.overallBypassRate >= 40 ? 'red' : undefined} />
-          <StatBlock label="FALSE POSITIVE" value={`${data.falsePositiveRate}%`} sub="legit flagged" highlight={data.falsePositiveRate >= 20 ? 'amber' : undefined} />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Bypass by technique */}
-          {data.byTechnique.length > 0 && (
-            <div className="term-border bg-[#060c06]">
-              <SectionHeader title="BYPASS RATE BY TECHNIQUE" />
-              <div className="divide-y divide-[rgba(0,255,65,0.08)]">
-                {data.byTechnique.map(({ technique, bypassRate, total }) => (
-                  <BarRow key={technique} label={technique} sub={`n=${total}`} value={`${bypassRate}%`} pct={bypassRate} color="#ff3333" />
-                ))}
-              </div>
+        {/* Accuracy by background */}
+        {data.byBackground && data.byBackground.length > 0 && (
+          <div className="term-border bg-[#060c06]">
+            <SectionHeader title="BYPASS RATE BY BACKGROUND" />
+            <div className="divide-y divide-[rgba(0,255,65,0.08)]">
+              {data.byBackground.map(({ background, accuracyRate, total }) => (
+                <BarRow key={background} label={BACKGROUND_LABELS[background] ?? background} sub={`n=${total}`} value={`${accuracyRate}%`} pct={accuracyRate} color="#00ff41" />
+              ))}
             </div>
-          )}
-
-          {/* Confidence calibration */}
-          {data.byConfidence.some((c) => c.total > 0) && (
-            <div className="term-border bg-[#060c06]">
-              <SectionHeader title="CONFIDENCE CALIBRATION" />
-              <div className="divide-y divide-[rgba(0,255,65,0.08)]">
-                {data.byConfidence.map(({ confidence, accuracyRate, total }) => (
-                  <BarRow key={confidence} label={confidence.toUpperCase()} sub={`n=${total}`} value={`${accuracyRate}%`} pct={accuracyRate} color="#00ff41" />
-                ))}
-              </div>
-              <div className="px-3 py-2 text-[#003a0e] text-sm font-mono">
-                Are players who bet CERTAIN actually more accurate?
-              </div>
+            <div className="px-3 py-2 text-[#003a0e] text-sm font-mono">
+              Does security background correlate with phishing detection accuracy?
             </div>
-          )}
-
-          {/* Accuracy by background */}
-          {data.byBackground && data.byBackground.length > 0 && (
-            <div className="term-border bg-[#060c06]">
-              <SectionHeader title="ACCURACY BY BACKGROUND" />
-              <div className="divide-y divide-[rgba(0,255,65,0.08)]">
-                {data.byBackground.map(({ background, accuracyRate, total }) => (
-                  <BarRow key={background} label={BACKGROUND_LABELS[background] ?? background} sub={`n=${total}`} value={`${accuracyRate}%`} pct={accuracyRate} color="#00ff41" />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Tool usage */}
-          {data.toolUsage && data.toolUsage.headersOpenedSample >= 10 && (
-            <div className="term-border bg-[#060c06]">
-              <SectionHeader title="TOOL USAGE CORRELATION" />
-              <div className="px-3 py-3 space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="term-border px-2 py-2 text-center">
-                    <div className="text-[#00ff41] text-lg font-mono font-bold glow-soft">{data.toolUsage.headersOpenedPct}%</div>
-                    <div className="text-[#00aa28] text-sm font-mono mt-0.5">opened [HEADERS]</div>
-                  </div>
-                  <div className="term-border px-2 py-2 text-center">
-                    <div className="text-[#00ff41] text-lg font-mono font-bold glow-soft">{data.toolUsage.urlInspectedPct}%</div>
-                    <div className="text-[#00aa28] text-sm font-mono mt-0.5">inspected URLs</div>
-                  </div>
-                </div>
-                {data.toolUsage.headersOpenedAccuracy !== null && data.toolUsage.headersNotOpenedAccuracy !== null && (
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-sm font-mono">
-                      <span className="text-[#00aa28]">accuracy w/ headers</span>
-                      <span className="text-[#00ff41] glow-soft">{data.toolUsage.headersOpenedAccuracy}%</span>
-                    </div>
-                    <div className="flex justify-between text-sm font-mono">
-                      <span className="text-[#00aa28]">accuracy w/o headers</span>
-                      <span className="text-[#ffaa00]">{data.toolUsage.headersNotOpenedAccuracy}%</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Auth trap */}
-          {data.authTrap && data.authTrap.sample >= 10 && data.authTrap.bypassRate !== null && (
-            <div className="term-border bg-[#060c06]">
-              <div className="border-b border-[rgba(255,51,51,0.35)] px-3 py-1.5">
-                <span className="text-[#ff3333] text-sm tracking-widest glow-red-soft">AUTH_TRAP_FINDING</span>
-              </div>
-              <div className="px-3 py-3">
-                <div className="text-center mb-2">
-                  <div className="text-[#ff3333] text-2xl font-mono font-bold glow-red-soft">{data.authTrap.bypassRate}%</div>
-                  <div className="text-[#00aa28] text-sm font-mono mt-0.5">of players fooled</div>
-                  <div className="text-[#003a0e] text-sm font-mono">n={data.authTrap.sample}</div>
-                </div>
-                <p className="text-[#00aa28] text-sm font-mono leading-relaxed">
-                  Phishing emails with fully passing auth headers (SPF, DKIM, DMARC all PASS) — the attacker set up valid DNS on a lookalike domain. {data.authTrap.bypassRate}% of players trusted the green checkmarks.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Decision time */}
-          {data.medianTimeByTechnique && data.medianTimeByTechnique.length > 0 && (
-            <div className="term-border bg-[#060c06]">
-              <SectionHeader title="MEDIAN DECISION TIME" />
-              <div className="px-3 py-3 space-y-2">
-                {(() => {
-                  const maxMs = Math.max(...data.medianTimeByTechnique!.map((t) => t.medianMs));
-                  return data.medianTimeByTechnique!.map(({ technique, medianMs, sample }) => (
-                    <div key={technique} className="space-y-0.5">
-                      <div className="flex justify-between text-sm font-mono">
-                        <span className="text-[#00aa28] truncate">{technique}</span>
-                        <span className="text-[#00ff41] shrink-0 ml-2">{(medianMs / 1000).toFixed(1)}s <span className="text-[#003a0e]">n={sample}</span></span>
-                      </div>
-                      <div className="h-1 bg-[#003a0e] w-full">
-                        <div className="h-full bg-[#00aa28]" style={{ width: `${Math.round((medianMs / maxMs) * 100)}%` }} />
-                      </div>
-                    </div>
-                  ));
-                })()}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Methodology */}
-        <div className="term-border bg-[#060c06] px-3 py-3 text-sm font-mono text-[#003a0e] space-y-1 leading-relaxed">
-          <div className="text-[#00aa28]">METHODOLOGY</div>
-          <div>Research Mode only. Anonymous, voluntary. Text-based recognition task. Self-selected sample. All cards AI-generated (Claude Haiku + Sonnet). Sample sizes shown as n=.</div>
-          <div className="mt-2">
-            Full methodology:{' '}
-            <Link href="/methodology" className="text-[#00aa28] hover:underline">
-              retro-phish.scottaltiparmak.com/methodology
-            </Link>
           </div>
-        </div>
+        )}
 
         <Link
           href="/"
