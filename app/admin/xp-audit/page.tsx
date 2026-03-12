@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from 'react';
 import Link from 'next/link';
-import { getLevelFromXp } from '@/lib/xp';
 
 // ── Types ──────────────────────────────────────────────────────────
 
@@ -18,6 +17,9 @@ interface FlaggedPlayer {
   displayName: string | null;
   currentXp: number;
   currentLevel: number;
+  projectedXp: number;
+  projectedLevel: number;
+  alreadyCorrected: boolean;
   legitimateXp: number;
   suspiciousXp: number;
   totalSessionsInWindow: number;
@@ -206,7 +208,8 @@ export default function XpAuditPage() {
   // ── Render ─────────────────────────────────────────────────────
 
   const selectedPlayers = data?.flaggedPlayers.filter(p => selected.has(p.playerId)) ?? [];
-  const totalSuspiciousXp = selectedPlayers.reduce((sum, p) => sum + p.suspiciousXp, 0);
+  const totalXpToRemove = selectedPlayers.reduce((sum, p) => sum + Math.max(0, p.currentXp - p.projectedXp), 0);
+  const uncorrectedPlayers = selectedPlayers.filter(p => !p.alreadyCorrected);
 
   return (
     <div className="min-h-screen bg-[#060c06] p-4">
@@ -333,9 +336,15 @@ export default function XpAuditPage() {
                           <span className="text-[#ffaa00] font-black shrink-0">
                             {player.currentXp} XP
                           </span>
-                          <span className="text-[#ff3333] font-black shrink-0 ml-auto">
-                            ~{player.suspiciousXp} sus
-                          </span>
+                          {player.alreadyCorrected ? (
+                            <span className="text-[#00ff41] font-black shrink-0 ml-auto">
+                              CORRECTED
+                            </span>
+                          ) : (
+                            <span className="text-[#ff3333] font-black shrink-0 ml-auto">
+                              &rarr;{player.projectedXp} XP
+                            </span>
+                          )}
                           <span className="text-[#003a0e] shrink-0">
                             {player.suspiciousSessionCount} rapid
                           </span>
@@ -367,12 +376,19 @@ export default function XpAuditPage() {
                               <span className="text-[#ffaa00] font-bold">{player.currentLevel}</span>
                             </div>
                             <div>
-                              <span className="text-[#003a0e]">LEGITIMATE XP: </span>
-                              <span className="text-[#00ff41] font-bold">{player.legitimateXp}</span>
+                              <span className="text-[#003a0e]">PROJECTED XP: </span>
+                              <span className={`font-bold ${player.alreadyCorrected ? 'text-[#00ff41]' : 'text-[#ff3333]'}`}>
+                                {player.projectedXp}
+                              </span>
+                              {player.alreadyCorrected && (
+                                <span className="text-[#00ff41] text-[9px] ml-1">ALREADY CORRECTED</span>
+                              )}
                             </div>
                             <div>
-                              <span className="text-[#003a0e]">SUSPICIOUS XP: </span>
-                              <span className="text-[#ff3333] font-bold">{player.suspiciousXp}</span>
+                              <span className="text-[#003a0e]">PROJECTED LEVEL: </span>
+                              <span className={`font-bold ${player.alreadyCorrected ? 'text-[#00ff41]' : 'text-[#ff3333]'}`}>
+                                {player.projectedLevel}
+                              </span>
                             </div>
                             <div>
                               <span className="text-[#003a0e]">TOTAL SESSIONS: </span>
@@ -452,13 +468,19 @@ export default function XpAuditPage() {
             <div className="px-3 py-3 space-y-3">
               <div className="text-xs font-mono text-[#00aa28] space-y-1">
                 <p>You are about to recalculate XP for <span className="text-[#ffaa00] font-bold">{selected.size}</span> player{selected.size > 1 ? 's' : ''}.</p>
-                <p>Estimated suspicious XP to remove: <span className="text-[#ff3333] font-bold">{totalSuspiciousXp} XP</span></p>
+                {totalXpToRemove > 0 ? (
+                  <p>Total XP to remove: <span className="text-[#ff3333] font-bold">{totalXpToRemove} XP</span></p>
+                ) : (
+                  <p className="text-[#00ff41]">All selected players are already at or below projected XP.</p>
+                )}
+                {uncorrectedPlayers.length < selectedPlayers.length && (
+                  <p className="text-[#ffaa00]">{selectedPlayers.length - uncorrectedPlayers.length} player{selectedPlayers.length - uncorrectedPlayers.length > 1 ? 's' : ''} already corrected (no change).</p>
+                )}
                 <p className="text-[#003a0e] mt-2">Sessions with gaps under {minGap} minutes from the previous session will be dropped. Research sessions are never affected.</p>
               </div>
               <div className="space-y-1.5 max-h-60 overflow-y-auto">
                 {selectedPlayers.map(p => {
-                  const estNewXp = Math.max(0, p.currentXp - p.suspiciousXp);
-                  const estNewLevel = getLevelFromXp(estNewXp);
+                  const diff = p.projectedXp - p.currentXp;
                   return (
                     <div key={p.playerId} className="space-y-0.5">
                       <div className="flex items-center gap-2 text-xs font-mono">
@@ -466,12 +488,18 @@ export default function XpAuditPage() {
                         <span className="text-[#003a0e]">Lv{p.currentLevel}</span>
                         <span className="text-[#ffaa00]">{p.currentXp} XP</span>
                       </div>
-                      <div className="flex items-center gap-2 text-xs font-mono pl-2">
-                        <span className="text-[#003a0e]">&rarr;</span>
-                        <span className="text-[#ff3333] font-bold">Lv{estNewLevel}</span>
-                        <span className="text-[#ff3333] font-bold">{estNewXp} XP</span>
-                        <span className="text-[#ff3333] text-[10px]">(-{p.suspiciousXp})</span>
-                      </div>
+                      {p.alreadyCorrected ? (
+                        <div className="flex items-center gap-2 text-xs font-mono pl-2">
+                          <span className="text-[#00ff41] text-[10px]">ALREADY CORRECTED — no change</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-xs font-mono pl-2">
+                          <span className="text-[#003a0e]">&rarr;</span>
+                          <span className="text-[#ff3333] font-bold">Lv{p.projectedLevel}</span>
+                          <span className="text-[#ff3333] font-bold">{p.projectedXp} XP</span>
+                          <span className="text-[#ff3333] text-[10px]">({diff >= 0 ? '+' : ''}{diff})</span>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
