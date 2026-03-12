@@ -135,8 +135,11 @@ export async function GET(req: NextRequest) {
       displayName: string | null;
       currentXp: number;
       currentLevel: number;
+      projectedXp: number;
+      projectedLevel: number;
       legitimateXp: number;
       suspiciousXp: number;
+      alreadyCorrected: boolean;
       totalSessionsInWindow: number;
       suspiciousSessionCount: number;
       fastestGapSeconds: number;
@@ -193,6 +196,9 @@ export async function GET(req: NextRequest) {
           displayName: null,
           currentXp: 0,
           currentLevel: 0,
+          projectedXp: 0,
+          projectedLevel: 0,
+          alreadyCorrected: false,
           legitimateXp,
           suspiciousXp,
           totalSessionsInWindow: sessions.length,
@@ -203,7 +209,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Fetch player details for flagged players
+    // Fetch player details + compute projected XP (same logic as DELETE)
     if (flaggedPlayerIds.length > 0) {
       const { data: players } = await supabase
         .from('players')
@@ -217,6 +223,71 @@ export async function GET(req: NextRequest) {
           detail.currentXp = pl.xp;
           detail.currentLevel = pl.level;
         }
+      }
+
+      // For each flagged player, compute what DELETE would produce
+      // (fetches ALL their answers, not just the scan window)
+      for (const playerId of flaggedPlayerIds) {
+        const detail = flaggedDetails.get(playerId);
+        if (!detail) continue;
+
+        type AllAnswerRow = { session_id: string; correct: boolean; game_mode: string; created_at: string };
+        const allAnswers: AllAnswerRow[] = [];
+        let allOffset = 0;
+        while (true) {
+          const { data: aData, error: aErr } = await supabase
+            .from('answers')
+            .select('session_id, correct, game_mode, created_at')
+            .eq('player_id', playerId)
+            .in('game_mode', ['freeplay', 'expert', 'research'])
+            .range(allOffset, allOffset + PAGE_SIZE - 1);
+          if (aErr) break;
+          if (!aData || aData.length === 0) break;
+          allAnswers.push(...(aData as AllAnswerRow[]));
+          if (aData.length < PAGE_SIZE) break;
+          allOffset += PAGE_SIZE;
+        }
+
+        // Group by session
+        type SessGroup = { correct: number; total: number; mode: string; earliestAt: string };
+        const sessGroups = new Map<string, SessGroup>();
+        for (const a of allAnswers) {
+          if (!sessGroups.has(a.session_id)) {
+            sessGroups.set(a.session_id, { correct: 0, total: 0, mode: a.game_mode, earliestAt: a.created_at });
+          }
+          const g = sessGroups.get(a.session_id)!;
+          g.total++;
+          if (a.correct) g.correct++;
+          if (a.created_at < g.earliestAt) g.earliestAt = a.created_at;
+        }
+
+        // Research: always kept
+        let projXp = 0;
+        for (const [, g] of sessGroups) {
+          if (g.mode === 'research') {
+            projXp += getXpForRound(g.correct, g.total || 10, g.mode);
+          }
+        }
+
+        // Freeplay/expert: velocity filter
+        const fpExpAll = [...sessGroups.values()]
+          .filter(g => g.mode !== 'research')
+          .sort((a, b) => a.earliestAt.localeCompare(b.earliestAt));
+
+        const projClassified = classifySessions(
+          fpExpAll.map(s => ({ ...s, createdAt: s.earliestAt })),
+          minGapMs,
+        );
+        for (let i = 0; i < projClassified.length; i++) {
+          if (!projClassified[i].suspicious) {
+            const s = fpExpAll[i];
+            projXp += getXpForRound(s.correct, s.total || 10, s.mode);
+          }
+        }
+
+        detail.projectedXp = projXp;
+        detail.projectedLevel = getLevelFromXp(projXp);
+        detail.alreadyCorrected = detail.currentXp <= projXp;
       }
     }
 
