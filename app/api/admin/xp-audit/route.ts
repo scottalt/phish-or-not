@@ -290,3 +290,47 @@ export async function DELETE(req: NextRequest) {
 
   return NextResponse.json({ results });
 }
+
+/**
+ * POST /api/admin/xp-audit
+ *
+ * Undo: restores previous XP/level values for players.
+ * Body: { restorations: { playerId: string; xp: number; level: number }[] }
+ */
+export async function POST(req: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
+  const body = await req.json();
+  const restorations: { playerId: string; xp: number; level: number }[] =
+    Array.isArray(body.restorations) ? body.restorations : [];
+
+  if (restorations.length === 0) {
+    return NextResponse.json({ error: 'restorations required' }, { status: 400 });
+  }
+  if (restorations.length > 20) {
+    return NextResponse.json({ error: 'Max 20 players per request' }, { status: 400 });
+  }
+
+  const supabase = getSupabaseAdminClient();
+  const results: { playerId: string; restoredXp: number; restoredLevel: number }[] = [];
+
+  for (const r of restorations) {
+    if (typeof r.xp !== 'number' || typeof r.level !== 'number') continue;
+
+    const { error } = await supabase
+      .from('players')
+      .update({
+        xp: r.xp,
+        level: r.level,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', r.playerId);
+
+    if (!error) {
+      results.push({ playerId: r.playerId, restoredXp: r.xp, restoredLevel: r.level });
+    }
+  }
+
+  return NextResponse.json({ results });
+}
