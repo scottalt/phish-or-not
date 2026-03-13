@@ -3,7 +3,13 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.TEST_SUPABASE_URL!;
 const serviceKey = process.env.TEST_SUPABASE_SERVICE_KEY!;
 
-const admin = createClient(supabaseUrl, serviceKey, {
+// Auth client — used for admin auth ops (verifyOtp taints the session, so keep it separate)
+const authAdmin = createClient(supabaseUrl, serviceKey, {
+  auth: { autoRefreshToken: false, persistSession: false },
+});
+
+// Data client — always uses service_role key, never tainted by user sessions
+const dataAdmin = createClient(supabaseUrl, serviceKey, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
@@ -23,11 +29,11 @@ interface TestUser {
  */
 export async function ensureTestUser(email: string): Promise<TestUser> {
   // Try to find existing user
-  const { data: { users } } = await admin.auth.admin.listUsers();
+  const { data: { users } } = await authAdmin.auth.admin.listUsers();
   let user = users.find((u) => u.email === email);
 
   if (!user) {
-    const { data, error } = await admin.auth.admin.createUser({
+    const { data, error } = await authAdmin.auth.admin.createUser({
       email,
       email_confirm: true,
     });
@@ -36,7 +42,7 @@ export async function ensureTestUser(email: string): Promise<TestUser> {
   }
 
   // Generate a session for this user
-  const { data: linkData, error: sessionErr } = await admin.auth.admin.generateLink({
+  const { data: linkData, error: sessionErr } = await authAdmin.auth.admin.generateLink({
     type: 'magiclink',
     email,
   });
@@ -44,8 +50,8 @@ export async function ensureTestUser(email: string): Promise<TestUser> {
     throw new Error(`Failed to generate session for ${email}: ${sessionErr?.message ?? 'no hashed_token returned'}`);
   }
 
-  // Exchange the link token for a session
-  const { data: tokenData, error: tokenErr } = await admin.auth.verifyOtp({
+  // Exchange the link token for a session (use authAdmin — this taints the client's session)
+  const { data: tokenData, error: tokenErr } = await authAdmin.auth.verifyOtp({
     token_hash: linkData.properties.hashed_token,
     type: 'magiclink',
   });
@@ -66,7 +72,7 @@ export async function ensureTestUser(email: string): Promise<TestUser> {
  * Idempotent — safe to call multiple times.
  */
 export async function seedGraduatedUser(authId: string): Promise<void> {
-  const { data: player } = await admin
+  const { data: player } = await dataAdmin
     .from('players')
     .select('id, research_graduated')
     .eq('auth_id', authId)
@@ -75,7 +81,7 @@ export async function seedGraduatedUser(authId: string): Promise<void> {
   let playerId: string;
 
   if (!player) {
-    const { data: newPlayer, error } = await admin
+    const { data: newPlayer, error } = await dataAdmin
       .from('players')
       .insert({ auth_id: authId, research_graduated: true, xp: 3000, level: 5 })
       .select('id')
@@ -85,12 +91,12 @@ export async function seedGraduatedUser(authId: string): Promise<void> {
   } else {
     playerId = player.id;
     if (!player.research_graduated) {
-      await admin.from('players').update({ research_graduated: true }).eq('id', playerId);
+      await dataAdmin.from('players').update({ research_graduated: true }).eq('id', playerId);
     }
   }
 
   // Check if already has 30+ research answers
-  const { count } = await admin
+  const { count } = await dataAdmin
     .from('answers')
     .select('id', { count: 'exact', head: true })
     .eq('player_id', playerId)
@@ -99,7 +105,7 @@ export async function seedGraduatedUser(authId: string): Promise<void> {
   if ((count ?? 0) >= 30) return;
 
   // Get card IDs not already answered by this player (avoids dedup constraint)
-  const { data: existingAnswers } = await admin
+  const { data: existingAnswers } = await dataAdmin
     .from('answers')
     .select('card_id')
     .eq('player_id', playerId)
@@ -108,7 +114,7 @@ export async function seedGraduatedUser(authId: string): Promise<void> {
   const answeredCardIds = new Set((existingAnswers ?? []).map((a) => a.card_id));
   const needed = 30 - (count ?? 0);
 
-  const { data: cards } = await admin
+  const { data: cards } = await dataAdmin
     .from('cards_real')
     .select('card_id, is_phishing, difficulty, type, technique')
     .limit(needed + 10);
@@ -121,7 +127,7 @@ export async function seedGraduatedUser(authId: string): Promise<void> {
   }
 
   const sessionId = crypto.randomUUID();
-  await admin.from('sessions').insert({
+  await dataAdmin.from('sessions').insert({
     session_id: sessionId,
     game_mode: 'research',
     cards_answered: needed,
@@ -144,6 +150,6 @@ export async function seedGraduatedUser(authId: string): Promise<void> {
     answer_ordinal: (i % 10) + 1,
   }));
 
-  const { error: insertErr } = await admin.from('answers').insert(answers);
+  const { error: insertErr } = await dataAdmin.from('answers').insert(answers);
   if (insertErr) throw new Error(`Failed to seed answers: ${insertErr.message}`);
 }
