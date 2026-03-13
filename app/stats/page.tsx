@@ -123,11 +123,11 @@ export default function StatsPage() {
 
   return (
     <main className="min-h-screen bg-[#020902] flex items-start justify-center px-4 py-8">
-      <div className="w-full max-w-sm space-y-4">
+      <div className="w-full max-w-sm lg:max-w-4xl space-y-4 lg:space-y-6">
         {/* Header */}
         <div className="term-border bg-[#060c06]">
           <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5 flex items-center justify-between">
-            <span className="text-[#33bb55] text-sm tracking-widest">OPERATOR_STATS</span>
+            <span className="text-[#33bb55] text-sm lg:text-base tracking-widest">OPERATOR_STATS</span>
             <Link href="/" className="text-[#33bb55] text-sm font-mono hover:text-[#00ff41]">← TERMINAL</Link>
           </div>
 
@@ -160,120 +160,129 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* By difficulty */}
-        <div className="term-border bg-[#060c06]">
-          <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5">
-            <span className="text-[#33bb55] text-sm tracking-widest">ACCURACY_BY_DIFFICULTY</span>
-          </div>
-          <div className="divide-y divide-[rgba(0,255,65,0.08)]">
-            {DIFFICULTY_ORDER.map(d => {
-              const data = stats.byDifficulty[d];
-              if (!data || data.total < 3) return null;
-              const pct = Math.round((data.correct / data.total) * 100);
-              const color = pct >= 80 ? '#00ff41' : pct >= 60 ? '#ffaa00' : '#ff3333';
-              return (
-                <div key={d} className="px-3 py-2.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[#33bb55] text-sm font-mono tracking-wider">{d.toUpperCase()}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[#1a5c2a] text-sm font-mono">{data.correct}/{data.total}</span>
-                      <span className="text-sm font-mono font-bold" style={{ color }}>{pct}%</span>
-                    </div>
-                  </div>
-                  <AccuracyBar pct={pct} color={color} />
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Confidence calibration */}
-        <div className="term-border bg-[#060c06]">
-          <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5">
-            <span className="text-[#33bb55] text-sm tracking-widest">CONFIDENCE_CALIBRATION</span>
-          </div>
-          <div className="divide-y divide-[rgba(0,255,65,0.08)]">
-            {CONFIDENCE_ORDER.map(c => {
-              const data = stats.byConfidence[c];
-              if (!data || data.total < 3) return null;
-              const pct = Math.round((data.correct / data.total) * 100);
-              const color = c === 'certain' ? (pct >= 90 ? '#00ff41' : '#ff3333')
-                : c === 'likely' ? (pct >= 70 ? '#00ff41' : '#ffaa00')
-                : '#33bb55';
-              return (
-                <div key={c} className="px-3 py-2.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[#33bb55] text-sm font-mono tracking-wider">{c.toUpperCase()}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[#1a5c2a] text-sm font-mono">{data.correct}/{data.total}</span>
-                      <span className="text-sm font-mono font-bold" style={{ color }}>{pct}%</span>
-                    </div>
-                  </div>
-                  <AccuracyBar pct={pct} color={color} />
-                </div>
-              );
-            })}
-          </div>
-          <div className="px-3 py-2 text-sm font-mono text-[#1a5c2a]">
-            CERTAIN should be 90%+. If not, recalibrate.
-          </div>
-        </div>
-
-        {/* Tool usage */}
-        <div className="term-border bg-[#060c06]">
-          <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5">
-            <span className="text-[#33bb55] text-sm tracking-widest">TOOL_USAGE</span>
-          </div>
-          <div className="divide-y divide-[rgba(0,255,65,0.08)]">
-            <div className="px-3 py-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[#33bb55] text-sm font-mono tracking-wider">HEADERS CHECKED</span>
-                <span className="text-sm font-mono font-bold text-[#00ff41]">{stats.headersRate}%</span>
+        {/* Two-column layout on desktop */}
+        <div className="lg:grid lg:grid-cols-2 lg:gap-4 space-y-4 lg:space-y-0">
+          {/* Left column */}
+          <div className="space-y-4">
+            {/* By game mode */}
+            <div className="term-border bg-[#060c06]">
+              <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5">
+                <span className="text-[#33bb55] text-sm lg:text-base tracking-widest">BY_GAME_MODE</span>
               </div>
-              <AccuracyBar pct={stats.headersRate} color="#33bb55" />
+              <div className="divide-y divide-[rgba(0,255,65,0.08)]">
+                {Object.entries(stats.byMode).map(([mode, data]) => {
+                  const pct = Math.round((data.correct / data.total) * 100);
+                  const color = pct >= 80 ? '#00ff41' : pct >= 60 ? '#ffaa00' : '#ff3333';
+                  return (
+                    <div key={mode} className="px-3 py-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[#33bb55] text-sm lg:text-base font-mono tracking-wider">{MODE_LABELS[mode] ?? mode.toUpperCase()}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#1a5c2a] text-sm lg:text-base font-mono">{data.total} answers</span>
+                          <span className="text-sm lg:text-base font-mono font-bold" style={{ color }}>{pct}%</span>
+                        </div>
+                      </div>
+                      <AccuracyBar pct={pct} color={color} />
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-            <div className="px-3 py-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[#33bb55] text-sm font-mono tracking-wider">URLS INSPECTED</span>
-                <span className="text-sm font-mono font-bold text-[#00ff41]">{stats.urlRate}%</span>
+
+            {/* Tool usage */}
+            <div className="term-border bg-[#060c06]">
+              <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5">
+                <span className="text-[#33bb55] text-sm lg:text-base tracking-widest">TOOL_USAGE</span>
               </div>
-              <AccuracyBar pct={stats.urlRate} color="#33bb55" />
+              <div className="divide-y divide-[rgba(0,255,65,0.08)]">
+                <div className="px-3 py-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#33bb55] text-sm lg:text-base font-mono tracking-wider">HEADERS CHECKED</span>
+                    <span className="text-sm lg:text-base font-mono font-bold text-[#00ff41]">{stats.headersRate}%</span>
+                  </div>
+                  <AccuracyBar pct={stats.headersRate} color="#33bb55" />
+                </div>
+                <div className="px-3 py-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#33bb55] text-sm lg:text-base font-mono tracking-wider">URLS INSPECTED</span>
+                    <span className="text-sm lg:text-base font-mono font-bold text-[#00ff41]">{stats.urlRate}%</span>
+                  </div>
+                  <AccuracyBar pct={stats.urlRate} color="#33bb55" />
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* By game mode */}
-        <div className="term-border bg-[#060c06]">
-          <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5">
-            <span className="text-[#33bb55] text-sm tracking-widest">BY_GAME_MODE</span>
-          </div>
-          <div className="divide-y divide-[rgba(0,255,65,0.08)]">
-            {Object.entries(stats.byMode).map(([mode, data]) => {
-              const pct = Math.round((data.correct / data.total) * 100);
-              const color = pct >= 80 ? '#00ff41' : pct >= 60 ? '#ffaa00' : '#ff3333';
-              return (
-                <div key={mode} className="px-3 py-2.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[#33bb55] text-sm font-mono tracking-wider">{MODE_LABELS[mode] ?? mode.toUpperCase()}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[#1a5c2a] text-sm font-mono">{data.total} answers</span>
-                      <span className="text-sm font-mono font-bold" style={{ color }}>{pct}%</span>
+          {/* Right column */}
+          <div className="space-y-4">
+            {/* By difficulty */}
+            <div className="term-border bg-[#060c06]">
+              <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5">
+                <span className="text-[#33bb55] text-sm lg:text-base tracking-widest">ACCURACY_BY_DIFFICULTY</span>
+              </div>
+              <div className="divide-y divide-[rgba(0,255,65,0.08)]">
+                {DIFFICULTY_ORDER.map(d => {
+                  const data = stats.byDifficulty[d];
+                  if (!data || data.total < 3) return null;
+                  const pct = Math.round((data.correct / data.total) * 100);
+                  const color = pct >= 80 ? '#00ff41' : pct >= 60 ? '#ffaa00' : '#ff3333';
+                  return (
+                    <div key={d} className="px-3 py-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[#33bb55] text-sm lg:text-base font-mono tracking-wider">{d.toUpperCase()}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#1a5c2a] text-sm lg:text-base font-mono">{data.correct}/{data.total}</span>
+                          <span className="text-sm lg:text-base font-mono font-bold" style={{ color }}>{pct}%</span>
+                        </div>
+                      </div>
+                      <AccuracyBar pct={pct} color={color} />
                     </div>
-                  </div>
-                  <AccuracyBar pct={pct} color={color} />
-                </div>
-              );
-            })}
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Confidence calibration */}
+            <div className="term-border bg-[#060c06]">
+              <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5">
+                <span className="text-[#33bb55] text-sm lg:text-base tracking-widest">CONFIDENCE_CALIBRATION</span>
+              </div>
+              <div className="divide-y divide-[rgba(0,255,65,0.08)]">
+                {CONFIDENCE_ORDER.map(c => {
+                  const data = stats.byConfidence[c];
+                  if (!data || data.total < 3) return null;
+                  const pct = Math.round((data.correct / data.total) * 100);
+                  const color = c === 'certain' ? (pct >= 90 ? '#00ff41' : '#ff3333')
+                    : c === 'likely' ? (pct >= 70 ? '#00ff41' : '#ffaa00')
+                    : '#33bb55';
+                  return (
+                    <div key={c} className="px-3 py-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[#33bb55] text-sm lg:text-base font-mono tracking-wider">{c.toUpperCase()}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#1a5c2a] text-sm lg:text-base font-mono">{data.correct}/{data.total}</span>
+                          <span className="text-sm lg:text-base font-mono font-bold" style={{ color }}>{pct}%</span>
+                        </div>
+                      </div>
+                      <AccuracyBar pct={pct} color={color} />
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="px-3 py-2 text-sm lg:text-base font-mono text-[#1a5c2a]">
+                CERTAIN should be 90%+. If not, recalibrate.
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Activity heatmap */}
         <div className="term-border bg-[#060c06]">
           <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5">
-            <span className="text-[#33bb55] text-sm tracking-widest">ACTIVITY_14D</span>
+            <span className="text-[#33bb55] text-sm lg:text-base tracking-widest">ACTIVITY_14D</span>
           </div>
           <div className="px-3 py-3">
-            <div className="flex gap-1 items-end h-12">
+            <div className="flex gap-1 items-end h-12 lg:h-16">
               {Object.entries(stats.activity).map(([date, count]) => {
                 const height = count > 0 ? Math.max(15, (count / maxActivity) * 100) : 4;
                 const opacity = count > 0 ? 0.3 + (count / maxActivity) * 0.7 : 0.08;
