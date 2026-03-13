@@ -116,4 +116,6 @@ export interface PlayerProfile {
   personalBestScore: number;
   background: PlayerBackground | null;
   achievements?: string[];
+  currentStreak: number;
+  longestStreak: number;
 }
