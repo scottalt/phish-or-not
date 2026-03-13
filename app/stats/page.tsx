@@ -56,7 +56,7 @@ export default function StatsPage() {
   if (loading) {
     return (
       <main className="min-h-screen bg-[#020902] flex items-center justify-center px-4">
-        <span className="text-[#00aa28] text-sm font-mono">LOADING...</span>
+        <span className="text-[#33bb55] text-sm font-mono">LOADING...</span>
       </main>
     );
   }
@@ -65,7 +65,7 @@ export default function StatsPage() {
     return (
       <main className="min-h-screen bg-[#020902] flex items-center justify-center px-4">
         <div className="w-full max-w-sm term-border bg-[#060c06] px-4 py-6 text-center space-y-3">
-          <div className="text-[#00aa28] text-sm font-mono tracking-widest">NOT_AUTHENTICATED</div>
+          <div className="text-[#33bb55] text-sm font-mono tracking-widest">NOT_AUTHENTICATED</div>
           <Link href="/" className="block text-[#00ff41] text-sm font-mono hover:underline">← BACK TO TERMINAL</Link>
         </div>
       </main>
@@ -77,7 +77,7 @@ export default function StatsPage() {
       <main className="min-h-screen bg-[#020902] flex items-center justify-center px-4">
         <div className="w-full max-w-sm term-border bg-[#060c06] px-4 py-6 text-center space-y-3">
           <div className="text-[#ffaa00] text-sm font-mono tracking-widest">STATS_LOCKED</div>
-          <div className="text-[#003a0e] text-sm font-mono">Complete 30 research answers to unlock your personal stats.</div>
+          <div className="text-[#1a5c2a] text-sm font-mono">Complete 30 research answers to unlock your personal stats.</div>
           <Link href="/" className="block text-[#00ff41] text-sm font-mono hover:underline">← BACK TO TERMINAL</Link>
         </div>
       </main>
@@ -99,8 +99,8 @@ export default function StatsPage() {
     return (
       <main className="min-h-screen bg-[#020902] flex items-center justify-center px-4">
         <div className="w-full max-w-sm term-border bg-[#060c06] px-4 py-6 text-center space-y-3">
-          <div className="text-[#00aa28] text-sm font-mono tracking-widest">NO_DATA</div>
-          <div className="text-[#003a0e] text-sm font-mono">Play some rounds in Freeplay, Daily, or Expert to see your stats.</div>
+          <div className="text-[#33bb55] text-sm font-mono tracking-widest">NO_DATA</div>
+          <div className="text-[#1a5c2a] text-sm font-mono">Play some rounds in Freeplay, Daily, or Expert to see your stats.</div>
           <Link href="/" className="block text-[#00ff41] text-sm font-mono hover:underline">← BACK TO TERMINAL</Link>
         </div>
       </main>
@@ -110,7 +110,7 @@ export default function StatsPage() {
   if (!stats) {
     return (
       <main className="min-h-screen bg-[#020902] flex items-center justify-center px-4">
-        <span className="text-[#00aa28] text-sm font-mono">LOADING...</span>
+        <span className="text-[#33bb55] text-sm font-mono">LOADING...</span>
       </main>
     );
   }
@@ -127,23 +127,23 @@ export default function StatsPage() {
         {/* Header */}
         <div className="term-border bg-[#060c06]">
           <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5 flex items-center justify-between">
-            <span className="text-[#00aa28] text-sm tracking-widest">OPERATOR_STATS</span>
-            <Link href="/" className="text-[#00aa28] text-sm font-mono hover:text-[#00ff41]">← TERMINAL</Link>
+            <span className="text-[#33bb55] text-sm tracking-widest">OPERATOR_STATS</span>
+            <Link href="/" className="text-[#33bb55] text-sm font-mono hover:text-[#00ff41]">← TERMINAL</Link>
           </div>
 
           {/* Core stats */}
           <div className="grid grid-cols-3 divide-x divide-[rgba(0,255,65,0.1)]">
             <div className="px-3 py-4 text-center">
               <div className="text-2xl font-black font-mono text-[#00ff41]">{stats.overallAccuracy}%</div>
-              <div className="text-sm font-mono text-[#003a0e] mt-1">ACCURACY</div>
+              <div className="text-sm font-mono text-[#1a5c2a] mt-1">ACCURACY</div>
             </div>
             <div className="px-3 py-4 text-center">
               <div className="text-2xl font-black font-mono text-[#00ff41]">{stats.totalAnswers}</div>
-              <div className="text-sm font-mono text-[#003a0e] mt-1">ANALYZED</div>
+              <div className="text-sm font-mono text-[#1a5c2a] mt-1">ANALYZED</div>
             </div>
             <div className="px-3 py-4 text-center">
               <div className="text-2xl font-black font-mono text-[#00ff41]">{avgTimeSec ?? '—'}s</div>
-              <div className="text-sm font-mono text-[#003a0e] mt-1">AVG TIME</div>
+              <div className="text-sm font-mono text-[#1a5c2a] mt-1">AVG TIME</div>
             </div>
           </div>
         </div>
@@ -152,18 +152,18 @@ export default function StatsPage() {
         <div className="grid grid-cols-2 gap-3">
           <div className="term-border bg-[#060c06] border-[rgba(255,51,51,0.3)] text-center px-3 py-3">
             <div className="text-[#ff3333] text-2xl font-black font-mono">{stats.phishingCatchRate ?? '—'}%</div>
-            <div className="text-sm font-mono text-[#00aa28] mt-1 tracking-wider">THREATS CAUGHT</div>
+            <div className="text-sm font-mono text-[#33bb55] mt-1 tracking-wider">THREATS CAUGHT</div>
           </div>
           <div className="term-border bg-[#060c06] border-[rgba(0,255,65,0.3)] text-center px-3 py-3">
             <div className="text-[#00ff41] text-2xl font-black font-mono">{stats.legitAccuracy ?? '—'}%</div>
-            <div className="text-sm font-mono text-[#00aa28] mt-1 tracking-wider">LEGIT CLEARED</div>
+            <div className="text-sm font-mono text-[#33bb55] mt-1 tracking-wider">LEGIT CLEARED</div>
           </div>
         </div>
 
         {/* By difficulty */}
         <div className="term-border bg-[#060c06]">
           <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5">
-            <span className="text-[#00aa28] text-sm tracking-widest">ACCURACY_BY_DIFFICULTY</span>
+            <span className="text-[#33bb55] text-sm tracking-widest">ACCURACY_BY_DIFFICULTY</span>
           </div>
           <div className="divide-y divide-[rgba(0,255,65,0.08)]">
             {DIFFICULTY_ORDER.map(d => {
@@ -174,9 +174,9 @@ export default function StatsPage() {
               return (
                 <div key={d} className="px-3 py-2.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-[#00aa28] text-sm font-mono tracking-wider">{d.toUpperCase()}</span>
+                    <span className="text-[#33bb55] text-sm font-mono tracking-wider">{d.toUpperCase()}</span>
                     <div className="flex items-center gap-2">
-                      <span className="text-[#003a0e] text-sm font-mono">{data.correct}/{data.total}</span>
+                      <span className="text-[#1a5c2a] text-sm font-mono">{data.correct}/{data.total}</span>
                       <span className="text-sm font-mono font-bold" style={{ color }}>{pct}%</span>
                     </div>
                   </div>
@@ -190,7 +190,7 @@ export default function StatsPage() {
         {/* Confidence calibration */}
         <div className="term-border bg-[#060c06]">
           <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5">
-            <span className="text-[#00aa28] text-sm tracking-widest">CONFIDENCE_CALIBRATION</span>
+            <span className="text-[#33bb55] text-sm tracking-widest">CONFIDENCE_CALIBRATION</span>
           </div>
           <div className="divide-y divide-[rgba(0,255,65,0.08)]">
             {CONFIDENCE_ORDER.map(c => {
@@ -199,13 +199,13 @@ export default function StatsPage() {
               const pct = Math.round((data.correct / data.total) * 100);
               const color = c === 'certain' ? (pct >= 90 ? '#00ff41' : '#ff3333')
                 : c === 'likely' ? (pct >= 70 ? '#00ff41' : '#ffaa00')
-                : '#00aa28';
+                : '#33bb55';
               return (
                 <div key={c} className="px-3 py-2.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-[#00aa28] text-sm font-mono tracking-wider">{c.toUpperCase()}</span>
+                    <span className="text-[#33bb55] text-sm font-mono tracking-wider">{c.toUpperCase()}</span>
                     <div className="flex items-center gap-2">
-                      <span className="text-[#003a0e] text-sm font-mono">{data.correct}/{data.total}</span>
+                      <span className="text-[#1a5c2a] text-sm font-mono">{data.correct}/{data.total}</span>
                       <span className="text-sm font-mono font-bold" style={{ color }}>{pct}%</span>
                     </div>
                   </div>
@@ -214,7 +214,7 @@ export default function StatsPage() {
               );
             })}
           </div>
-          <div className="px-3 py-2 text-sm font-mono text-[#003a0e]">
+          <div className="px-3 py-2 text-sm font-mono text-[#1a5c2a]">
             CERTAIN should be 90%+. If not, recalibrate.
           </div>
         </div>
@@ -222,22 +222,22 @@ export default function StatsPage() {
         {/* Tool usage */}
         <div className="term-border bg-[#060c06]">
           <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5">
-            <span className="text-[#00aa28] text-sm tracking-widest">TOOL_USAGE</span>
+            <span className="text-[#33bb55] text-sm tracking-widest">TOOL_USAGE</span>
           </div>
           <div className="divide-y divide-[rgba(0,255,65,0.08)]">
             <div className="px-3 py-2.5">
               <div className="flex items-center justify-between">
-                <span className="text-[#00aa28] text-sm font-mono tracking-wider">HEADERS CHECKED</span>
+                <span className="text-[#33bb55] text-sm font-mono tracking-wider">HEADERS CHECKED</span>
                 <span className="text-sm font-mono font-bold text-[#00ff41]">{stats.headersRate}%</span>
               </div>
-              <AccuracyBar pct={stats.headersRate} color="#00aa28" />
+              <AccuracyBar pct={stats.headersRate} color="#33bb55" />
             </div>
             <div className="px-3 py-2.5">
               <div className="flex items-center justify-between">
-                <span className="text-[#00aa28] text-sm font-mono tracking-wider">URLS INSPECTED</span>
+                <span className="text-[#33bb55] text-sm font-mono tracking-wider">URLS INSPECTED</span>
                 <span className="text-sm font-mono font-bold text-[#00ff41]">{stats.urlRate}%</span>
               </div>
-              <AccuracyBar pct={stats.urlRate} color="#00aa28" />
+              <AccuracyBar pct={stats.urlRate} color="#33bb55" />
             </div>
           </div>
         </div>
@@ -245,7 +245,7 @@ export default function StatsPage() {
         {/* By game mode */}
         <div className="term-border bg-[#060c06]">
           <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5">
-            <span className="text-[#00aa28] text-sm tracking-widest">BY_GAME_MODE</span>
+            <span className="text-[#33bb55] text-sm tracking-widest">BY_GAME_MODE</span>
           </div>
           <div className="divide-y divide-[rgba(0,255,65,0.08)]">
             {Object.entries(stats.byMode).map(([mode, data]) => {
@@ -254,9 +254,9 @@ export default function StatsPage() {
               return (
                 <div key={mode} className="px-3 py-2.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-[#00aa28] text-sm font-mono tracking-wider">{MODE_LABELS[mode] ?? mode.toUpperCase()}</span>
+                    <span className="text-[#33bb55] text-sm font-mono tracking-wider">{MODE_LABELS[mode] ?? mode.toUpperCase()}</span>
                     <div className="flex items-center gap-2">
-                      <span className="text-[#003a0e] text-sm font-mono">{data.total} answers</span>
+                      <span className="text-[#1a5c2a] text-sm font-mono">{data.total} answers</span>
                       <span className="text-sm font-mono font-bold" style={{ color }}>{pct}%</span>
                     </div>
                   </div>
@@ -270,7 +270,7 @@ export default function StatsPage() {
         {/* Activity heatmap */}
         <div className="term-border bg-[#060c06]">
           <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5">
-            <span className="text-[#00aa28] text-sm tracking-widest">ACTIVITY_14D</span>
+            <span className="text-[#33bb55] text-sm tracking-widest">ACTIVITY_14D</span>
           </div>
           <div className="px-3 py-3">
             <div className="flex gap-1 items-end h-12">
@@ -292,8 +292,8 @@ export default function StatsPage() {
               })}
             </div>
             <div className="flex justify-between mt-1.5">
-              <span className="text-[#003a0e] text-xs font-mono">{Object.keys(stats.activity)[0]?.slice(5)}</span>
-              <span className="text-[#003a0e] text-xs font-mono">TODAY</span>
+              <span className="text-[#1a5c2a] text-xs font-mono">{Object.keys(stats.activity)[0]?.slice(5)}</span>
+              <span className="text-[#1a5c2a] text-xs font-mono">TODAY</span>
             </div>
           </div>
         </div>

@@ -96,7 +96,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <main className="min-h-screen bg-[#020902] flex items-center justify-center px-4">
-        <span className="text-[#00aa28] text-sm font-mono">LOADING...</span>
+        <span className="text-[#33bb55] text-sm font-mono">LOADING...</span>
       </main>
     );
   }
@@ -106,8 +106,8 @@ export default function ProfilePage() {
       <main className="min-h-screen bg-[#020902] flex items-center justify-center px-4">
         <div className="w-full max-w-sm space-y-4">
           <div className="term-border bg-[#060c06] px-4 py-6 text-center space-y-3">
-            <div className="text-[#00aa28] text-sm font-mono tracking-widest">NOT_AUTHENTICATED</div>
-            <div className="text-[#00aa28] text-sm font-mono opacity-70">Sign in to view your profile.</div>
+            <div className="text-[#33bb55] text-sm font-mono tracking-widest">NOT_AUTHENTICATED</div>
+            <div className="text-[#33bb55] text-sm font-mono opacity-70">Sign in to view your profile.</div>
             <Link href="/" className="block text-[#00ff41] text-sm font-mono hover:underline">
               ← BACK TO TERMINAL
             </Link>
@@ -182,22 +182,22 @@ export default function ProfilePage() {
       <div className="w-full max-w-sm space-y-4">
         <div className="term-border bg-[#060c06]">
           <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5 flex items-center justify-between">
-            <span className="text-[#00aa28] text-sm tracking-widest">OPERATOR_PROFILE</span>
-            <Link href="/" className="text-[#00aa28] text-sm font-mono hover:text-[#00ff41]">← TERMINAL</Link>
+            <span className="text-[#33bb55] text-sm tracking-widest">OPERATOR_PROFILE</span>
+            <Link href="/" className="text-[#33bb55] text-sm font-mono hover:text-[#00ff41]">← TERMINAL</Link>
           </div>
 
           <div className="divide-y divide-[rgba(0,255,65,0.08)]">
             {/* CALLSIGN row — editable */}
             <div className="px-3 py-2 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[#00aa28] text-sm font-mono tracking-wider">CALLSIGN</span>
+                <span className="text-[#33bb55] text-sm font-mono tracking-wider">CALLSIGN</span>
                 {!editingCallsign ? (
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-mono font-bold text-[#00ff41]">{profile.displayName ?? '—'}</span>
                     <button
                       type="button"
                       onClick={() => { setCallsignValue(profile.displayName ?? ''); setCallsignError(''); setEditingCallsign(true); }}
-                      className="text-[#00aa28] text-sm font-mono hover:text-[#00ff41] transition-colors"
+                      className="text-[#33bb55] text-sm font-mono hover:text-[#00ff41] transition-colors"
                     >
                       [EDIT]
                     </button>
@@ -206,7 +206,7 @@ export default function ProfilePage() {
                   <button
                     type="button"
                     onClick={() => setEditingCallsign(false)}
-                    className="text-[#00aa28] text-sm font-mono hover:text-[#00ff41] transition-colors"
+                    className="text-[#33bb55] text-sm font-mono hover:text-[#00ff41] transition-colors"
                   >
                     [CANCEL]
                   </button>
@@ -242,7 +242,7 @@ export default function ProfilePage() {
             {/* BACKGROUND row — editable */}
             <div className="px-3 py-2 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[#00aa28] text-sm font-mono tracking-wider">BACKGROUND</span>
+                <span className="text-[#33bb55] text-sm font-mono tracking-wider">BACKGROUND</span>
                 {!editingBackground ? (
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-mono font-bold text-[#00ff41]">
@@ -250,7 +250,7 @@ export default function ProfilePage() {
                     </span>
                     <button
                       onClick={() => setEditingBackground(true)}
-                      className="text-[#00aa28] text-sm font-mono hover:text-[#00ff41] transition-colors"
+                      className="text-[#33bb55] text-sm font-mono hover:text-[#00ff41] transition-colors"
                     >
                       [EDIT]
                     </button>
@@ -258,7 +258,7 @@ export default function ProfilePage() {
                 ) : (
                   <button
                     onClick={() => setEditingBackground(false)}
-                    className="text-[#00aa28] text-sm font-mono hover:text-[#00ff41] transition-colors"
+                    className="text-[#33bb55] text-sm font-mono hover:text-[#00ff41] transition-colors"
                   >
                     [CANCEL]
                   </button>
@@ -275,7 +275,7 @@ export default function ProfilePage() {
                       className={`py-1.5 font-mono text-sm tracking-wider transition-all border disabled:opacity-40 ${
                         profile.background === opt.value
                           ? 'text-[#00ff41] border-[rgba(0,255,65,0.8)] bg-[rgba(0,255,65,0.08)]'
-                          : 'text-[#00aa28] border-[rgba(0,255,65,0.35)] hover:text-[#00ff41] hover:border-[rgba(0,255,65,0.5)]'
+                          : 'text-[#33bb55] border-[rgba(0,255,65,0.35)] hover:text-[#00ff41] hover:border-[rgba(0,255,65,0.5)]'
                       }`}
                     >
                       {backgroundSaving ? '...' : opt.label}
@@ -287,7 +287,7 @@ export default function ProfilePage() {
 
             {bottomRows.map(({ label, value }) => (
               <div key={label} className="flex items-center justify-between px-3 py-2">
-                <span className="text-[#00aa28] text-sm font-mono tracking-wider">{label}</span>
+                <span className="text-[#33bb55] text-sm font-mono tracking-wider">{label}</span>
                 <span className={`text-sm font-mono font-bold ${
                   label === 'GRADUATION' && profile.researchGraduated
                     ? 'text-[#ffaa00]'
@@ -307,7 +307,7 @@ export default function ProfilePage() {
         {/* Rank ladder */}
         <div className="term-border bg-[#060c06]">
           <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5">
-            <span className="text-[#00aa28] text-sm tracking-widest">RANK_PROGRESSION</span>
+            <span className="text-[#33bb55] text-sm tracking-widest">RANK_PROGRESSION</span>
           </div>
           <div className="divide-y divide-[rgba(0,255,65,0.08)]">
             {RANKS.map((rank) => {
@@ -324,7 +324,7 @@ export default function ProfilePage() {
                       {rank.label}
                     </span>
                   </div>
-                  <span className="text-[#00aa28] text-sm font-mono opacity-60">LVL {rank.levels}</span>
+                  <span className="text-[#33bb55] text-sm font-mono opacity-60">LVL {rank.levels}</span>
                 </div>
               );
             })}
@@ -334,8 +334,8 @@ export default function ProfilePage() {
         {/* Achievements */}
         <div className="term-border bg-[#060c06]">
           <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5 flex items-center justify-between">
-            <span className="text-[#00aa28] text-sm tracking-widest">ACHIEVEMENTS</span>
-            <span className="text-[#00aa28] text-sm font-mono">
+            <span className="text-[#33bb55] text-sm tracking-widest">ACHIEVEMENTS</span>
+            <span className="text-[#33bb55] text-sm font-mono">
               {profile.achievements?.length ?? 0}/{ACHIEVEMENTS.length}
             </span>
           </div>
@@ -345,12 +345,12 @@ export default function ProfilePage() {
               return (
                 <div key={cat}>
                   <div className="px-3 py-1.5 bg-[rgba(0,255,65,0.02)]">
-                    <span className="text-[#003a0e] text-sm font-mono tracking-widest">{CATEGORY_LABELS[cat]}</span>
+                    <span className="text-[#1a5c2a] text-sm font-mono tracking-widest">{CATEGORY_LABELS[cat]}</span>
                   </div>
                   <div className="grid grid-cols-2 gap-px bg-[rgba(0,255,65,0.04)]">
                     {catAchievements.map((a) => {
                       const unlocked = profile.achievements?.includes(a.id) ?? false;
-                      const color = unlocked ? RARITY_COLORS[a.rarity] : '#003a0e';
+                      const color = unlocked ? RARITY_COLORS[a.rarity] : '#1a5c2a';
                       return (
                         <div
                           key={a.id}
@@ -362,7 +362,7 @@ export default function ProfilePage() {
                               {a.name}
                             </span>
                           </div>
-                          <div className="text-sm font-mono mt-0.5" style={{ color: unlocked ? '#00aa28' : '#003a0e' }}>
+                          <div className="text-sm font-mono mt-0.5" style={{ color: unlocked ? '#33bb55' : '#1a5c2a' }}>
                             {unlocked ? a.description : '[LOCKED]'}
                           </div>
                         </div>
