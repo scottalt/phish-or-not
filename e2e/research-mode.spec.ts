@@ -4,6 +4,31 @@ import { injectSession } from './helpers/auth';
 
 const supabaseUrl = process.env.TEST_SUPABASE_URL!;
 
+/**
+ * Helper: complete the research tutorial mini-game.
+ * Tutorial shows: confidence → answer → "GOT IT — START RESEARCH"
+ */
+async function completeTutorialIfShown(page: import('@playwright/test').Page) {
+  // Check for the TRAINING_SIMULATION banner (unique to tutorial)
+  const trainingBanner = page.getByText('TRAINING_SIMULATION');
+  if (!(await trainingBanner.isVisible({ timeout: 5_000 }).catch(() => false))) return;
+
+  // Select confidence
+  const confidence = page.getByRole('button', { name: /certain|likely|guessing/i }).first();
+  await expect(confidence).toBeVisible({ timeout: 3_000 });
+  await confidence.click();
+
+  // Answer the tutorial card
+  const phishing = page.getByRole('button', { name: /phishing/i });
+  await expect(phishing).toBeVisible({ timeout: 3_000 });
+  await phishing.click();
+
+  // Complete tutorial
+  const gotIt = page.getByRole('button', { name: /got it/i });
+  await expect(gotIt).toBeVisible({ timeout: 3_000 });
+  await gotIt.click();
+}
+
 test.describe('Research Mode', () => {
   let freshUser: Awaited<ReturnType<typeof ensureTestUser>>;
 
@@ -26,41 +51,26 @@ test.describe('Research Mode', () => {
     );
     await researchButton.click();
 
-    // Research intro screen (first time) — click "BEGIN RESEARCH"
+    // Research intro screen — click "BEGIN RESEARCH"
     const beginButton = page.getByRole('button', { name: /begin/i });
     if (await beginButton.isVisible({ timeout: 5_000 }).catch(() => false)) {
       await beginButton.click();
     }
 
-    // Tutorial screen (first time research player) — must complete the mini-game:
-    // 1. Select confidence, 2. Click answer, 3. Click "GOT IT"
-    const tutorialConfidence = page.getByRole('button', { name: /certain|likely|guessing/i }).first();
-    if (await tutorialConfidence.isVisible({ timeout: 5_000 }).catch(() => false)) {
-      await tutorialConfidence.click();
-
-      // Answer the tutorial card
-      const tutorialPhishing = page.getByRole('button', { name: /phishing/i });
-      await expect(tutorialPhishing).toBeVisible({ timeout: 3_000 });
-      await tutorialPhishing.click();
-
-      // Complete tutorial
-      const gotItButton = page.getByRole('button', { name: /got it/i });
-      await expect(gotItButton).toBeVisible({ timeout: 3_000 });
-      await gotItButton.click();
-    }
+    // Complete tutorial if shown (first-time user)
+    await completeTutorialIfShown(page);
 
     // Wait for cards response
     await cardsResponse;
 
     // Now on the actual game card — select confidence first
     const confidenceButton = page.getByRole('button', { name: /certain|likely|guessing/i }).first();
-    await expect(confidenceButton).toBeVisible({ timeout: 10_000 });
+    await expect(confidenceButton).toBeVisible({ timeout: 15_000 });
     await confidenceButton.click();
 
     // Now phishing/legit buttons appear
     const phishingButton = page.getByRole('button', { name: /phishing/i });
-    const legitButton = page.getByRole('button', { name: /legit/i });
-    await expect(phishingButton.or(legitButton)).toBeVisible({ timeout: 5_000 });
+    await expect(phishingButton).toBeVisible({ timeout: 5_000 });
 
     // Set up check listener BEFORE clicking
     const checkResponse = page.waitForResponse(
@@ -80,7 +90,7 @@ test.describe('Research Mode', () => {
     expect(checkData).toHaveProperty('explanation');
 
     // Feedback screen should be visible
-    await expect(page.getByText(/correct|incorrect/i)).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText(/neutralized|cleared|breach|false positive/i)).toBeVisible({ timeout: 10_000 });
 
     // Click next to proceed (force click to bypass animation stability check)
     const nextButton = page.getByRole('button', { name: /next/i });
@@ -118,22 +128,13 @@ test.describe('Research Mode', () => {
     }
 
     // Complete tutorial if shown
-    const tutorialConfidence = page.getByRole('button', { name: /certain|likely|guessing/i }).first();
-    if (await tutorialConfidence.isVisible({ timeout: 5_000 }).catch(() => false)) {
-      await tutorialConfidence.click();
-      const tutorialPhishing = page.getByRole('button', { name: /phishing/i });
-      await expect(tutorialPhishing).toBeVisible({ timeout: 3_000 });
-      await tutorialPhishing.click();
-      const gotItButton = page.getByRole('button', { name: /got it/i });
-      await expect(gotItButton).toBeVisible({ timeout: 3_000 });
-      await gotItButton.click();
-    }
+    await completeTutorialIfShown(page);
 
     await cardsResponse;
 
     // Select confidence first, then answer
     const confidenceButton = page.getByRole('button', { name: /certain|likely|guessing/i }).first();
-    await expect(confidenceButton).toBeVisible({ timeout: 10_000 });
+    await expect(confidenceButton).toBeVisible({ timeout: 15_000 });
     await confidenceButton.click();
 
     const phishingButton = page.getByRole('button', { name: /phishing/i });

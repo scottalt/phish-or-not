@@ -46,7 +46,7 @@ test.describe('Graduated User Modes & Pages', () => {
     await phishingButton.click();
 
     await checkResponse;
-    await expect(page.getByText(/correct|incorrect/i)).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText(/neutralized|cleared|breach|false positive/i)).toBeVisible({ timeout: 10_000 });
   });
 
   test('expert mode: start and answer a card', async ({ page }) => {
@@ -79,7 +79,7 @@ test.describe('Graduated User Modes & Pages', () => {
     await phishingButton.click();
 
     await checkResponse;
-    await expect(page.getByText(/correct|incorrect/i)).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText(/neutralized|cleared|breach|false positive/i)).toBeVisible({ timeout: 10_000 });
   });
 
   test('stats page loads without crashing', async ({ page }) => {

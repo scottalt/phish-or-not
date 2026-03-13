@@ -40,8 +40,8 @@ test.describe('Freeplay Mode', () => {
 
       await checkResponse;
 
-      // Feedback screen
-      await expect(page.getByText(/correct|incorrect/i)).toBeVisible({ timeout: 5_000 });
+      // Feedback screen (server check can be slow on cold starts)
+      await expect(page.getByText(/neutralized|cleared|breach|false positive/i)).toBeVisible({ timeout: 10_000 });
 
       if (i < 9) {
         // NEXT button has CSS animation — force click to bypass Playwright stability check
