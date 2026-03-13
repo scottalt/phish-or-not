@@ -13,7 +13,7 @@ const SKIP_KEYS = new Set([
 ]);
 
 function sfxEnabled(): boolean {
-  try { return localStorage.getItem('sfx_enabled') === 'true'; } catch { return false; }
+  try { return sessionStorage.getItem('sfx_enabled') === 'true'; } catch { return false; }
 }
 
 export function TerminalSounds() {
