@@ -6,28 +6,32 @@ test.describe('Freeplay Mode', () => {
 
     const playButton = page.getByRole('button', { name: /play/i }).first();
     await expect(playButton).toBeVisible({ timeout: 15_000 });
-    await playButton.click();
 
-    // Wait for cards to load
-    await page.waitForResponse(
+    // Set up response listener BEFORE clicking to avoid race condition
+    const cardsResponse = page.waitForResponse(
       (resp) => resp.url().includes('/api/cards/freeplay') && resp.status() === 200,
       { timeout: 30_000 },
     );
+    await playButton.click();
+    await cardsResponse;
 
     // Answer 10 cards to complete a round
     for (let i = 0; i < 10; i++) {
       const phishingButton = page.getByRole('button', { name: /phishing/i });
       await expect(phishingButton).toBeVisible({ timeout: 10_000 });
+
+      // Set up check listener BEFORE clicking
+      const checkResponse = page.waitForResponse(
+        (resp) => resp.url().includes('/api/cards/check') && resp.status() === 200,
+        { timeout: 15_000 },
+      );
       await phishingButton.click();
 
       const confidenceButton = page.getByRole('button', { name: /certain|likely|guessing/i }).first();
       await expect(confidenceButton).toBeVisible({ timeout: 5_000 });
       await confidenceButton.click();
 
-      await page.waitForResponse(
-        (resp) => resp.url().includes('/api/cards/check') && resp.status() === 200,
-        { timeout: 15_000 },
-      );
+      await checkResponse;
 
       // Feedback screen
       await expect(page.getByText(/correct|incorrect/i)).toBeVisible({ timeout: 5_000 });

@@ -22,24 +22,27 @@ test.describe('Graduated User Modes & Pages', () => {
 
     const dailyButton = page.getByRole('button', { name: /daily challenge/i });
     await expect(dailyButton).toBeVisible({ timeout: 15_000 });
-    await dailyButton.click();
 
-    await page.waitForResponse(
+    const cardsResponse = page.waitForResponse(
       (resp) => resp.url().includes('/api/cards/daily') && resp.status() === 200,
       { timeout: 30_000 },
     );
+    await dailyButton.click();
+    await cardsResponse;
 
     const phishingButton = page.getByRole('button', { name: /phishing/i });
     await expect(phishingButton).toBeVisible({ timeout: 10_000 });
+
+    const checkResponse = page.waitForResponse(
+      (resp) => resp.url().includes('/api/cards/check'),
+      { timeout: 15_000 },
+    );
     await phishingButton.click();
 
     const confidenceButton = page.getByRole('button', { name: /certain|likely|guessing/i }).first();
     await confidenceButton.click();
 
-    await page.waitForResponse(
-      (resp) => resp.url().includes('/api/cards/check'),
-      { timeout: 15_000 },
-    );
+    await checkResponse;
     await expect(page.getByText(/correct|incorrect/i)).toBeVisible({ timeout: 5_000 });
   });
 
@@ -49,24 +52,27 @@ test.describe('Graduated User Modes & Pages', () => {
 
     const expertButton = page.getByRole('button', { name: /expert mode/i });
     await expect(expertButton).toBeVisible({ timeout: 15_000 });
-    await expertButton.click();
 
-    await page.waitForResponse(
+    const cardsResponse = page.waitForResponse(
       (resp) => resp.url().includes('/api/cards/expert') && resp.status() === 200,
       { timeout: 30_000 },
     );
+    await expertButton.click();
+    await cardsResponse;
 
     const phishingButton = page.getByRole('button', { name: /phishing/i });
     await expect(phishingButton).toBeVisible({ timeout: 10_000 });
+
+    const checkResponse = page.waitForResponse(
+      (resp) => resp.url().includes('/api/cards/check'),
+      { timeout: 15_000 },
+    );
     await phishingButton.click();
 
     const confidenceButton = page.getByRole('button', { name: /certain|likely|guessing/i }).first();
     await confidenceButton.click();
 
-    await page.waitForResponse(
-      (resp) => resp.url().includes('/api/cards/check'),
-      { timeout: 15_000 },
-    );
+    await checkResponse;
     await expect(page.getByText(/correct|incorrect/i)).toBeVisible({ timeout: 5_000 });
   });
 

@@ -18,6 +18,12 @@ test.describe('Research Mode', () => {
     // Should see RESEARCH MODE button (fresh user, not graduated)
     const researchButton = page.getByRole('button', { name: /research mode/i });
     await expect(researchButton).toBeVisible({ timeout: 15_000 });
+
+    // Set up response listener BEFORE clicking
+    const cardsResponse = page.waitForResponse(
+      (resp) => resp.url().includes('/api/cards/research') && resp.status() === 200,
+      { timeout: 30_000 },
+    );
     await researchButton.click();
 
     // Research intro screen (first time)
@@ -32,16 +38,19 @@ test.describe('Research Mode', () => {
       await completeButton.click();
     }
 
-    // Playing phase — wait for cards to load
-    await page.waitForResponse(
-      (resp) => resp.url().includes('/api/cards/research') && resp.status() === 200,
-      { timeout: 30_000 },
-    );
+    // Wait for cards response
+    await cardsResponse;
 
     // Answer the first card
     const phishingButton = page.getByRole('button', { name: /phishing/i });
     const legitButton = page.getByRole('button', { name: /legit/i });
     await expect(phishingButton.or(legitButton)).toBeVisible({ timeout: 10_000 });
+
+    // Set up check listener BEFORE clicking
+    const checkResponse = page.waitForResponse(
+      (resp) => resp.url().includes('/api/cards/check') && resp.status() === 200,
+      { timeout: 15_000 },
+    );
     await phishingButton.click();
 
     // Select confidence
@@ -50,11 +59,7 @@ test.describe('Research Mode', () => {
     await confidenceButton.click();
 
     // Wait for server-side answer check
-    const checkResponse = await page.waitForResponse(
-      (resp) => resp.url().includes('/api/cards/check') && resp.status() === 200,
-      { timeout: 15_000 },
-    );
-    const checkData = await checkResponse.json();
+    const checkData = await (await checkResponse).json();
 
     // Verify server returned expected fields
     expect(checkData).toHaveProperty('correct');
@@ -86,6 +91,12 @@ test.describe('Research Mode', () => {
 
     const researchButton = page.getByRole('button', { name: /research mode/i });
     await expect(researchButton).toBeVisible({ timeout: 15_000 });
+
+    // Set up response listener BEFORE clicking
+    const cardsResponse = page.waitForResponse(
+      (resp) => resp.url().includes('/api/cards/research') && resp.status() === 200,
+      { timeout: 30_000 },
+    );
     await researchButton.click();
 
     // Skip intro/tutorial if shown
@@ -94,23 +105,22 @@ test.describe('Research Mode', () => {
       if (await btn.isVisible({ timeout: 3_000 }).catch(() => false)) await btn.click();
     }
 
-    await page.waitForResponse(
-      (resp) => resp.url().includes('/api/cards/research') && resp.status() === 200,
-      { timeout: 30_000 },
-    );
+    await cardsResponse;
 
     // Answer one card
     const phishingButton = page.getByRole('button', { name: /phishing/i });
     await expect(phishingButton).toBeVisible({ timeout: 10_000 });
+
+    const checkResponse = page.waitForResponse(
+      (resp) => resp.url().includes('/api/cards/check'),
+      { timeout: 15_000 },
+    );
     await phishingButton.click();
 
     const confidenceButton = page.getByRole('button', { name: /certain|likely|guessing/i }).first();
     await confidenceButton.click();
 
-    await page.waitForResponse(
-      (resp) => resp.url().includes('/api/cards/check'),
-      { timeout: 15_000 },
-    );
+    await checkResponse;
 
     // Each card should only produce ONE check call
     expect(checkCount).toBe(1);
