@@ -219,7 +219,7 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
     urlInspected: boolean;
   }) {
     const card = deck[currentIndex];
-    const isServerChecked = mode !== 'preview';
+    const isServerChecked = true;
 
     if (isServerChecked) {
       // Server-side answer verification for freeplay/daily/expert
