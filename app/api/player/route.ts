@@ -24,7 +24,7 @@ async function getAuthId(): Promise<string | null> {
   return user?.id ?? null;
 }
 
-function toProfile(row: Record<string, unknown>, researchAnswersSubmitted = 0): PlayerProfile {
+function toProfile(row: Record<string, unknown>, researchAnswersSubmitted = 0, achievements: string[] = []): PlayerProfile {
   return {
     id: row.id as string,
     authId: row.auth_id as string,
@@ -37,6 +37,7 @@ function toProfile(row: Record<string, unknown>, researchAnswersSubmitted = 0): 
     researchGraduated: row.research_graduated as boolean,
     personalBestScore: row.personal_best_score as number,
     background: (row.background as PlayerBackground | null) ?? null,
+    achievements,
   };
 }
 
@@ -63,13 +64,16 @@ export async function GET(req: NextRequest) {
   }
 
   const row = data as unknown as Record<string, unknown>;
-  const { count: researchAnswersSubmitted } = await admin
-    .from('answers')
-    .select('*', { count: 'exact', head: true })
-    .eq('player_id', row.id as string)
-    .eq('game_mode', 'research');
+  const [{ count: researchAnswersSubmitted }, { data: achievementRows }] = await Promise.all([
+    admin.from('answers').select('*', { count: 'exact', head: true })
+      .eq('player_id', row.id as string).eq('game_mode', 'research'),
+    admin.from('player_achievements').select('achievement_id')
+      .eq('player_id', row.id as string),
+  ]);
 
-  return NextResponse.json(toProfile(row, researchAnswersSubmitted ?? 0), {
+  const achievements = (achievementRows ?? []).map((r: { achievement_id: string }) => r.achievement_id);
+
+  return NextResponse.json(toProfile(row, researchAnswersSubmitted ?? 0, achievements), {
     headers: { 'Cache-Control': 'no-store' },
   });
 }

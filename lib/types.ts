@@ -115,4 +115,5 @@ export interface PlayerProfile {
   researchGraduated: boolean;
   personalBestScore: number;
   background: PlayerBackground | null;
+  achievements?: string[];
 }

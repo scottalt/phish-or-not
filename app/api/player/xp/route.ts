@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { getSupabaseAdminClient } from '@/lib/supabase';
 import { getLevelFromXp, getXpForRound, RESEARCH_GRADUATION_ANSWERS } from '@/lib/xp';
 import { redis } from '@/lib/redis';
+import { checkAchievements } from '@/lib/achievement-checker';
 
 // Rate limits for freeplay/expert XP awards (research has its own caps in answers route)
 const MAX_XP_SESSIONS_PER_HOUR = 6;   // ~1 session per 10 min is generous
@@ -96,15 +97,16 @@ export async function PATCH(req: NextRequest) {
   // Cap answer counts to ROUND_SIZE to prevent inflated XP from extra answer submissions
   const ROUND_SIZE = 10;
   let xpEarned = 0;
+  // Fetch full session answers for both XP calculation and achievement checking
+  let sessionAnswers: { correct: boolean; confidence: string; difficulty: string; time_from_render_ms: number | null; streak_at_answer_time: number; headers_opened: boolean; url_inspected: boolean; game_mode: string }[] = [];
   if (sessionId) {
-    const [{ count: rawCorrectCount }, { count: rawTotalCount }] = await Promise.all([
-      admin.from('answers').select('*', { count: 'exact', head: true })
-        .eq('session_id', sessionId).eq('correct', true),
-      admin.from('answers').select('*', { count: 'exact', head: true })
-        .eq('session_id', sessionId),
-    ]);
-    const correctCount = Math.min(rawCorrectCount ?? 0, ROUND_SIZE);
-    const totalCount = Math.min(rawTotalCount ?? 0, ROUND_SIZE);
+    const { data: answerRows } = await admin
+      .from('answers')
+      .select('correct, confidence, difficulty, time_from_render_ms, streak_at_answer_time, headers_opened, url_inspected, game_mode')
+      .eq('session_id', sessionId);
+    sessionAnswers = (answerRows ?? []) as typeof sessionAnswers;
+    const correctCount = Math.min(sessionAnswers.filter(a => a.correct).length, ROUND_SIZE);
+    const totalCount = Math.min(sessionAnswers.length, ROUND_SIZE);
     xpEarned = getXpForRound(correctCount, totalCount, verifiedGameMode);
   }
 
@@ -177,6 +179,23 @@ export async function PATCH(req: NextRequest) {
     if (dCount === 1) await redis.expire(dailyKey, 86400);
   }
 
+  // Check for newly earned achievements
+  let newAchievements: string[] = [];
+  if (sessionId) {
+    try {
+      newAchievements = await checkAchievements(admin, {
+        id: p.id as string,
+        xp: newXp,
+        level: newLevel,
+        totalSessions: newTotalSessions,
+        researchGraduated: nowGraduated,
+        personalBestScore: newBest,
+      }, sessionId, sessionAnswers, verifiedGameMode);
+    } catch {
+      // Achievement check failure should never block XP award
+    }
+  }
+
   return NextResponse.json({
     xp: newXp,
     level: newLevel,
@@ -184,5 +203,6 @@ export async function PATCH(req: NextRequest) {
     levelUp,
     graduated: !wasGraduated && nowGraduated,
     researchSessionsCompleted: newResearchSessions,
+    newAchievements,
   });
 }

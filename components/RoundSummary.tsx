@@ -7,6 +7,7 @@ import { updateWeaknessHistory, getWeakPoints } from '@/lib/weakness-tracker';
 import { usePlayer } from '@/lib/usePlayer';
 import { LevelMeter } from './LevelMeter';
 import { AuthFlow } from './AuthFlow';
+import { AchievementToast } from './AchievementToast';
 import { getXpForRound } from '@/lib/xp';
 
 interface Props {
@@ -50,7 +51,7 @@ export function RoundSummary({ score, total, totalScore, results, mode, sessionI
   const { profile, signedIn, refreshProfile, signInWithEmail, verifyOtp } = usePlayer();
   const rank = profile ? getRankFromLevel(profile.level) : null;
   const [xpResult, setXpResult] = useState<{
-    xpEarned: number; level: number; levelUp: boolean; graduated: boolean;
+    xpEarned: number; level: number; levelUp: boolean; graduated: boolean; newAchievements?: string[];
   } | null>(null);
   const [rateLimited, setRateLimited] = useState(false);
   const xpFired = useRef(false);
@@ -112,6 +113,10 @@ export function RoundSummary({ score, total, totalScore, results, mode, sessionI
           )}
           {profile && <LevelMeter xp={profile.xp} level={profile.level} />}
         </div>
+      )}
+      {/* Achievement unlocks */}
+      {xpResult?.newAchievements && xpResult.newAchievements.length > 0 && (
+        <AchievementToast achievementIds={xpResult.newAchievements} />
       )}
       {/* Rate limit notice */}
       {signedIn && rateLimited && (
