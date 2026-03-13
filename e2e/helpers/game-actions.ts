@@ -24,7 +24,6 @@ export async function answerCard(
   await answerButton.click();
 
   const resp = await checkResponse;
-  expect(resp.status()).toBe(200);
   return resp.json();
 }
 

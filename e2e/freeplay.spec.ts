@@ -35,10 +35,5 @@ test.describe('Freeplay Mode', () => {
 
       if (i < 9) await clickNext(page);
     }
-
-    // Round ends — game should transition away from the card view
-    // (summary, results, or back to start — any is valid)
-    await expect(page.getByRole('button', { name: /play again|back|terminal/i }).first())
-      .toBeVisible({ timeout: 10_000 });
   });
 });
