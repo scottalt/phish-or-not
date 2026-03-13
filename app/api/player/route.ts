@@ -24,7 +24,7 @@ async function getAuthId(): Promise<string | null> {
   return user?.id ?? null;
 }
 
-function toProfile(row: Record<string, unknown>, researchAnswersSubmitted = 0, achievements: string[] = []): PlayerProfile {
+function toProfile(row: Record<string, unknown>, researchAnswersSubmitted = 0, achievements: string[] = [], streakData?: { current_streak: number; longest_streak: number } | null): PlayerProfile {
   return {
     id: row.id as string,
     authId: row.auth_id as string,
@@ -38,6 +38,8 @@ function toProfile(row: Record<string, unknown>, researchAnswersSubmitted = 0, a
     personalBestScore: row.personal_best_score as number,
     background: (row.background as PlayerBackground | null) ?? null,
     achievements,
+    currentStreak: streakData?.current_streak ?? 0,
+    longestStreak: streakData?.longest_streak ?? 0,
   };
 }
 
@@ -64,16 +66,18 @@ export async function GET(req: NextRequest) {
   }
 
   const row = data as unknown as Record<string, unknown>;
-  const [{ count: researchAnswersSubmitted }, { data: achievementRows }] = await Promise.all([
+  const [{ count: researchAnswersSubmitted }, { data: achievementRows }, { data: streakData }] = await Promise.all([
     admin.from('answers').select('*', { count: 'exact', head: true })
       .eq('player_id', row.id as string).eq('game_mode', 'research'),
     admin.from('player_achievements').select('achievement_id')
       .eq('player_id', row.id as string),
+    admin.from('player_streaks').select('current_streak, longest_streak')
+      .eq('player_id', row.id as string).maybeSingle(),
   ]);
 
   const achievements = (achievementRows ?? []).map((r: { achievement_id: string }) => r.achievement_id);
 
-  return NextResponse.json(toProfile(row, researchAnswersSubmitted ?? 0, achievements), {
+  return NextResponse.json(toProfile(row, researchAnswersSubmitted ?? 0, achievements, streakData), {
     headers: { 'Cache-Control': 'no-store' },
   });
 }
@@ -120,5 +124,8 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (error || !data) return NextResponse.json({ error: 'Update failed' }, { status: 500 });
-  return NextResponse.json(toProfile(data as unknown as Record<string, unknown>));
+  const updatedRow = data as unknown as Record<string, unknown>;
+  const { data: postStreakData } = await admin.from('player_streaks').select('current_streak, longest_streak')
+    .eq('player_id', updatedRow.id as string).maybeSingle();
+  return NextResponse.json(toProfile(updatedRow, 0, [], postStreakData));
 }
