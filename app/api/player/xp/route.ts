@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { getSupabaseAdminClient } from '@/lib/supabase';
-import { getLevelFromXp, getXpForRound, RESEARCH_GRADUATION_ANSWERS } from '@/lib/xp';
+import { getLevelFromXp, getXpForRound, getStreakBonusXp, RESEARCH_GRADUATION_ANSWERS } from '@/lib/xp';
 import { redis } from '@/lib/redis';
 import { checkAchievements } from '@/lib/achievement-checker';
 
@@ -110,7 +110,59 @@ export async function PATCH(req: NextRequest) {
     xpEarned = getXpForRound(correctCount, totalCount, verifiedGameMode);
   }
 
-  const newXp = (p.xp as number) + xpEarned;
+  // --- Daily streak computation ---
+  // Compute today/yesterday once to avoid UTC midnight boundary issues
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD UTC
+  const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+  let streakDay = 0;
+  let streakBonusXp = 0;
+  const playerId = p.id as string;
+
+  // Upsert streak row (ON CONFLICT DO NOTHING handles race conditions)
+  await admin.from('player_streaks').upsert(
+    { player_id: playerId },
+    { onConflict: 'player_id', ignoreDuplicates: true }
+  );
+
+  const { data: streakRow } = await admin
+    .from('player_streaks')
+    .select('current_streak, longest_streak, last_active_date')
+    .eq('player_id', playerId)
+    .maybeSingle();
+
+  let newCurrentStreak = 1;
+  let newLongestStreak = streakRow?.longest_streak ?? 0;
+  let streakAdvanced = false;
+
+  if (streakRow) {
+    const lastActive = streakRow.last_active_date; // DATE comes as YYYY-MM-DD string
+
+    if (lastActive === today) {
+      // Same day — no advancement, return current values
+      newCurrentStreak = streakRow.current_streak;
+      newLongestStreak = streakRow.longest_streak;
+      streakDay = newCurrentStreak;
+      streakBonusXp = 0;
+    } else {
+      if (lastActive === yesterday) {
+        newCurrentStreak = streakRow.current_streak + 1;
+      } else {
+        newCurrentStreak = 1;
+      }
+      newLongestStreak = Math.max(newLongestStreak, newCurrentStreak);
+      streakDay = newCurrentStreak;
+      streakBonusXp = getStreakBonusXp(newCurrentStreak);
+      streakAdvanced = true;
+    }
+  } else {
+    // No row existed (shouldn't happen after upsert, but defensive)
+    streakDay = 1;
+    streakBonusXp = getStreakBonusXp(1);
+    streakAdvanced = true;
+  }
+  // --- End streak computation ---
+
+  const newXp = (p.xp as number) + xpEarned + streakBonusXp;
   const newLevel = getLevelFromXp(newXp);
   const levelUp = newLevel > (p.level as number);
   const newTotalSessions = sessionCompleted ? (p.total_sessions as number) + 1 : p.total_sessions as number;
@@ -179,6 +231,16 @@ export async function PATCH(req: NextRequest) {
     if (dCount === 1) await redis.expire(dailyKey, 86400);
   }
 
+  // Commit streak update only after successful XP write
+  if (streakAdvanced) {
+    await admin.from('player_streaks').update({
+      current_streak: newCurrentStreak,
+      longest_streak: newLongestStreak,
+      last_active_date: today,
+      streak_updated_at: new Date().toISOString(),
+    }).eq('player_id', playerId);
+  }
+
   // Check for newly earned achievements
   let newAchievements: string[] = [];
   if (sessionId) {
@@ -190,7 +252,7 @@ export async function PATCH(req: NextRequest) {
         totalSessions: newTotalSessions,
         researchGraduated: nowGraduated,
         personalBestScore: newBest,
-      }, sessionId, sessionAnswers, verifiedGameMode);
+      }, sessionId, sessionAnswers, verifiedGameMode, newCurrentStreak);
     } catch {
       // Achievement check failure should never block XP award
     }
@@ -204,5 +266,7 @@ export async function PATCH(req: NextRequest) {
     graduated: !wasGraduated && nowGraduated,
     researchSessionsCompleted: newResearchSessions,
     newAchievements,
+    streakDay,
+    streakBonusXp,
   });
 }
