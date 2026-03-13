@@ -1,16 +1,45 @@
 # Retro Phish
 
-A retro terminal phishing awareness game and research platform studying human detection rates for AI-generated phishing across six attack techniques.
+A cybersecurity research game measuring how humans detect AI-generated phishing emails — built as a retro terminal experience.
 
-**Live:** [retro-phish.scottaltiparmak.com](https://retro-phish.scottaltiparmak.com)
+**Live:** [research.scottaltiparmak.com](https://research.scottaltiparmak.com)
 
 ---
 
-## What it is
+## The Problem
 
-Retro Phish presents emails in a retro terminal interface. All cards are AI-generated, both phishing and legitimate. Players classify each message, bet confidence on their answer, and earn XP based on accuracy and streak. Forensic signals are revealed after each answer so players can see exactly what they missed.
+AI can now generate phishing emails with perfect grammar, flawless spelling, and convincing context. The old signals — broken English, awkward phrasing, obvious typos — no longer apply. So how do humans detect phishing in 2026?
 
-The game has two modes. **Freeplay** is a standard training mode. **Research Mode** is a structured game mode that collects pseudonymous answer data contributing to a published study on which phishing techniques humans miss most when AI eliminates linguistic quality as a detection signal.
+## What This Is
+
+Retro Phish is a game and live research platform. Players read AI-generated emails in a retro terminal interface, decide if each one is phishing or legitimate, and bet their confidence. Every answer contributes to a live dataset measuring which phishing techniques humans miss most when linguistic quality is no longer a reliable signal.
+
+No security background needed. If you use email, you're a valid research participant.
+
+---
+
+## Game Modes
+
+| Mode | Description | Access |
+|------|-------------|--------|
+| **Research Mode** | 10 cards per round from the research dataset. Every answer contributes to the live study. | Requires sign-in |
+| **Daily Challenge** | Same 10 cards for all players each day. Resets at UTC midnight. One attempt per day. | Requires sign-in |
+| **Freeplay** | 10 random cards per round. Unlimited replays. | Open to all |
+| **Expert Mode** | Extreme difficulty only. Double XP. | Unlocked after 30 research answers |
+
+**Core loop:**
+- Read an email and classify it as phishing or legitimate
+- Bet confidence: GUESSING (1x) · LIKELY (2x) · CERTAIN (3x)
+- Earn XP from correct answers and streak bonuses
+- Forensic signal breakdown after each answer shows what you missed
+
+**Forensic signals available during gameplay:**
+- Sender domain inspection (tap to reveal full email address)
+- SPF / DKIM / DMARC authentication headers
+- Reply-To mismatch detection
+- Send timestamp analysis
+- URL destination inspector (tap any link)
+- Attachment filename analysis
 
 ---
 
@@ -18,78 +47,32 @@ The game has two modes. **Freeplay** is a standard training mode. **Research Mod
 
 **Study question:** Which phishing techniques are humans most likely to miss when linguistic quality is no longer a reliable detection signal?
 
-**Dataset:** 1,000 AI-generated cards. 690 phishing across 6 techniques, 310 legitimate. All cards are AI-generated so linguistic quality is held constant as a baseline. Technique is the only independent variable.
+**Dataset:** 1,000+ AI-generated email cards. Phishing cards span 6 techniques, legitimate cards cover transactional, marketing, and workplace categories. All cards are AI-generated so linguistic quality is held constant. Technique is the independent variable.
 
-**Six phishing techniques, equal volume, controlled difficulty:**
+**Six phishing techniques under study:**
 
 `urgency` · `authority-impersonation` · `credential-harvest` · `hyper-personalization` · `pretexting` · `fluent-prose`
 
-Each technique has 115 cards: 35 easy, 35 medium, 35 hard, 10 extreme. Legitimate cards cover three categories: transactional (110), marketing (100), workplace (100). The dataset is frozen at v1 once 1,000 approved cards are reached.
+**Data collection:** Research Mode requires a player account. Answers are linked to a pseudonymous player UUID. Email addresses are held only in Supabase Auth and are never stored in research tables. No behavioural tracking outside the game session.
 
-**Research Mode deck structure:**
+**Recorded per answer:** classification, confidence level, response time, whether headers were opened, whether URLs were inspected, position within the session, card difficulty, and technique.
 
-Each Research Mode round draws 10 cards at random from the full dataset. With equal card volume per technique (115 each), technique representation balances naturally at scale. This avoids artificial deck constraints and produces a realistic sampling distribution.
+**Not recorded:** email address, IP address, location, or any identifying information.
 
-**Data collection:**
+Players optionally self-report their professional background: `NON-TECHNICAL`, `TECHNICAL / NON-SECURITY`, or `INFOSEC / CYBERSECURITY`. This enables comparison of bypass rates across expertise levels.
 
-Research Mode requires a player account. Answers are linked to a pseudonymous player UUID. Email addresses are held only in Supabase Auth and are never stored in research tables. Our own tables store only UUIDs, game mode, technique, correctness, confidence, and timing signals. No behavioural tracking outside the game session.
+**Intel Briefing:** After submitting 30 research answers, players unlock the Intel Briefing — a live dashboard showing aggregate findings from all participants including overall bypass rates, accuracy by background, and technique effectiveness.
 
-Players can optionally self-report their professional background on their profile: `OTHER`, `TECHNICAL / NON-SECURITY`, or `INFOSEC / CYBERSECURITY`. This is used to compare bypass rates across groups — the study tests whether security professionals detect phishing at meaningfully higher rates than technical non-security and general users. Background is optional and can be set to prefer not to say.
-
-**Sample limitation:** Participants are self-selected players who opted into Research Mode and created an account. This is disclosed as a limitation in the published methodology.
-
-- Methodology: [retro-phish.scottaltiparmak.com/methodology](https://retro-phish.scottaltiparmak.com/methodology)
-- Live findings: [retro-phish.scottaltiparmak.com/intel](https://retro-phish.scottaltiparmak.com/intel)
+- Methodology: [research.scottaltiparmak.com/methodology](https://research.scottaltiparmak.com/methodology)
 
 ---
 
-## Game
+## Progression
 
-**Research Mode:** 10 cards drawn at random from the full dataset (see above). Requires an account. Contributes to the study dataset.
-
-**Freeplay:** 10 cards per round drawn randomly from the full dataset. Open to all players, no account required.
-
-**Daily Challenge:** A shared deterministic deck that changes each UTC day. All players see the same cards in the same order. Open to all.
-
-**Expert Mode:** Unlocked after submitting 30 research answers (3 completed sessions). Draws exclusively from extreme difficulty cards. Double XP.
-
-**Core loop:**
-- Classify each message as phishing or legitimate
-- Bet confidence: GUESSING (1x) · LIKELY (2x) · CERTAIN (3x)
-- Earn XP from correct answers and streak bonuses
-- Forensic signal breakdown after each round shows what you missed
-
-**Forensic signals revealed after each answer:**
-- SPF / DKIM / DMARC auth status
-- Reply-To mismatch detection
-- Send timestamp analysis (odd hours, unusual timezone offsets)
-- URL inspector (tappable links reveal destinations)
-- Attachment name analysis
-
-**Leaderboards:**
-- XP leaderboard (default, account holders only)
-- Daily challenge (score-based, resets each UTC day)
-
-**Sound:**
-- Ambient cyberpunk background music (loopable MP3, low volume)
-- Terminal click and keypress sounds throughout
-- Toggled via SFX button, off by default
-
----
-
-## Player Accounts
-
-Accounts use email OTP, no password. Enter your email, get a 6-digit code, enter it in-app. Works in PWA context on iOS without a browser redirect.
-
-**XP and progression:**
-- 30 levels with compounding XP requirements (~15% per level, ~37,700 XP at level 30)
-- 10 ranks tied to level ranges: CLICK_HAPPY · PHISH_BAIT · LINK_CHECKER · HEADER_READER · SOC_ANALYST · THREAT_HUNTER · INCIDENT_HANDLER · RED_TEAMER · APT_ANALYST · ZERO_DAY
-- Personal best score, session history, and background tracked per account
-
-**Expert Mode:**
-- Unlocked after submitting 30 research answers (3 completed sessions)
-- Draws exclusively from extreme difficulty cards
-- Double XP
+- **30 levels** with compounding XP requirements
+- **10 ranks:** CLICK_HAPPY · PHISH_BAIT · LINK_CHECKER · HEADER_READER · SOC_ANALYST · THREAT_HUNTER · INCIDENT_HANDLER · RED_TEAMER · APT_ANALYST · ZERO_DAY
+- **Leaderboards:** XP (global, account holders) and Daily Challenge (score-based, resets daily)
+- **Expert Mode + Intel Briefing** unlock after 30 research answers
 
 ---
 
@@ -97,25 +80,35 @@ Accounts use email OTP, no password. Enter your email, get a 6-digit code, enter
 
 | Layer | Tech |
 |---|---|
-| Frontend | Next.js 16 (App Router), TypeScript, Tailwind CSS v4 |
+| Frontend | Next.js (App Router), TypeScript, Tailwind CSS v4 |
 | Auth | Supabase Auth (email OTP, no passwords) |
-| Database | Supabase (PostgreSQL): cards, players, answers, sessions |
-| Leaderboard | Upstash Redis: global + daily sorted sets |
-| Hosting | Vercel, auto-deploys from master |
-| Card generation | Claude Haiku + Sonnet (3 Haiku + 1 Sonnet per 20-card batch) |
+| Database | Supabase (PostgreSQL) |
+| Cache / Rate Limiting | Upstash Redis |
+| Hosting | Vercel |
 | Email | Resend (SMTP via scottaltiparmak.com) |
+| Card Generation | Claude (Anthropic API) |
 | Analytics | Vercel Analytics |
-| PWA | Service worker with auto-update broadcast, no HTML caching |
+| PWA | Service worker with auto-update, installable on mobile |
 
 ---
 
-## Card Generation Pipeline
+## Card Pools
 
-1. Prompt templates in `docs/prompts/` define technique, difficulty, and format
-2. `scripts/generate-batch.sh` generates cards via Claude API and writes to `cards_staging` with `status=pending`
-3. `/admin` review dashboard: approve, reject, or flag for follow-up
-4. Approved cards land in `cards_real` and go live immediately
-5. Dataset freezes at 1,000 approved cards (v1)
+| Pool | Cards | Difficulties | Used By |
+|------|-------|-------------|---------|
+| Daily / Freeplay | 450+ | Easy, Medium, Hard | Daily Challenge, Freeplay |
+| Expert | 180+ | Extreme | Expert Mode |
+| Research | 1,000+ | Easy → Extreme | Research Mode (frozen dataset) |
+
+Each pool is independent — research cards are never reused in other game modes.
+
+---
+
+## Sound
+
+- Ambient cyberpunk background music (loopable, low volume)
+- Terminal click and keypress sound effects
+- All sound off by default, toggled via SFX button
 
 ---
 
