@@ -34,7 +34,6 @@ class SummaryErrorBoundary extends Component<
     return this.props.children;
   }
 }
-import { getShuffledDeck, getDailyDeck } from '@/data/cards';
 import { GameCard } from './GameCard';
 import { FeedbackCard } from './FeedbackCard';
 import { RoundSummary } from './RoundSummary';
@@ -111,6 +110,16 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
     return 'desktop';
   }
 
+  function fetchFreeplayDeck() {
+    fetch('/api/cards/freeplay')
+      .then((r) => r.json())
+      .then((cards: Card[]) => {
+        setDeck(cards);
+        setPhase('playing');
+      })
+      .catch(() => setPhase('start'));
+  }
+
   function startRound(newMode: GameMode = 'freeplay') {
     sessionId.current = generateSessionId();
     sessionStartedAt.current = new Date().toISOString();
@@ -145,9 +154,7 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
           if (!cards.length) {
             // Research deck not ready — fall back to freeplay silently
             setMode('freeplay');
-            setDeck(getShuffledDeck(ROUND_SIZE));
-            setPhase('playing');
-            return;
+            return fetchFreeplayDeck();
           }
           const arr = [...cards];
           for (let i = arr.length - 1; i > 0; i--) {
@@ -176,9 +183,7 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
           if (!cards.length) {
             // No extreme cards yet — fall back to freeplay silently
             setMode('freeplay');
-            setDeck(getShuffledDeck(ROUND_SIZE));
-            setPhase('playing');
-            return;
+            return fetchFreeplayDeck();
           }
           const arr = [...cards];
           for (let i = arr.length - 1; i > 0; i--) {
@@ -192,8 +197,16 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
       return;
     }
 
-    setDeck(newMode === 'daily' ? getDailyDeck() : getShuffledDeck(ROUND_SIZE));
-    setPhase('playing');
+    // Freeplay and daily modes — fetch cards from server
+    setPhase('loading' as GamePhase);
+    const endpoint = newMode === 'daily' ? '/api/cards/daily' : '/api/cards/freeplay';
+    fetch(endpoint)
+      .then((r) => r.json())
+      .then((cards: Card[]) => {
+        setDeck(cards);
+        setPhase('playing');
+      })
+      .catch(() => setPhase('start'));
   }
 
   function handleAnswer(answer: Answer, confidence: Confidence, timing?: {
