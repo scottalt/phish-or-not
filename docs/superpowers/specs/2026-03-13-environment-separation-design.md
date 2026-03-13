@@ -61,7 +61,7 @@ Update `.env.local.example` to include the `NEXT_PUBLIC_` variables that `lib/su
 2. Write SQL in:      supabase/migrations/<timestamp>_<name>.sql
 3. Test on dev:       npm run db:push:dev
 4. PR & review:       Migration file reviewed alongside code
-5. Apply to prod:     npm run db:dump:prod && npm run db:push:prod
+5. Apply to prod:     npm run db:migrate:prod  (auto-backs up first)
 6. Merge to master:   Vercel deploys code to prod
 ```
 
@@ -71,11 +71,20 @@ Update `.env.local.example` to include the `NEXT_PUBLIC_` variables that `lib/su
 
 ```json
 "db:push:dev": "supabase db push --project-ref <dev-ref>",
-"db:push:prod": "supabase db push --project-ref <prod-ref>",
+"db:migrate:prod": "npm run db:dump:prod && supabase db push --project-ref <prod-ref>",
 "db:dump:prod": "supabase db dump --project-ref <prod-ref> > backups/pre-migration-$(date +%Y%m%d-%H%M%S).sql",
 "db:reset:dev": "supabase db reset --project-ref <dev-ref>",
 "db:seed:dev": "psql <dev-connection-string> -f supabase/seed.sql"
 ```
+
+### Migration File Reconciliation
+
+Existing migration files in `supabase/migrations/` do not have timestamp prefixes (e.g., `add-dealt-cards-to-sessions.sql`). The Supabase CLI expects timestamped filenames to track which migrations have been applied.
+
+During initial setup:
+1. Rename existing migration files to include timestamp prefixes (based on git commit dates)
+2. Mark all existing migrations as "already applied" on both prod and dev using `supabase migration repair`
+3. All future migrations use `supabase migration new` which auto-generates timestamps
 
 ### Initial Dev DB Setup
 
@@ -91,7 +100,7 @@ Export a sample of freeplay cards from prod Supabase and commit as `supabase/see
 
 These are mandatory for all migrations targeting prod:
 
-1. **Pre-migration backup is mandatory.** Run `npm run db:dump:prod` before every `npm run db:push:prod`.
+1. **Pre-migration backup is automatic.** `npm run db:migrate:prod` chains dump → push, so backups can't be skipped. Never run `db push` against prod directly — always use `db:migrate:prod`.
 
 2. **No destructive SQL in a single migration:**
    - No `DROP TABLE` / `DROP COLUMN`
@@ -146,9 +155,34 @@ feature branch → PR opens
   ├── (future) GitHub Actions: lint + typecheck + test + build
   └── Manual testing on preview URL
        ↓
-  PR approved & merged to master
+  PR approved
        ↓
-  Vercel: production deploy → prod Supabase + prod Upstash
+  If additive migration: npm run db:migrate:prod (before merge)
        ↓
-  If migration included: db:dump:prod → db:push:prod (manual)
+  Merge to master → Vercel deploys code to prod
+       ↓
+  If removal migration: npm run db:migrate:prod (after merge, days later)
 ```
+
+## Post-Setup Verification
+
+After initial setup is complete, run this one-time verification:
+
+1. **Create a test branch** with a trivial change (e.g., add a comment)
+2. **Push it** and wait for Vercel preview deploy
+3. **Open the preview URL** and trigger an action that writes to Supabase (e.g., start a game session)
+4. **Check the dev Supabase dashboard** — confirm the row appeared in dev, NOT prod
+5. **Check prod Supabase dashboard** — confirm no new rows from the test
+6. **Delete the test branch**
+
+This confirms Vercel's env scoping is working correctly before any real development begins.
+
+## Known Risks & Mitigations
+
+| Risk | Likelihood | Mitigation |
+|------|-----------|------------|
+| Running raw `db push` against prod (skipping backup) | Low | `db:migrate:prod` chains backup automatically; document never to use `db push` directly |
+| Migration drift between dev and prod | Medium | CLI tracks applied migrations; `db push` errors on mismatch rather than silently corrupting |
+| Shared AI keys — runaway preview exhausts budget | Low | Set usage limits on OpenAI dashboard; low volume project |
+| Existing migrations lack timestamps | One-time | Reconcile during initial setup with `migration repair` |
+| Dev/prod auth sessions are separate | Not a risk | Expected behavior — users must log in separately on preview URLs |
