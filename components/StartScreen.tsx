@@ -243,9 +243,16 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                   </div>
                   <div className="px-3 py-2 space-y-2">
                     <LevelMeter xp={profile.xp} level={profile.level} />
-                    {profile.researchGraduated && (
-                      <div className="text-[#ffaa00] text-sm font-mono">⬡ RESEARCH GRADUATED — EXPERT MODE UNLOCKED</div>
-                    )}
+                    <div className="flex items-center justify-between">
+                      {profile.researchGraduated && (
+                        <div className="text-[#ffaa00] text-sm font-mono">⬡ RESEARCH GRADUATED</div>
+                      )}
+                      {(profile.achievements?.length ?? 0) > 0 && (
+                        <Link href="/profile#achievements" className="text-[#00aa28] text-sm font-mono hover:text-[#00ff41]">
+                          ★ {profile.achievements?.length ?? 0}/20
+                        </Link>
+                      )}
+                    </div>
                   </div>
                 </div>
               ) : showAuthFlow ? (
