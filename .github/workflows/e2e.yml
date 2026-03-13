@@ -29,6 +29,7 @@ jobs:
           BASE_URL: ${{ github.event.deployment_status.target_url }}
           TEST_SUPABASE_URL: ${{ secrets.DEV_SUPABASE_URL }}
           TEST_SUPABASE_SERVICE_KEY: ${{ secrets.DEV_SUPABASE_SERVICE_ROLE_KEY }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
 
       - name: Upload test results
         if: always()
