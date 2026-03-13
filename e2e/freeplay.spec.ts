@@ -44,8 +44,10 @@ test.describe('Freeplay Mode', () => {
       await expect(page.getByText(/correct|incorrect/i)).toBeVisible({ timeout: 5_000 });
 
       if (i < 9) {
+        // NEXT button has CSS animation — force click to bypass Playwright stability check
         const nextButton = page.getByRole('button', { name: /next/i });
-        await nextButton.click();
+        await expect(nextButton).toBeVisible({ timeout: 5_000 });
+        await nextButton.click({ force: true });
       }
     }
 

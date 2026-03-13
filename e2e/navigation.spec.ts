@@ -22,7 +22,8 @@ test.describe('Navigation & UI', () => {
 
   test('methodology page loads markdown content', async ({ page }) => {
     await page.goto('/methodology');
-    await expect(page.locator('body')).not.toContainText(/error|404/i, { timeout: 10_000 });
+    // Page may contain "error" in legitimate research text — just check for 404/crash indicators
+    await expect(page.locator('body')).not.toContainText('404', { timeout: 10_000 });
     await expect(page.getByText(/methodology|research/i).first()).toBeVisible({ timeout: 10_000 });
   });
 
