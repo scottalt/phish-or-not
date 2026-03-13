@@ -44,7 +44,3 @@ next-env.d.ts
 # corpus pipeline
 downloads/
 corpus/
-
-# card data (contains answers)
-data/cards.ts
-data/expert-cards.ts
