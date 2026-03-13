@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { usePlayer } from '@/lib/usePlayer';
 import { LevelMeter } from '@/components/LevelMeter';
 import { getRankFromLevel } from '@/lib/rank';
+import { ACHIEVEMENTS, RARITY_COLORS, CATEGORY_LABELS, type AchievementCategory } from '@/lib/achievements';
 import Link from 'next/link';
 import type { PlayerBackground } from '@/lib/types';
 
@@ -322,6 +323,50 @@ export default function ProfilePage() {
                     </span>
                   </div>
                   <span className="text-[#00aa28] text-sm font-mono opacity-60">LVL {rank.levels}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Achievements */}
+        <div className="term-border bg-[#060c06]">
+          <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5 flex items-center justify-between">
+            <span className="text-[#00aa28] text-sm tracking-widest">ACHIEVEMENTS</span>
+            <span className="text-[#00aa28] text-sm font-mono">
+              {profile.achievements?.length ?? 0}/{ACHIEVEMENTS.length}
+            </span>
+          </div>
+          <div className="divide-y divide-[rgba(0,255,65,0.06)]">
+            {(Object.keys(CATEGORY_LABELS) as AchievementCategory[]).map((cat) => {
+              const catAchievements = ACHIEVEMENTS.filter(a => a.category === cat);
+              return (
+                <div key={cat}>
+                  <div className="px-3 py-1.5 bg-[rgba(0,255,65,0.02)]">
+                    <span className="text-[#003a0e] text-sm font-mono tracking-widest">{CATEGORY_LABELS[cat]}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-px bg-[rgba(0,255,65,0.04)]">
+                    {catAchievements.map((a) => {
+                      const unlocked = profile.achievements?.includes(a.id) ?? false;
+                      const color = unlocked ? RARITY_COLORS[a.rarity] : '#003a0e';
+                      return (
+                        <div
+                          key={a.id}
+                          className={`px-3 py-2.5 bg-[#060c06] ${unlocked ? '' : 'opacity-40'}`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg font-mono" style={{ color }}>{a.icon}</span>
+                            <span className="text-sm font-mono font-bold tracking-wider" style={{ color }}>
+                              {a.name}
+                            </span>
+                          </div>
+                          <div className="text-sm font-mono mt-0.5" style={{ color: unlocked ? '#00aa28' : '#003a0e' }}>
+                            {unlocked ? a.description : '[LOCKED]'}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               );
             })}
