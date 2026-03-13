@@ -39,8 +39,20 @@ export function TerminalSounds() {
 
     // Retry on first user gesture to bypass autoplay block
     function handleFirstInteraction() {
-      if (sfxEnabled() && musicRef.current?.paused) {
-        musicRef.current.play().catch(() => {});
+      if (sfxEnabled()) {
+        if (!musicRef.current) {
+          const audio = new Audio(MUSIC_SRC);
+          audio.loop = true;
+          audio.volume = 0.06;
+          musicRef.current = audio;
+        }
+        if (musicRef.current.paused) {
+          musicRef.current.play().then(() => {
+            document.removeEventListener('click', handleFirstInteraction);
+            document.removeEventListener('touchstart', handleFirstInteraction);
+          }).catch(() => {});
+          return;
+        }
       }
       document.removeEventListener('click', handleFirstInteraction);
       document.removeEventListener('touchstart', handleFirstInteraction);
