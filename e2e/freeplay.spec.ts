@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { ensureTestUser, seedGraduatedUser, TEST_GRADUATED_EMAIL } from './helpers/test-accounts';
+import { ensureTestUser, seedGraduatedUser, TEST_FREEPLAY_EMAIL } from './helpers/test-accounts';
 import { injectSession } from './helpers/auth';
 
 const supabaseUrl = process.env.TEST_SUPABASE_URL!;
@@ -8,7 +8,7 @@ test.describe('Freeplay Mode', () => {
   let user: Awaited<ReturnType<typeof ensureTestUser>>;
 
   test.beforeAll(async () => {
-    user = await ensureTestUser(TEST_GRADUATED_EMAIL);
+    user = await ensureTestUser(TEST_FREEPLAY_EMAIL);
     await seedGraduatedUser(user.id);
   });
 

@@ -15,6 +15,7 @@ const dataAdmin = createClient(supabaseUrl, serviceKey, {
 
 export const TEST_FRESH_EMAIL = 'test-fresh@phish-or-not.dev';
 export const TEST_GRADUATED_EMAIL = 'test-graduated@phish-or-not.dev';
+export const TEST_FREEPLAY_EMAIL = 'test-freeplay@phish-or-not.dev';
 
 interface TestUser {
   id: string;
