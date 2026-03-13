@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { usePlayer } from '@/lib/usePlayer';
-import Link from 'next/link';
 
 interface Stats {
   totalAnswers: number;
@@ -55,7 +54,7 @@ export default function StatsPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#020902] flex items-center justify-center px-4">
+      <main className="min-h-screen bg-[#020902] flex items-center justify-center px-4 lg:pt-16 pb-20 lg:pb-8">
         <span className="text-[#33bb55] text-sm font-mono">LOADING...</span>
       </main>
     );
@@ -63,10 +62,9 @@ export default function StatsPage() {
 
   if (!signedIn || !profile) {
     return (
-      <main className="min-h-screen bg-[#020902] flex items-center justify-center px-4">
+      <main className="min-h-screen bg-[#020902] flex items-center justify-center px-4 lg:pt-16 pb-20 lg:pb-8">
         <div className="w-full max-w-sm term-border bg-[#060c06] px-4 py-6 text-center space-y-3">
           <div className="text-[#33bb55] text-sm font-mono tracking-widest">NOT_AUTHENTICATED</div>
-          <Link href="/" className="block text-[#00ff41] text-sm font-mono hover:underline">← BACK TO TERMINAL</Link>
         </div>
       </main>
     );
@@ -74,11 +72,10 @@ export default function StatsPage() {
 
   if (error === 'LOCKED') {
     return (
-      <main className="min-h-screen bg-[#020902] flex items-center justify-center px-4">
+      <main className="min-h-screen bg-[#020902] flex items-center justify-center px-4 lg:pt-16 pb-20 lg:pb-8">
         <div className="w-full max-w-sm term-border bg-[#060c06] px-4 py-6 text-center space-y-3">
           <div className="text-[#ffaa00] text-sm font-mono tracking-widest">STATS_LOCKED</div>
           <div className="text-[#1a5c2a] text-sm font-mono">Complete 30 research answers to unlock your personal stats.</div>
-          <Link href="/" className="block text-[#00ff41] text-sm font-mono hover:underline">← BACK TO TERMINAL</Link>
         </div>
       </main>
     );
@@ -86,10 +83,9 @@ export default function StatsPage() {
 
   if (error) {
     return (
-      <main className="min-h-screen bg-[#020902] flex items-center justify-center px-4">
+      <main className="min-h-screen bg-[#020902] flex items-center justify-center px-4 lg:pt-16 pb-20 lg:pb-8">
         <div className="w-full max-w-sm term-border bg-[#060c06] px-4 py-6 text-center space-y-3">
           <div className="text-[#ff3333] text-sm font-mono">LOAD_FAILED</div>
-          <Link href="/" className="block text-[#00ff41] text-sm font-mono hover:underline">← BACK TO TERMINAL</Link>
         </div>
       </main>
     );
@@ -97,11 +93,10 @@ export default function StatsPage() {
 
   if (empty) {
     return (
-      <main className="min-h-screen bg-[#020902] flex items-center justify-center px-4">
+      <main className="min-h-screen bg-[#020902] flex items-center justify-center px-4 lg:pt-16 pb-20 lg:pb-8">
         <div className="w-full max-w-sm term-border bg-[#060c06] px-4 py-6 text-center space-y-3">
           <div className="text-[#33bb55] text-sm font-mono tracking-widest">NO_DATA</div>
           <div className="text-[#1a5c2a] text-sm font-mono">Play some rounds in Freeplay, Daily, or Expert to see your stats.</div>
-          <Link href="/" className="block text-[#00ff41] text-sm font-mono hover:underline">← BACK TO TERMINAL</Link>
         </div>
       </main>
     );
@@ -109,7 +104,7 @@ export default function StatsPage() {
 
   if (!stats) {
     return (
-      <main className="min-h-screen bg-[#020902] flex items-center justify-center px-4">
+      <main className="min-h-screen bg-[#020902] flex items-center justify-center px-4 lg:pt-16 pb-20 lg:pb-8">
         <span className="text-[#33bb55] text-sm font-mono">LOADING...</span>
       </main>
     );
@@ -122,13 +117,12 @@ export default function StatsPage() {
   const maxActivity = Math.max(...activityValues, 1);
 
   return (
-    <main className="min-h-screen bg-[#020902] flex items-start justify-center px-4 py-8">
+    <main className="min-h-screen bg-[#020902] flex items-start justify-center px-4 py-8 lg:pt-16 pb-20 lg:pb-8">
       <div className="w-full max-w-sm lg:max-w-4xl space-y-4 lg:space-y-6">
         {/* Header */}
         <div className="term-border bg-[#060c06]">
-          <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5 flex items-center justify-between">
+          <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5">
             <span className="text-[#33bb55] text-sm lg:text-base tracking-widest">OPERATOR_STATS</span>
-            <Link href="/" className="text-[#33bb55] text-sm font-mono hover:text-[#00ff41]">← TERMINAL</Link>
           </div>
 
           {/* Core stats */}
@@ -307,12 +301,6 @@ export default function StatsPage() {
           </div>
         </div>
 
-        <Link
-          href="/"
-          className="block w-full py-4 term-border text-[#00ff41] font-mono font-bold tracking-widest text-sm text-center hover:bg-[rgba(0,255,65,0.05)] transition-all"
-        >
-          [ BACK TO TERMINAL ]
-        </Link>
       </div>
     </main>
   );
