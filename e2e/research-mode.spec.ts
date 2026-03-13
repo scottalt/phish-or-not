@@ -1,33 +1,11 @@
 import { test, expect } from '@playwright/test';
+import { createClient } from '@supabase/supabase-js';
 import { ensureTestUser, TEST_FRESH_EMAIL } from './helpers/test-accounts';
 import { injectSession } from './helpers/auth';
+import { answerCard, clickNext, completeResearchOnboarding } from './helpers/game-actions';
 
 const supabaseUrl = process.env.TEST_SUPABASE_URL!;
-
-/**
- * Helper: complete the research tutorial mini-game.
- * Tutorial shows: confidence → answer → "GOT IT — START RESEARCH"
- */
-async function completeTutorialIfShown(page: import('@playwright/test').Page) {
-  // Check for the TRAINING_SIMULATION banner (unique to tutorial)
-  const trainingBanner = page.getByText('TRAINING_SIMULATION');
-  if (!(await trainingBanner.isVisible({ timeout: 5_000 }).catch(() => false))) return;
-
-  // Select confidence
-  const confidence = page.getByRole('button', { name: /certain|likely|guessing/i }).first();
-  await expect(confidence).toBeVisible({ timeout: 3_000 });
-  await confidence.click();
-
-  // Answer the tutorial card
-  const phishing = page.getByRole('button', { name: /phishing/i });
-  await expect(phishing).toBeVisible({ timeout: 3_000 });
-  await phishing.click();
-
-  // Complete tutorial
-  const gotIt = page.getByRole('button', { name: /got it/i });
-  await expect(gotIt).toBeVisible({ timeout: 3_000 });
-  await gotIt.click();
-}
+const serviceKey = process.env.TEST_SUPABASE_SERVICE_KEY!;
 
 test.describe('Research Mode', () => {
   let freshUser: Awaited<ReturnType<typeof ensureTestUser>>;
@@ -36,73 +14,44 @@ test.describe('Research Mode', () => {
     freshUser = await ensureTestUser(TEST_FRESH_EMAIL);
   });
 
-  test('full research flow: intro → tutorial → answer card → feedback → summary', async ({ page }) => {
+  test('answer is server-verified and stored in database', async ({ page }) => {
     await injectSession(page, supabaseUrl, freshUser.accessToken, freshUser.refreshToken);
     await page.goto('/');
 
-    // Should see RESEARCH MODE button (fresh user, not graduated)
     const researchButton = page.getByRole('button', { name: /research mode/i });
     await expect(researchButton).toBeVisible({ timeout: 15_000 });
 
-    // Set up response listener BEFORE clicking
     const cardsResponse = page.waitForResponse(
       (resp) => resp.url().includes('/api/cards/research'),
       { timeout: 30_000 },
     );
     await researchButton.click();
-
-    // Wait for API to return cards FIRST — intro/tutorial only render after cards load
     await cardsResponse;
 
-    // Research intro screen — click "BEGIN RESEARCH"
-    const beginButton = page.getByRole('button', { name: /begin/i });
-    if (await beginButton.isVisible({ timeout: 10_000 }).catch(() => false)) {
-      await beginButton.click();
-    }
+    // Complete onboarding (intro + tutorial) for first-time user
+    await completeResearchOnboarding(page);
 
-    // Complete tutorial if shown (first-time user)
-    await completeTutorialIfShown(page);
+    // Answer a real research card
+    const checkData = await answerCard(page);
 
-    // Now on the actual game card — select confidence first
-    const confidenceButton = page.getByRole('button', { name: /certain|likely|guessing/i }).first();
-    await expect(confidenceButton).toBeVisible({ timeout: 15_000 });
-    await confidenceButton.click();
-
-    // Now phishing/legit buttons appear
-    const phishingButton = page.getByRole('button', { name: /phishing/i });
-    await expect(phishingButton).toBeVisible({ timeout: 5_000 });
-
-    // Set up check listener BEFORE clicking
-    const checkResponse = page.waitForResponse(
-      (resp) => resp.url().includes('/api/cards/check'),
-      { timeout: 15_000 },
-    );
-    await phishingButton.click();
-
-    // Wait for server-side answer check
-    const checkData = await (await checkResponse).json();
-
-    // Verify server returned expected fields
+    // Verify server-side check returned correct structure
     expect(checkData).toHaveProperty('correct');
     expect(checkData).toHaveProperty('isPhishing');
     expect(checkData).toHaveProperty('pointsEarned');
     expect(checkData).toHaveProperty('streak');
     expect(checkData).toHaveProperty('explanation');
+    expect(typeof checkData.correct).toBe('boolean');
+    expect(typeof checkData.isPhishing).toBe('boolean');
 
-    // Feedback screen should be visible
-    await expect(page.getByText(/neutralized|cleared|breach|false positive/i)).toBeVisible({ timeout: 10_000 });
+    // Advance to next card to confirm game loop works
+    await clickNext(page);
 
-    // Click next to proceed (force click to bypass animation stability check)
-    const nextButton = page.getByRole('button', { name: /next/i });
-    await expect(nextButton).toBeVisible({ timeout: 5_000 });
-    await nextButton.click({ force: true });
-
-    // Second card should load — select confidence first
-    const confidenceButton2 = page.getByRole('button', { name: /certain|likely|guessing/i }).first();
-    await expect(confidenceButton2).toBeVisible({ timeout: 10_000 });
+    // Second card's confidence selector should appear
+    const confidence2 = page.getByRole('button', { name: /certain|likely|guessing/i }).first();
+    await expect(confidence2).toBeVisible({ timeout: 10_000 });
   });
 
-  test('server-side answer verification rejects re-checking same card', async ({ page }) => {
+  test('each card produces exactly one /check call', async ({ page }) => {
     await injectSession(page, supabaseUrl, freshUser.accessToken, freshUser.refreshToken);
     await page.goto('/');
 
@@ -114,42 +63,70 @@ test.describe('Research Mode', () => {
     const researchButton = page.getByRole('button', { name: /research mode/i });
     await expect(researchButton).toBeVisible({ timeout: 15_000 });
 
-    // Set up response listener BEFORE clicking
     const cardsResponse = page.waitForResponse(
       (resp) => resp.url().includes('/api/cards/research'),
       { timeout: 30_000 },
     );
     await researchButton.click();
-
-    // Wait for API to return cards FIRST
     await cardsResponse;
 
-    // Dismiss intro if shown
-    const beginButton = page.getByRole('button', { name: /begin/i });
-    if (await beginButton.isVisible({ timeout: 10_000 }).catch(() => false)) {
-      await beginButton.click();
-    }
+    await completeResearchOnboarding(page);
+    await answerCard(page);
 
-    // Complete tutorial if shown
-    await completeTutorialIfShown(page);
-
-    // Select confidence first, then answer
-    const confidenceButton = page.getByRole('button', { name: /certain|likely|guessing/i }).first();
-    await expect(confidenceButton).toBeVisible({ timeout: 15_000 });
-    await confidenceButton.click();
-
-    const phishingButton = page.getByRole('button', { name: /phishing/i });
-    await expect(phishingButton).toBeVisible({ timeout: 5_000 });
-
-    const checkResponse = page.waitForResponse(
-      (resp) => resp.url().includes('/api/cards/check'),
-      { timeout: 15_000 },
-    );
-    await phishingButton.click();
-
-    await checkResponse;
-
-    // Each card should only produce ONE check call
+    // Exactly one check call per answered card
     expect(checkCount).toBe(1);
+  });
+
+  test('answers are persisted to the database', async ({ page }) => {
+    await injectSession(page, supabaseUrl, freshUser.accessToken, freshUser.refreshToken);
+    await page.goto('/');
+
+    // Get player's answer count before playing
+    const db = createClient(supabaseUrl, serviceKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+    const { data: player } = await db
+      .from('players')
+      .select('id')
+      .eq('auth_id', freshUser.id)
+      .single();
+
+    const { count: beforeCount } = await db
+      .from('answers')
+      .select('id', { count: 'exact', head: true })
+      .eq('player_id', player?.id)
+      .eq('game_mode', 'research');
+
+    // Play one card
+    const researchButton = page.getByRole('button', { name: /research mode/i });
+    await expect(researchButton).toBeVisible({ timeout: 15_000 });
+
+    const cardsResponse = page.waitForResponse(
+      (resp) => resp.url().includes('/api/cards/research'),
+      { timeout: 30_000 },
+    );
+    await researchButton.click();
+    await cardsResponse;
+
+    await completeResearchOnboarding(page);
+    await answerCard(page);
+
+    // Wait for the answer to be persisted (client sends to /api/answers after feedback)
+    await page.waitForResponse(
+      (resp) => resp.url().includes('/api/answers') && resp.status() === 200,
+      { timeout: 15_000 },
+    ).catch(() => null); // Answer logging is fire-and-forget, may not always arrive
+
+    // Give the DB a moment to process
+    await page.waitForTimeout(2_000);
+
+    // Verify answer count increased
+    const { count: afterCount } = await db
+      .from('answers')
+      .select('id', { count: 'exact', head: true })
+      .eq('player_id', player?.id)
+      .eq('game_mode', 'research');
+
+    expect((afterCount ?? 0)).toBeGreaterThan(beforeCount ?? 0);
   });
 });

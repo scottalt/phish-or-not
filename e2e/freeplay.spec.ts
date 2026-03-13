@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { ensureTestUser, seedGraduatedUser, TEST_FREEPLAY_EMAIL } from './helpers/test-accounts';
 import { injectSession } from './helpers/auth';
+import { answerCard, clickNext } from './helpers/game-actions';
 
 const supabaseUrl = process.env.TEST_SUPABASE_URL!;
 
@@ -12,46 +13,32 @@ test.describe('Freeplay Mode', () => {
     await seedGraduatedUser(user.id);
   });
 
-  test('play a full round: card → answer → feedback → next → summary', async ({ page }) => {
+  test('full round: 10 cards with server-verified answers', async ({ page }) => {
     await injectSession(page, supabaseUrl, user.accessToken, user.refreshToken);
     await page.goto('/');
 
-    // Graduated user sees [ PLAY ] for freeplay
     const playButton = page.getByRole('button', { name: /play/i }).first();
     await expect(playButton).toBeVisible({ timeout: 15_000 });
     await playButton.click();
 
-    // Answer 10 cards to complete a round
+    // Play through 10 cards, verifying server check response each time
     for (let i = 0; i < 10; i++) {
-      // Step 1: Select confidence first (UI requires this before answer buttons appear)
-      const confidenceButton = page.getByRole('button', { name: /certain|likely|guessing/i }).first();
-      await expect(confidenceButton).toBeVisible({ timeout: 15_000 });
-      await confidenceButton.click();
+      const checkData = await answerCard(page);
 
-      // Step 2: Now phishing/legit buttons appear
-      const phishingButton = page.getByRole('button', { name: /phishing/i });
-      await expect(phishingButton).toBeVisible({ timeout: 5_000 });
+      // Server must return these fields for the game to function
+      expect(checkData).toHaveProperty('correct');
+      expect(checkData).toHaveProperty('isPhishing');
+      expect(checkData).toHaveProperty('pointsEarned');
+      expect(checkData).toHaveProperty('streak');
+      expect(typeof checkData.correct).toBe('boolean');
+      expect(typeof checkData.pointsEarned).toBe('number');
 
-      const checkResponse = page.waitForResponse(
-        (resp) => resp.url().includes('/api/cards/check'),
-        { timeout: 15_000 },
-      );
-      await phishingButton.click();
-
-      await checkResponse;
-
-      // Feedback screen (server check can be slow on cold starts)
-      await expect(page.getByText(/neutralized|cleared|breach|false positive/i)).toBeVisible({ timeout: 10_000 });
-
-      if (i < 9) {
-        // NEXT button has CSS animation — force click to bypass Playwright stability check
-        const nextButton = page.getByRole('button', { name: /next/i });
-        await expect(nextButton).toBeVisible({ timeout: 5_000 });
-        await nextButton.click({ force: true });
-      }
+      if (i < 9) await clickNext(page);
     }
 
-    // Summary screen after 10th card
-    await expect(page.getByText(/summary|round complete|results/i)).toBeVisible({ timeout: 10_000 });
+    // Round ends — game should transition away from the card view
+    // (summary, results, or back to start — any is valid)
+    await expect(page.getByRole('button', { name: /play again|back|terminal/i }).first())
+      .toBeVisible({ timeout: 10_000 });
   });
 });

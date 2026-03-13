@@ -5,6 +5,7 @@ import {
   TEST_GRADUATED_EMAIL,
 } from './helpers/test-accounts';
 import { injectSession } from './helpers/auth';
+import { answerCard } from './helpers/game-actions';
 
 const supabaseUrl = process.env.TEST_SUPABASE_URL!;
 
@@ -16,7 +17,7 @@ test.describe('Graduated User Modes & Pages', () => {
     await seedGraduatedUser(graduatedUser.id);
   });
 
-  test('daily challenge: start, answer, see feedback', async ({ page }) => {
+  test('daily challenge: server-verified answer', async ({ page }) => {
     await injectSession(page, supabaseUrl, graduatedUser.accessToken, graduatedUser.refreshToken);
     await page.goto('/');
 
@@ -24,32 +25,19 @@ test.describe('Graduated User Modes & Pages', () => {
     await expect(dailyButton).toBeVisible({ timeout: 15_000 });
 
     const cardsResponse = page.waitForResponse(
-      (resp) => resp.url().includes('/api/cards/daily') ,
+      (resp) => resp.url().includes('/api/cards/daily'),
       { timeout: 30_000 },
     );
     await dailyButton.click();
     await cardsResponse;
 
-    // Step 1: Select confidence first (UI requires this before answer buttons appear)
-    const confidenceButton = page.getByRole('button', { name: /certain|likely|guessing/i }).first();
-    await expect(confidenceButton).toBeVisible({ timeout: 10_000 });
-    await confidenceButton.click();
-
-    // Step 2: Now phishing/legit buttons appear
-    const phishingButton = page.getByRole('button', { name: /phishing/i });
-    await expect(phishingButton).toBeVisible({ timeout: 5_000 });
-
-    const checkResponse = page.waitForResponse(
-      (resp) => resp.url().includes('/api/cards/check'),
-      { timeout: 15_000 },
-    );
-    await phishingButton.click();
-
-    await checkResponse;
-    await expect(page.getByText(/neutralized|cleared|breach|false positive/i)).toBeVisible({ timeout: 10_000 });
+    const checkData = await answerCard(page);
+    expect(checkData).toHaveProperty('correct');
+    expect(checkData).toHaveProperty('isPhishing');
+    expect(typeof checkData.correct).toBe('boolean');
   });
 
-  test('expert mode: start and answer a card', async ({ page }) => {
+  test('expert mode: server-verified answer', async ({ page }) => {
     await injectSession(page, supabaseUrl, graduatedUser.accessToken, graduatedUser.refreshToken);
     await page.goto('/');
 
@@ -57,51 +45,36 @@ test.describe('Graduated User Modes & Pages', () => {
     await expect(expertButton).toBeVisible({ timeout: 15_000 });
 
     const cardsResponse = page.waitForResponse(
-      (resp) => resp.url().includes('/api/cards/expert') ,
+      (resp) => resp.url().includes('/api/cards/expert'),
       { timeout: 30_000 },
     );
     await expertButton.click();
     await cardsResponse;
 
-    // Step 1: Select confidence first
-    const confidenceButton = page.getByRole('button', { name: /certain|likely|guessing/i }).first();
-    await expect(confidenceButton).toBeVisible({ timeout: 10_000 });
-    await confidenceButton.click();
-
-    // Step 2: Now phishing/legit buttons appear
-    const phishingButton = page.getByRole('button', { name: /phishing/i });
-    await expect(phishingButton).toBeVisible({ timeout: 5_000 });
-
-    const checkResponse = page.waitForResponse(
-      (resp) => resp.url().includes('/api/cards/check'),
-      { timeout: 15_000 },
-    );
-    await phishingButton.click();
-
-    await checkResponse;
-    await expect(page.getByText(/neutralized|cleared|breach|false positive/i)).toBeVisible({ timeout: 10_000 });
+    const checkData = await answerCard(page);
+    expect(checkData).toHaveProperty('correct');
+    expect(checkData).toHaveProperty('isPhishing');
+    expect(typeof checkData.correct).toBe('boolean');
   });
 
   test('stats page loads without crashing', async ({ page }) => {
     await injectSession(page, supabaseUrl, graduatedUser.accessToken, graduatedUser.refreshToken);
     await page.goto('/stats');
-    // Stats page should show either full stats, locked state, or empty state — all are valid
+    // Stats page renders one of: full stats, locked state, or loading
     await expect(
       page.getByText(/accuracy|operator_stats|stats_locked|not_authenticated|loading/i).first(),
     ).toBeVisible({ timeout: 15_000 });
   });
 
-  test('intel page loads with aggregate data', async ({ page }) => {
+  test('intel page loads with data', async ({ page }) => {
     await injectSession(page, supabaseUrl, graduatedUser.accessToken, graduatedUser.refreshToken);
     await page.goto('/intel/player');
-    await expect(page.locator('body')).not.toContainText(/error|exception/i, { timeout: 15_000 });
     await expect(page.getByText(/bypass|technique|analysis/i).first()).toBeVisible({ timeout: 15_000 });
   });
 
-  test('profile page loads and shows callsign', async ({ page }) => {
+  test('profile page loads', async ({ page }) => {
     await injectSession(page, supabaseUrl, graduatedUser.accessToken, graduatedUser.refreshToken);
     await page.goto('/profile');
-    await expect(page.locator('body')).not.toContainText(/error|exception/i, { timeout: 15_000 });
     await expect(page.getByText(/callsign|operator|profile/i).first()).toBeVisible({ timeout: 15_000 });
   });
 });

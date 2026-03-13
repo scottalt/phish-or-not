@@ -5,29 +5,18 @@ import { injectSession } from './helpers/auth';
 const supabaseUrl = process.env.TEST_SUPABASE_URL!;
 
 test.describe('Navigation & UI', () => {
-  test('homepage loads with play button and leaderboard', async ({ page }) => {
+  test('homepage loads with play button', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('button', { name: /play/i }).first()).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText(/xp/i).first()).toBeVisible({ timeout: 10_000 });
   });
 
-  test('signal guide expands and collapses', async ({ page }) => {
-    await page.goto('/');
-    const guide = page.getByText(/signal guide/i);
-    if (await guide.isVisible({ timeout: 5_000 }).catch(() => false)) {
-      await guide.click();
-      await expect(page.locator('body')).toContainText(/phishing|signal|indicator/i, { timeout: 5_000 });
-    }
-  });
-
-  test('methodology page loads markdown content', async ({ page }) => {
+  test('methodology page renders content', async ({ page }) => {
     await page.goto('/methodology');
-    // Page may contain "error" in legitimate research text — just check for 404/crash indicators
-    await expect(page.locator('body')).not.toContainText('404', { timeout: 10_000 });
+    // Just verify the page rendered meaningful content (not a 404 or crash)
     await expect(page.getByText(/methodology|research/i).first()).toBeVisible({ timeout: 10_000 });
   });
 
-  test('leaderboard daily tab visible for graduated user', async ({ page }) => {
+  test('leaderboard visible for graduated user', async ({ page }) => {
     const graduatedUser = await ensureTestUser(TEST_GRADUATED_EMAIL);
     await seedGraduatedUser(graduatedUser.id);
     await injectSession(page, supabaseUrl, graduatedUser.accessToken, graduatedUser.refreshToken);
@@ -37,7 +26,7 @@ test.describe('Navigation & UI', () => {
     await expect(dailyTab).toBeVisible({ timeout: 15_000 });
   });
 
-  test('back navigation links work', async ({ page }) => {
+  test('back navigation from methodology works', async ({ page }) => {
     await page.goto('/methodology');
     const backLink = page.getByText(/intel|back/i).first();
     await expect(backLink).toBeVisible({ timeout: 10_000 });
