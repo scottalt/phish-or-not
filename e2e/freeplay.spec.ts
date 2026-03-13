@@ -20,13 +20,22 @@ test.describe('Freeplay Mode', () => {
     const playButton = page.getByRole('button', { name: /play/i }).first();
     await expect(playButton).toBeVisible({ timeout: 15_000 });
 
-    // Set up response listener BEFORE clicking to avoid race condition
+    // Log all API responses for debugging
+    page.on('response', (resp) => {
+      if (resp.url().includes('/api/')) {
+        console.log(`API response: ${resp.status()} ${resp.url()}`);
+      }
+    });
+
+    // Set up response listener BEFORE clicking — match freeplay specifically
     const cardsResponse = page.waitForResponse(
-      (resp) => resp.url().includes('/api/cards/'),
+      (resp) => resp.url().includes('/api/cards/freeplay'),
       { timeout: 30_000 },
     );
     await playButton.click();
-    await cardsResponse;
+    const resp = await cardsResponse;
+    console.log(`Freeplay response status: ${resp.status()}`);
+    console.log(`Freeplay response body: ${await resp.text().catch(() => 'FAILED TO READ')}`);
 
     // Debug: log what the page shows after clicking play
     await page.waitForTimeout(3_000);
