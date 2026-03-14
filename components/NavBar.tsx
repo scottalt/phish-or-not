@@ -35,8 +35,8 @@ export function NavBar() {
   return (
     <>
       {/* Desktop: top bar */}
-      <nav className="hidden lg:flex fixed top-0 left-0 right-0 z-50 bg-[#060c06] border-b border-[rgba(0,255,65,0.35)] px-4 py-2 items-center justify-between font-mono">
-        <Link href="/" className="text-[#00ff41] text-sm font-bold tracking-widest">
+      <nav className="hidden lg:flex fixed top-0 left-0 right-0 z-50 bg-[#060c06] border-b border-[rgba(0,255,65,0.35)] px-6 py-2.5 items-center justify-between font-mono" style={{ boxShadow: '0 2px 12px rgba(0, 255, 65, 0.06)' }}>
+        <Link href="/" className="text-[#00ff41] text-sm font-bold tracking-widest" style={{ textShadow: '0 0 8px rgba(0, 255, 65, 0.4)' }}>
           THREAT TERMINAL
         </Link>
         <div className="flex items-center gap-6">
