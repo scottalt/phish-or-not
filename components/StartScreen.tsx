@@ -380,25 +380,27 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
             const graduated = signedIn && (profile?.researchGraduated ?? false);
             const researchCapped = signedIn && !graduated && (profile?.researchAnswersSubmitted ?? 0) >= 30;
             const isResearch = signedIn && !graduated && !researchCapped;
+            const needsCallsign = signedIn && !profile?.displayName;
             return (
               <>
-                <button
-                  onClick={() => {
-                    if (!signedIn) { setShowInlineAuth(true); return; }
-                    if (signedIn && !profile?.displayName) { setShowInlineAuth(true); return; }
-                    if (researchCapped) { handleStart('freeplay'); return; }
-                    handleStart(graduated ? 'freeplay' : 'research');
-                  }}
-                  className={`w-full py-3 term-border font-mono font-bold tracking-widest text-sm active:scale-95 transition-all ${
-                    !signedIn
-                      ? 'border-[rgba(255,170,0,0.5)] text-[#ffaa00] hover:bg-[rgba(255,170,0,0.06)]'
-                      : isResearch
+                {!needsCallsign && (
+                  <button
+                    onClick={() => {
+                      if (!signedIn) { setShowInlineAuth(true); return; }
+                      if (researchCapped) { handleStart('freeplay'); return; }
+                      handleStart(graduated ? 'freeplay' : 'research');
+                    }}
+                    className={`w-full py-3 term-border font-mono font-bold tracking-widest text-sm active:scale-95 transition-all ${
+                      !signedIn
                         ? 'border-[rgba(255,170,0,0.5)] text-[#ffaa00] hover:bg-[rgba(255,170,0,0.06)]'
-                        : 'text-[#33bb55] hover:bg-[rgba(0,255,65,0.05)]'
-                  }`}
-                >
-                  {!signedIn ? '[ LOG IN / SIGN UP TO PLAY ]' : isResearch ? '[ RESEARCH MODE ]' : '[ PLAY ]'}
-                </button>
+                        : isResearch
+                          ? 'border-[rgba(255,170,0,0.5)] text-[#ffaa00] hover:bg-[rgba(255,170,0,0.06)]'
+                          : 'text-[#33bb55] hover:bg-[rgba(0,255,65,0.05)]'
+                    }`}
+                  >
+                    {!signedIn ? '[ LOG IN / SIGN UP TO PLAY ]' : isResearch ? '[ RESEARCH MODE ]' : '[ PLAY ]'}
+                  </button>
+                )}
                 {/* Inline onboarding: sign-in (State 1) or callsign setup (State 2) */}
                 {!signedIn && showInlineAuth && (
                   <div ref={inlineAuthRef} className="anim-slide-down term-border bg-[#060c06] border-[rgba(255,170,0,0.5)]">
