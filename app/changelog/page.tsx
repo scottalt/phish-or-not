@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { usePlayer } from '@/lib/usePlayer';
 import { CHANGELOG_ENTRIES } from '@/lib/changelog';
+import { version } from '@/package.json';
 
 const RECENT_COUNT = 5;
 
@@ -24,6 +25,11 @@ export default function ChangelogPage() {
   return (
     <main className="min-h-screen bg-[#060c06] p-4 flex flex-col items-center lg:pt-16 pb-20 lg:pb-8">
       <div className="w-full max-w-2xl space-y-6 mt-4">
+
+        {/* Version badge */}
+        <div className="text-center">
+          <span className="text-[#1a5c2a] text-xs font-mono tracking-widest">THREAT TERMINAL v{version}</span>
+        </div>
 
         {/* Research Timeline — signed-in only */}
         {signedIn && milestones.length > 0 && (

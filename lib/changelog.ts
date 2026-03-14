@@ -21,20 +21,32 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     date: '2026-03-11',
     category: 'update',
-    title: 'Platform launch',
+    title: 'v1.0.0 — Platform launch',
     body: 'Research mode, daily challenges, expert mode, player accounts with XP and leveling, interactive tutorial, and intel analytics.',
   },
   {
     date: '2026-03-12',
     category: 'update',
-    title: 'Achievements and stats',
+    title: 'v1.1.0 — Achievements and stats',
     body: '20 achievements to unlock. Personal stats dashboard with accuracy breakdown and performance history.',
   },
   {
     date: '2026-03-13',
     category: 'update',
-    title: 'Navigation and desktop layouts',
-    body: 'Persistent nav bar, two-column desktop layouts, daily streak bonuses, and changelog.',
+    title: 'v1.2.0 — Anti-cheat and reliability',
+    body: 'Server-side answer verification for all game modes. Daily streak XP bonuses. E2E test suite and CI pipeline.',
+  },
+  {
+    date: '2026-03-13',
+    category: 'update',
+    title: 'v1.3.0 — Navigation and desktop layouts',
+    body: 'Persistent nav bar, two-column desktop layouts, boot animation, and readability improvements.',
+  },
+  {
+    date: '2026-03-13',
+    category: 'update',
+    title: 'v1.4.0 — Changelog',
+    body: 'Research timeline and platform update history. Semantic versioning.',
   },
 ];
 
