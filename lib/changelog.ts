@@ -33,8 +33,8 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     date: '2026-03-13',
     category: 'update',
-    title: 'v1.2.0 — Anti-cheat and reliability',
-    body: 'Server-side answer verification for all game modes. Daily streak XP bonuses. E2E test suite and CI pipeline.',
+    title: 'v1.2.0 — Daily streaks',
+    body: 'Play daily challenges on consecutive days for escalating XP bonuses.',
   },
   {
     date: '2026-03-13',
@@ -46,7 +46,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
     date: '2026-03-13',
     category: 'update',
     title: 'v1.4.0 — Changelog',
-    body: 'Research timeline and platform update history. Semantic versioning.',
+    body: 'Research timeline and platform update history.',
   },
 ];
 
