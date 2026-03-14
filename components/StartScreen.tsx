@@ -233,6 +233,7 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                   <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5 flex items-center justify-between">
                     <span className="text-[#33bb55] text-sm tracking-widest">SET_CALLSIGN</span>
                     <div className="flex items-center gap-3">
+                      <button onClick={toggleSound} aria-label={soundEnabled ? 'Mute sound effects' : 'Enable sound effects'} className={`lg:hidden text-sm font-mono transition-colors ${soundEnabled ? 'text-[#00ff41]' : 'text-[#1a5c2a]'}`}>{soundEnabled ? '[SFX]' : '[SFX OFF]'}</button>
                       <button onClick={async () => { await signOut(); setShowAuthFlow(false); }} className="text-[#1a5c2a] text-sm font-mono hover:text-[#33bb55]">SIGN OUT</button>
                     </div>
                   </div>
@@ -294,6 +295,7 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                           ★ {profile.achievements?.length ?? 0}/20
                         </Link>
                       )}
+                      <button onClick={toggleSound} aria-label={soundEnabled ? 'Mute sound effects' : 'Enable sound effects'} className={`lg:hidden text-sm font-mono transition-colors ${soundEnabled ? 'text-[#00ff41]' : 'text-[#1a5c2a]'}`}>{soundEnabled ? '[SFX]' : '[SFX OFF]'}</button>
                       <button onClick={async () => { await signOut(); setShowAuthFlow(false); }} className="text-[#1a5c2a] text-sm font-mono hover:text-[#33bb55]">SIGN OUT</button>
                     </div>
                   </div>
