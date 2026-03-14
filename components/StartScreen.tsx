@@ -411,6 +411,8 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
             {/* Main column: actions + leaderboard */}
             <div className="contents lg:block lg:flex-1 lg:pl-6 lg:space-y-4">
 
+          {/* Action buttons group — tighter spacing than outer layout */}
+          <div className="space-y-3">
           {(() => {
             const graduated = signedIn && (profile?.researchGraduated ?? false);
             const researchCapped = signedIn && !graduated && (profile?.researchAnswersSubmitted ?? 0) >= 30;
@@ -495,10 +497,11 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
             </Link>
           )}
 
-          <div className="flex items-center justify-center gap-4 text-sm font-mono -mt-3 lg:-mt-4">
+          <div className="flex items-center justify-center gap-4 text-xs font-mono pt-1">
             <span className="text-[#1a5c2a]">10 questions per round</span>
             <span className="text-[#1a5c2a]">·</span>
             <Link href="/changelog" className="text-[#1a5c2a] hover:text-[#33bb55] transition-colors tracking-wider">v{version}</Link>
+          </div>
           </div>
 
           {/* Tabbed leaderboard — XP always visible; Daily tab only for graduated players */}
