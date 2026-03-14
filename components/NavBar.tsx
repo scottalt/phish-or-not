@@ -7,10 +7,10 @@ import { useNavVisibility } from '@/lib/NavVisibilityContext';
 import { useSoundEnabled } from '@/lib/useSoundEnabled';
 
 const NAV_LINKS = [
-  { label: 'PLAY', path: '/', match: (p: string) => p === '/' },
-  { label: 'STATS', path: '/stats', match: (p: string) => p.startsWith('/stats'), auth: true },
-  { label: 'INTEL', path: '/intel/player', match: (p: string) => p.startsWith('/intel'), auth: true },
-  { label: 'PROFILE', path: '/profile', match: (p: string) => p.startsWith('/profile'), auth: true },
+  { label: 'HOME', path: '/', match: (p: string) => p === '/' },
+  { label: 'STATS', path: '/stats', match: (p: string) => p.startsWith('/stats') },
+  { label: 'INTEL', path: '/intel/player', match: (p: string) => p.startsWith('/intel') },
+  { label: 'PROFILE', path: '/profile', match: (p: string) => p.startsWith('/profile') },
 ];
 
 const HIDDEN_PATHS = ['/admin', '/auth', '/intel'];
@@ -26,10 +26,11 @@ export function NavBar() {
   const { navHidden } = useNavVisibility();
   const { soundEnabled, toggleSound } = useSoundEnabled();
 
+  if (!signedIn) return null;
   if (navHidden) return null;
   if (shouldHideForPath(pathname)) return null;
 
-  const links = NAV_LINKS.filter((link) => !link.auth || signedIn);
+  const links = NAV_LINKS;
 
   return (
     <>

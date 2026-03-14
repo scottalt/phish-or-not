@@ -26,19 +26,20 @@ test.describe('Navigation & UI', () => {
     await expect(dailyTab).toBeVisible({ timeout: 15_000 });
   });
 
-  test('nav bar is visible on homepage', async ({ page }) => {
+  test('nav bar hidden when signed out', async ({ page }) => {
+    await page.goto('/');
+    // Nav bar should not be visible for unauthenticated users
+    await expect(page.locator('nav')).not.toBeVisible({ timeout: 5_000 });
+  });
+
+  test('nav bar visible for signed-in user', async ({ page }) => {
+    const graduatedUser = await ensureTestUser(TEST_GRADUATED_EMAIL);
+    await seedGraduatedUser(graduatedUser.id);
+    await injectSession(page, supabaseUrl, graduatedUser.accessToken, graduatedUser.refreshToken);
     await page.goto('/');
     const nav = page.locator('nav');
     await expect(nav.first()).toBeVisible({ timeout: 10_000 });
-    await expect(nav.first().locator('a[aria-current="page"]')).toContainText('PLAY');
-  });
-
-  test('can navigate via nav bar', async ({ page }) => {
-    await page.goto('/methodology');
-    const nav = page.locator('nav');
-    await expect(nav.first()).toBeVisible({ timeout: 10_000 });
-    await nav.first().locator('a', { hasText: 'PLAY' }).click();
-    await expect(page).toHaveURL('/');
+    await expect(nav.first().locator('a[aria-current="page"]')).toContainText('HOME');
   });
 
   test('methodology page is accessible', async ({ page }) => {
