@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useLayoutEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { usePlayer } from '@/lib/usePlayer';
@@ -27,7 +28,12 @@ export function NavBar() {
   const { soundEnabled, toggleSound } = useSoundEnabled();
 
   // On home page, hide nav until boot animation completes (bootSeen flag in sessionStorage)
-  const bootPending = pathname === '/' && typeof sessionStorage !== 'undefined' && sessionStorage.getItem('bootSeen') !== '1';
+  // Uses useLayoutEffect to avoid hydration mismatch (SSR has no sessionStorage)
+  const [bootPending, setBootPending] = useState(false);
+  useLayoutEffect(() => {
+    const pending = pathname === '/' && sessionStorage.getItem('bootSeen') !== '1';
+    setBootPending(pending);
+  }, [pathname, navHidden]); // re-check when navHidden changes (boot completed)
 
   if (!signedIn) return null;
   if (navHidden || bootPending) return null;
