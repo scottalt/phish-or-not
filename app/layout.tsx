@@ -61,7 +61,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="apple-touch-icon" href="/api/icons?size=192" />
+        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
