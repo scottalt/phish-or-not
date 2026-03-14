@@ -567,6 +567,13 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
               </div>
             );
           })()}
+
+              <Link
+                href="/changelog"
+                className="block text-center text-[#1a5c2a] text-sm font-mono hover:text-[#33bb55] transition-colors tracking-wider"
+              >
+                [ CHANGELOG ]
+              </Link>
             </div>
           </div>
         </div>
