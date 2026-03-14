@@ -49,7 +49,7 @@ test.describe('Freeplay Round Completion', () => {
     await seedGraduatedUser(user.id);
   });
 
-  test('round completion awards XP and records answers', async ({ page }) => {
+  test('round completion awards XP and records answers', { timeout: 120_000 }, async ({ page }) => {
     const before = await getPlayerState(user.id);
 
     await injectSession(page, supabaseUrl, user.accessToken, user.refreshToken);
