@@ -51,6 +51,7 @@ export async function POST(req: NextRequest) {
       typeof a.correct !== 'boolean' ||
       typeof a.isPhishing !== 'boolean'
     ) {
+      console.warn('[answers] reject: validation failed', { ip: req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() });
       return NextResponse.json({ ok: true }); // silent reject — don't break the game
     }
 
@@ -71,6 +72,7 @@ export async function POST(req: NextRequest) {
     // Research and expert modes require authentication — silently skip unauthenticated answers
     const playerId = await getPlayerId();
     if ((a.gameMode === 'research' || a.gameMode === 'expert') && !playerId) {
+      console.warn('[answers] reject: unauthenticated research/expert', { mode: a.gameMode, ip });
       return NextResponse.json({ ok: true });
     }
 
@@ -84,6 +86,7 @@ export async function POST(req: NextRequest) {
         .eq('session_id', a.sessionId);
 
       if ((sessionAnswerCount ?? 0) >= MAX_ANSWERS_PER_SESSION) {
+        console.warn('[answers] reject: session full', { sessionId: a.sessionId, count: sessionAnswerCount });
         return NextResponse.json({ ok: true }); // silent reject — session full
       }
     }
@@ -98,12 +101,14 @@ export async function POST(req: NextRequest) {
       const cardsJson = await redis.get<string>(`session-cards:${a.sessionId}`);
       if (!cardsJson) {
         // Redis key expired — reject rather than trusting client values
+        console.warn('[answers] reject: session expired in Redis', { sessionId: a.sessionId, mode: a.gameMode });
         return NextResponse.json({ ok: true }); // silent reject
       }
       const cards = typeof cardsJson === 'string' ? JSON.parse(cardsJson) : cardsJson;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const card = cards.find((c: any) => c.id === a.cardId);
       if (!card) {
+        console.warn('[answers] reject: card not in session', { sessionId: a.sessionId, cardId: a.cardId });
         return NextResponse.json({ ok: true }); // silent reject — card not in session
       }
       verifiedIsPhishing = card.isPhishing;
@@ -120,6 +125,7 @@ export async function POST(req: NextRequest) {
         .single();
 
       if (!card) {
+        console.warn('[answers] reject: research card not in cards_real', { cardId: a.cardId });
         return NextResponse.json({ ok: true }); // silent reject — card doesn't exist
       }
 
@@ -131,6 +137,7 @@ export async function POST(req: NextRequest) {
         .single();
 
       if (session?.dealt_card_ids && !session.dealt_card_ids.includes(a.cardId)) {
+        console.warn('[answers] reject: card not dealt to session', { sessionId: a.sessionId, cardId: a.cardId });
         return NextResponse.json({ ok: true }); // silent reject — card not dealt to this session
       }
 
@@ -142,6 +149,7 @@ export async function POST(req: NextRequest) {
         .eq('game_mode', 'research');
 
       if ((sessionCount ?? 0) >= MAX_RESEARCH_ANSWERS) {
+        console.warn('[answers] reject: research session cap', { sessionId: a.sessionId, count: sessionCount });
         return NextResponse.json({ ok: true }); // silent reject
       }
 
@@ -155,6 +163,7 @@ export async function POST(req: NextRequest) {
           .eq('game_mode', 'research');
 
         if ((dupCount ?? 0) > 0) {
+          console.warn('[answers] reject: duplicate research answer', { playerId, cardId: a.cardId });
           return NextResponse.json({ ok: true }); // silent reject — already answered
         }
       }
@@ -168,6 +177,7 @@ export async function POST(req: NextRequest) {
           .eq('game_mode', 'research');
 
         if ((totalResearchCount ?? 0) >= MAX_RESEARCH_ANSWERS_PER_PLAYER_TOTAL) {
+          console.warn('[answers] reject: lifetime research cap', { playerId, count: totalResearchCount });
           return NextResponse.json({ ok: true }); // silent reject — lifetime cap
         }
       }
@@ -179,6 +189,7 @@ export async function POST(req: NextRequest) {
         const dailyCount = await redis.get<number>(dailyKey);
 
         if ((dailyCount ?? 0) >= MAX_RESEARCH_ANSWERS_PER_PLAYER_PER_DAY) {
+          console.warn('[answers] reject: daily research limit', { playerId, count: dailyCount });
           return NextResponse.json({ ok: true }); // silent reject — daily limit
         }
       }
@@ -232,6 +243,7 @@ export async function POST(req: NextRequest) {
     if (answerError) {
       // Unique constraint violation = duplicate research answer (race condition caught by DB)
       if (answerError.code === '23505') {
+        console.warn('[answers] reject: DB unique constraint (race condition)', { cardId: a.cardId });
         return NextResponse.json({ ok: true }); // silent reject — duplicate
       }
       console.error('Answer insert failed:', answerError);
