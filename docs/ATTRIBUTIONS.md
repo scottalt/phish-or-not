@@ -1,4 +1,14 @@
-# Data Attributions
+# Attributions
+
+## Audio
+
+**Track:** "Synthetic Deception" (Loopable Epic Cyberpunk Crime Music)
+**Author:** Joel Fazhari
+**Source:** Pixabay — https://pixabay.com/music/suspense-synthetic-deception-loopable-epic-cyberpunk-crime-music-157454/
+**License:** Pixabay Content License (https://pixabay.com/service/license-summary/)
+**Used for:** Background gameplay music
+
+## Data
 
 ## Phishing Email Dataset
 
