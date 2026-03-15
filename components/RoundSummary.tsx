@@ -31,7 +31,7 @@ function getTier(score: number, total: number): { label: string; sub: string; co
 
 const CONFIDENCE_LABEL: Record<string, string> = { guessing: 'G', likely: 'L', certain: 'C' };
 
-const SHARE_URL = 'https://threatterminal.ai/?ref=share';
+const SHARE_URL = 'https://research.scottaltiparmak.com/?ref=share';
 
 function buildShareText(opts: {
   label: string;
