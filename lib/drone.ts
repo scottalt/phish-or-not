@@ -53,7 +53,7 @@ export class AmbientDrone {
       this.padSynth = new Tone.PolySynth(Tone.FMSynth, {
         harmonicity: 3,
         modulationIndex: 10,
-        volume: -14,
+        volume: -30,
         envelope: { attack: 4, decay: 1, sustain: 0.8, release: 8 },
         modulation: { type: 'sine' as const },
         modulationEnvelope: { attack: 0.5, decay: 0, sustain: 1, release: 4 },
@@ -64,7 +64,7 @@ export class AmbientDrone {
       this.bassSynth = new Tone.Synth({
         oscillator: { type: 'sine' as const },
         envelope: { attack: 2, decay: 0, sustain: 1, release: 4 },
-        volume: -22,
+        volume: -36,
       });
       this.bassSynth.connect(this.master);
 
@@ -116,7 +116,7 @@ export class AmbientDrone {
       const blip = new Tone.Synth({
         oscillator: { type: 'square' as const },
         envelope: { attack: 0.001, decay: 0.05, sustain: 0, release: 0.01 },
-        volume: -30,
+        volume: -42,
       }).connect(this.master);
       blip.triggerAttackRelease(note, '32n');
       setTimeout(() => blip.dispose(), 500);

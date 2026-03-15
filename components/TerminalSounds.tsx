@@ -82,7 +82,7 @@ export function TerminalSounds() {
     function handleClick(e: MouseEvent) {
       if (!sfxEnabled()) return;
       const target = e.target as HTMLElement;
-      if (target.closest('button') || target.closest('[role="button"]')) {
+      if (target.closest('button') || target.closest('[role="button"]') || target.closest('a')) {
         playClick();
       }
     }

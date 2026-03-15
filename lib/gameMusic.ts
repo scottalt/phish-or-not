@@ -62,7 +62,7 @@ export class GameMusic {
       this.arpSynth = new Tone.Synth({
         oscillator: { type: 'sawtooth' as const },
         envelope: { attack: 0.01, decay: 0.12, sustain: 0.25, release: 0.15 },
-        volume: -20,
+        volume: -34,
       });
       this.arpSynth.connect(this.arpGain);
 
@@ -70,7 +70,7 @@ export class GameMusic {
       this.bassSynth = new Tone.Synth({
         oscillator: { type: 'triangle' as const },
         envelope: { attack: 0.02, decay: 0.3, sustain: 0.6, release: 0.4 },
-        volume: -16,
+        volume: -30,
       });
       this.bassSynth.connect(this.filter);
 
@@ -79,7 +79,7 @@ export class GameMusic {
         pitchDecay: 0.05,
         octaves: 6,
         envelope: { attack: 0.001, decay: 0.3, sustain: 0, release: 0.1 },
-        volume: -12,
+        volume: -28,
       });
       this.kick.connect(this.master);
 
