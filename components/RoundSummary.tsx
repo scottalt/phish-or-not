@@ -304,7 +304,7 @@ export function RoundSummary({ score, total, totalScore, results, mode, sessionI
       {/* Share results */}
       <button
         onClick={handleShare}
-        className="w-full py-4 term-border text-[#00ff41] font-mono font-bold tracking-widest text-sm hover:bg-[rgba(0,255,65,0.05)] active:scale-95 transition-all"
+        className="w-full py-2 text-[#00aa28] font-mono text-sm tracking-widest hover:text-[#00ff41] active:scale-95 transition-all"
       >
         {copied ? '[ COPIED ✓ ]' : '[ SHARE RESULTS ]'}
       </button>
