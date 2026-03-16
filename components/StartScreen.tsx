@@ -300,20 +300,20 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
       {/* Terminal boot animation — fades out after loading */}
       {!bootHidden && (
         <div
-          className={`term-border bg-[#060c06] transition-opacity duration-300 ${bootDone ? 'opacity-0' : 'opacity-100'}`}
+          className={`term-border bg-[var(--c-bg)] transition-opacity duration-300 ${bootDone ? 'opacity-0' : 'opacity-100'}`}
           onTransitionEnd={() => { if (bootDone) { setBootHidden(true); setShowButton(true); } }}
         >
-          <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-2 flex items-center justify-between">
-            <span className="text-[#33bb55] text-sm tracking-widest">ANALYST_TERMINAL</span>
+          <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] px-3 py-2 flex items-center justify-between">
+            <span className="text-[var(--c-secondary)] text-sm tracking-widest">ANALYST_TERMINAL</span>
             <div className="flex items-center gap-3">
               <button
                 onClick={toggleSound}
                 aria-label={soundEnabled ? 'Mute sound effects' : 'Enable sound effects'}
-                className={`lg:hidden text-sm font-mono transition-colors p-2 -m-2 ${soundEnabled ? 'text-[#00ff41]' : 'text-[#1a5c2a]'}`}
+                className={`lg:hidden text-sm font-mono transition-colors p-2 -m-2 ${soundEnabled ? 'text-[var(--c-primary)]' : 'text-[var(--c-muted)]'}`}
               >
                 {soundEnabled ? '[SFX]' : '[SFX OFF]'}
               </button>
-              <span className="text-[#33bb55] text-sm">■ □ □</span>
+              <span className="text-[var(--c-secondary)] text-sm">■ □ □</span>
             </div>
           </div>
           <div className="px-3 py-4 min-h-48 space-y-1 overflow-hidden">
@@ -321,7 +321,7 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
               <div
                 key={i}
                 className={`anim-fade-in text-sm font-mono leading-relaxed ${
-                  line.bright ? 'text-[#00ff41]' : 'text-[#33bb55]'
+                  line.bright ? 'text-[var(--c-primary)]' : 'text-[var(--c-secondary)]'
                 }`}
               >
                 {line.text}
@@ -342,7 +342,7 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
               <button
                 onClick={toggleSound}
                 aria-label={soundEnabled ? 'Mute sound effects' : 'Enable sound effects'}
-                className={`text-sm font-mono transition-colors ${soundEnabled ? 'text-[#00ff41]' : 'text-[#1a5c2a]'}`}
+                className={`text-sm font-mono transition-colors ${soundEnabled ? 'text-[var(--c-primary)]' : 'text-[var(--c-muted)]'}`}
               >
                 {soundEnabled ? '[SFX]' : '[SFX OFF]'}
               </button>
@@ -351,17 +351,17 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
           {/* Player Profile Card — only shown for signed-in users with a display name */}
           {!playerLoading && signedIn && profile?.displayName && (
             <div className="anim-fade-in-up">
-              <div className="term-border bg-[#060c06]">
-                <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5 flex items-center justify-between">
+              <div className="term-border bg-[var(--c-bg)]">
+                <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] px-3 py-1.5 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Link href="/profile" className="text-[#00ff41] text-sm tracking-widest font-bold hover:text-[#00ff41] border border-[rgba(0,255,65,0.3)] px-2 py-0.5 hover:bg-[rgba(0,255,65,0.06)] transition-colors">[ {profile.displayName} ]</Link>
+                    <Link href="/profile" className="text-[var(--c-primary)] text-sm tracking-widest font-bold hover:text-[var(--c-primary)] border border-[color-mix(in_srgb,var(--c-primary)_30%,transparent)] px-2 py-0.5 hover:bg-[color-mix(in_srgb,var(--c-primary)_6%,transparent)] transition-colors">[ {profile.displayName} ]</Link>
                     {profile.researchGraduated && (
                       <span className="text-[#ffaa00] text-sm font-mono hidden lg:inline">⬡ GRADUATED</span>
                     )}
                   </div>
                   <div className="flex items-center gap-3">
                     {(profile.achievements?.length ?? 0) > 0 && (
-                      <Link href="/profile#achievements" className="text-[#33bb55] text-sm font-mono hover:text-[#00ff41] hidden lg:inline">
+                      <Link href="/profile#achievements" className="text-[var(--c-secondary)] text-sm font-mono hover:text-[var(--c-primary)] hidden lg:inline">
                         ★ {profile.achievements?.length ?? 0}/20
                       </Link>
                     )}

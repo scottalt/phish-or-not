@@ -8,18 +8,26 @@
   --terminal-bg: #060c06;
   --red-alert: #ff3333;
   --amber: #ffaa00;
+
+  /* Theme system — overridden by ThemeContext */
+  --c-primary: #00ff41;
+  --c-secondary: #33bb55;
+  --c-muted: #1a5c2a;
+  --c-dark: #003a0e;
+  --c-bg: #060c06;
+  --c-bg-alt: #020902;
 }
 
 @theme inline {
-  --color-background: var(--terminal-bg);
-  --color-foreground: var(--phosphor);
+  --color-background: var(--c-bg);
+  --color-foreground: var(--c-primary);
   --font-sans: var(--font-geist-mono);
   --font-mono: var(--font-geist-mono);
 }
 
 body {
-  background: var(--terminal-bg);
-  color: var(--phosphor);
+  background: var(--c-bg);
+  color: var(--c-primary);
   font-family: var(--font-geist-mono), 'Courier New', monospace;
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
@@ -217,13 +225,13 @@ body::after {
 
 /* Terminal border */
 .term-border {
-  border: 1px solid rgba(0, 255, 65, 0.35);
-  box-shadow: 0 0 10px rgba(0, 255, 65, 0.05), inset 0 0 10px rgba(0, 255, 65, 0.02);
+  border: 1px solid color-mix(in srgb, var(--c-primary) 35%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--c-primary) 5%, transparent), inset 0 0 10px color-mix(in srgb, var(--c-primary) 2%, transparent);
 }
 
 .term-border-bright {
-  border: 1px solid rgba(0, 255, 65, 0.7);
-  box-shadow: 0 0 18px rgba(0, 255, 65, 0.15), inset 0 0 10px rgba(0, 255, 65, 0.04);
+  border: 1px solid color-mix(in srgb, var(--c-primary) 70%, transparent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--c-primary) 15%, transparent), inset 0 0 10px color-mix(in srgb, var(--c-primary) 4%, transparent);
 }
 
 /* Glitch animation — wrong answer feedback */

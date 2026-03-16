@@ -4,6 +4,7 @@ import { ServiceWorker } from '@/components/ServiceWorker';
 import { TerminalSounds } from '@/components/TerminalSounds';
 import { PlayerProvider } from '@/lib/PlayerContext';
 import { NavVisibilityProvider } from '@/lib/NavVisibilityContext';
+import { ThemeProvider } from '@/lib/ThemeContext';
 import { NavBar } from '@/components/NavBar';
 import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
@@ -88,10 +89,12 @@ export default function RootLayout({
         <TerminalSounds />
         <div className="scanline-sweep" aria-hidden="true" />
         <PlayerProvider>
-          <NavVisibilityProvider>
-            <NavBar />
-            {children}
-          </NavVisibilityProvider>
+          <ThemeProvider>
+            <NavVisibilityProvider>
+              <NavBar />
+              {children}
+            </NavVisibilityProvider>
+          </ThemeProvider>
         </PlayerProvider>
         <Analytics />
       </body>
