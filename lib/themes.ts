@@ -113,6 +113,7 @@ export function getThemeById(id: string): ThemeDef {
   return THEMES.find((t) => t.id === id) ?? THEMES[0];
 }
 
-export function isThemeUnlocked(theme: ThemeDef, playerLevel: number): boolean {
-  return playerLevel >= theme.unlockLevel;
+export function isThemeUnlocked(theme: ThemeDef, playerLevel: number, graduated: boolean): boolean {
+  if (theme.id === 'phosphor') return true; // default always available
+  return graduated && playerLevel >= theme.unlockLevel;
 }

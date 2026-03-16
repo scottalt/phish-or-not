@@ -387,7 +387,7 @@ export default function ProfilePage() {
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 p-3">
             {THEMES.map((t) => {
-              const unlocked = isThemeUnlocked(t, profile.level);
+              const unlocked = isThemeUnlocked(t, profile.level, profile.researchGraduated);
               const isActive = activeTheme.id === t.id;
               return (
                 <button
@@ -446,7 +446,7 @@ export default function ProfilePage() {
                     </div>
                     {!unlocked && (
                       <div className="text-[10px] font-mono text-[#555] mt-0.5">
-                        &#128274; {t.unlockLabel}
+                        &#128274; {!profile.researchGraduated ? 'GRADUATE RESEARCH' : t.unlockLabel}
                       </div>
                     )}
                     {isActive && (
