@@ -385,8 +385,8 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                 <div className="flex items-center gap-3">
                   <span className="text-[#ffaa00] text-lg animate-pulse">&#128274;</span>
                   <div className="flex-1 min-w-0">
-                    <div className="text-[#ffaa00] text-sm font-mono font-bold tracking-widest">XP_LOCKED</div>
-                    <div className="text-[#ffaa00] text-lg font-mono font-black mt-0.5">{cooldownTimer}</div>
+                    <div className="text-[#ffaa00] text-sm font-mono font-bold tracking-widest">XP_LOCKED — HOURLY CAP REACHED</div>
+                    <div className="text-[#ffaa00] text-lg font-mono font-black mt-0.5">RESETS IN {cooldownTimer}</div>
                   </div>
                   <span className="text-[#664400] text-xs font-mono shrink-0 hidden lg:block">RESEARCH<br />UNAFFECTED</span>
                 </div>
