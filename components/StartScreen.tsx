@@ -375,9 +375,12 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
 
           {/* XP cooldown indicator */}
           {signedIn && cooldownLabel && (
-            <div className="term-border border-[rgba(255,170,0,0.3)] bg-[#060c06] px-3 py-2 flex items-center justify-between">
-              <span className="text-[#ffaa00] text-sm font-mono tracking-wider">{cooldownLabel}</span>
-              <span className="text-[#1a5c2a] text-sm font-mono">RESEARCH MODE UNAFFECTED</span>
+            <div className="term-border border-[rgba(255,170,0,0.4)] bg-[#060c06] px-3 py-2.5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[#ffaa00] text-sm font-mono font-bold tracking-wider">{cooldownLabel}</span>
+                <span className="text-[#1a5c2a] text-sm font-mono shrink-0 hidden lg:inline">RESEARCH UNAFFECTED</span>
+              </div>
+              <div className="text-[#1a5c2a] text-xs font-mono mt-1 lg:hidden">Research mode unaffected</div>
             </div>
           )}
 
