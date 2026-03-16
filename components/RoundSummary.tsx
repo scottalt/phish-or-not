@@ -173,11 +173,11 @@ export function RoundSummary({ score, total, totalScore, results, mode, sessionI
           {profile && <LevelMeter xp={profile.xp} level={profile.level} />}
           {/* Daily streak */}
           {(xpResult.streakDay ?? 0) > 0 && (
-            <div className="flex justify-between text-sm font-mono">
-              <span className="text-[#00aa28]">
+            <div className="flex justify-between gap-2 text-sm font-mono">
+              <span className="text-[#00aa28] shrink-0">
                 {(xpResult.streakBonusXp ?? 0) > 0 ? 'STREAK BONUS' : 'STREAK'}
               </span>
-              <span className="text-[#00ff41]">
+              <span className="text-[#00ff41] text-right">
                 {(xpResult.streakBonusXp ?? 0) > 0
                   ? `+${xpResult.streakBonusXp} XP · Day ${xpResult.streakDay}`
                   : `Day ${xpResult.streakDay} (bonus already earned today)`}
