@@ -24,8 +24,16 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const refreshProfile = useCallback(async () => {
     try {
       const res = await fetch('/api/player', { cache: 'no-store' });
-      if (res.ok) setProfile(await res.json());
-      else setProfile(null);
+      if (res.ok) {
+        const data = await res.json();
+        // Store cooldown info in localStorage so StartScreen can show it
+        if (data.cooldown) {
+          try { localStorage.setItem('xp_cooldown', JSON.stringify(data.cooldown)); } catch {}
+        }
+        setProfile(data);
+      } else {
+        setProfile(null);
+      }
     } catch {
       setProfile(null);
     }
@@ -79,6 +87,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     const supabase = getSupabaseBrowserClient();
     await supabase.auth.signOut();
     setProfile(null);
+    try { localStorage.removeItem('xp_cooldown'); } catch {}
   }
 
   return (

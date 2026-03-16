@@ -66,18 +66,43 @@ export async function GET(req: NextRequest) {
   }
 
   const row = data as unknown as Record<string, unknown>;
-  const [{ count: researchAnswersSubmitted }, { data: achievementRows }, { data: streakData }] = await Promise.all([
+  const nowHour = new Date().toISOString().slice(0, 13);
+  const todayStr = new Date().toISOString().slice(0, 10);
+
+  const [{ count: researchAnswersSubmitted }, { data: achievementRows }, { data: streakData }, hourlyCount, dailyCount] = await Promise.all([
     admin.from('answers').select('*', { count: 'exact', head: true })
       .eq('player_id', row.id as string).eq('game_mode', 'research'),
     admin.from('player_achievements').select('achievement_id')
       .eq('player_id', row.id as string),
     admin.from('player_streaks').select('current_streak, longest_streak')
       .eq('player_id', row.id as string).maybeSingle(),
+    redis.get<number>(`ratelimit:xp:${authId}:h:${nowHour}`),
+    redis.get<number>(`ratelimit:xp:${authId}:d:${todayStr}`),
   ]);
 
   const achievements = (achievementRows ?? []).map((r: { achievement_id: string }) => r.achievement_id);
 
-  return NextResponse.json(toProfile(row, researchAnswersSubmitted ?? 0, achievements, streakData), {
+  // Compute cooldown info from current rate limit state
+  const hUsed = hourlyCount ?? 0;
+  const dUsed = dailyCount ?? 0;
+  const MAX_HOURLY = 12;
+  const MAX_DAILY = 30;
+  const nextHour = new Date(nowHour + ':00:00.000Z');
+  nextHour.setUTCHours(nextHour.getUTCHours() + 1);
+  const nextDay = new Date(todayStr + 'T00:00:00.000Z');
+  nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+
+  const profile = toProfile(row, researchAnswersSubmitted ?? 0, achievements, streakData);
+
+  return NextResponse.json({
+    ...profile,
+    cooldown: {
+      hourlyRemaining: Math.max(0, MAX_HOURLY - hUsed),
+      dailyRemaining: Math.max(0, MAX_DAILY - dUsed),
+      hourlyResetsAt: nextHour.toISOString(),
+      dailyResetsAt: nextDay.toISOString(),
+    },
+  }, {
     headers: { 'Cache-Control': 'no-store' },
   });
 }
