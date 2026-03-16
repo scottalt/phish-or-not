@@ -60,6 +60,12 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
     title: 'v1.6.0 — Share your results',
     body: 'Share your score from the round summary. Uses your device\'s native share sheet on mobile, or copies to clipboard on desktop.',
   },
+  {
+    date: '2026-03-16',
+    category: 'update',
+    title: 'v1.7.0 — Terminal themes, XP cooldown, and QoL fixes',
+    body: '6 unlockable terminal color themes (Phosphor, Amber Alert, Frost Bite, Phantom, Red Team, Ghost Protocol) — graduate research and rank up to unlock them. XP cooldown indicator with live countdown timer. "What\'s New" unread dot. Intel stats now show full dataset beyond 1,000 answers.',
+  },
 ];
 
 /*
