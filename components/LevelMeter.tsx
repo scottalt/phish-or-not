@@ -14,11 +14,11 @@ export function LevelMeter({ xp, level, compact }: LevelMeterProps) {
   if (compact) {
     return (
       <div className="flex items-center gap-2 text-sm font-mono">
-        <span className="text-[#00aa28]">LVL {level}</span>
-        <div className="w-16 h-0.5 bg-[#003a0e]">
-          <div className="h-full bg-[#00aa28]" style={{ width: `${pct}%` }} />
+        <span className="text-[var(--c-secondary)]">LVL {level}</span>
+        <div className="w-16 h-0.5 bg-[var(--c-dark)]">
+          <div className="h-full bg-[var(--c-secondary)]" style={{ width: `${pct}%` }} />
         </div>
-        {!isMax && <span className="text-[#003a0e]">{current}/{needed} XP</span>}
+        {!isMax && <span className="text-[var(--c-dark)]">{current}/{needed} XP</span>}
       </div>
     );
   }
@@ -26,13 +26,13 @@ export function LevelMeter({ xp, level, compact }: LevelMeterProps) {
   return (
     <div className="space-y-1">
       <div className="flex justify-between text-sm font-mono">
-        <span className="text-[#00aa28]">LEVEL {level}</span>
-        <span className="text-[#003a0e]">{isMax ? 'MAX' : `${current} / ${needed} XP`}</span>
+        <span className="text-[var(--c-secondary)]">LEVEL {level}</span>
+        <span className="text-[var(--c-dark)]">{isMax ? 'MAX' : `${current} / ${needed} XP`}</span>
       </div>
-      <div className="h-1 bg-[#003a0e] w-full">
-        <div className="h-full bg-[#00ff41] transition-all duration-700" style={{ width: `${pct}%` }} />
+      <div className="h-1 bg-[var(--c-dark)] w-full">
+        <div className="h-full bg-[var(--c-primary)] transition-all duration-700" style={{ width: `${pct}%` }} />
       </div>
-      <div className="text-right text-sm font-mono text-[#003a0e]">{xp.toLocaleString()} XP total</div>
+      <div className="text-right text-sm font-mono text-[var(--c-dark)]">{xp.toLocaleString()} XP total</div>
     </div>
   );
 }

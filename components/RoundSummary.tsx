@@ -22,8 +22,8 @@ interface Props {
 
 function getTier(score: number, total: number): { label: string; sub: string; color: string } {
   const pct = score / total;
-  if (pct === 1) return { label: 'PERFECT_SCORE', color: 'text-[#00ff41]', sub: 'Zero breaches. Clean sweep.' };
-  if (pct >= 0.8) return { label: 'SHARP_ANALYST', color: 'text-[#00ff41]', sub: 'Strong instincts. A couple slipped through.' };
+  if (pct === 1) return { label: 'PERFECT_SCORE', color: 'text-[var(--c-primary)]', sub: 'Zero breaches. Clean sweep.' };
+  if (pct >= 0.8) return { label: 'SHARP_ANALYST', color: 'text-[var(--c-primary)]', sub: 'Strong instincts. A couple slipped through.' };
   if (pct >= 0.6) return { label: 'NEEDS_CALIBRATION', color: 'text-[#ffaa00]', sub: 'Decent, but a few got past you.' };
   if (pct >= 0.4) return { label: 'HOOKED', color: 'text-[#ff3333]', sub: 'You took the bait more than once.' };
   return { label: 'COMPROMISED', color: 'text-[#ff3333]', sub: 'The phishers owned you this round.' };
@@ -156,10 +156,10 @@ export function RoundSummary({ score, total, totalScore, results, mode, sessionI
     <div className="anim-fade-in-up w-full max-w-sm px-4 pb-safe flex flex-col gap-4">
       {/* XP award — only shown when signed in and API has responded */}
       {signedIn && xpResult && (
-        <div className="term-border bg-[#060c06] px-3 py-3 space-y-2">
+        <div className="term-border bg-[var(--c-bg)] px-3 py-3 space-y-2">
           <div className="flex justify-between text-sm font-mono">
-            <span className="text-[#00aa28]">XP EARNED</span>
-            <span className="text-[#00ff41] font-bold">+{xpResult.xpEarned} XP</span>
+            <span className="text-[var(--c-secondary)]">XP EARNED</span>
+            <span className="text-[var(--c-primary)] font-bold">+{xpResult.xpEarned} XP</span>
           </div>
           {xpResult.levelUp && (
             <div className="text-[#ffaa00] text-sm font-mono text-center">LEVEL UP → {xpResult.level}</div>
@@ -167,17 +167,17 @@ export function RoundSummary({ score, total, totalScore, results, mode, sessionI
           {xpResult.graduated && (
             <div className="term-border border-[rgba(255,170,0,0.4)] px-2 py-2 text-center">
               <div className="text-[#ffaa00] text-sm font-mono font-bold">RESEARCH GRADUATED</div>
-              <div className="text-[#003a0e] text-sm font-mono mt-0.5">Expert Mode unlocked. You&apos;ve submitted all 30 research answers.</div>
+              <div className="text-[var(--c-dark)] text-sm font-mono mt-0.5">Expert Mode unlocked. You&apos;ve submitted all 30 research answers.</div>
             </div>
           )}
           {profile && <LevelMeter xp={profile.xp} level={profile.level} />}
           {/* Daily streak */}
           {(xpResult.streakDay ?? 0) > 0 && (
             <div className="flex justify-between gap-2 text-sm font-mono">
-              <span className="text-[#00aa28] shrink-0">
+              <span className="text-[var(--c-secondary)] shrink-0">
                 {(xpResult.streakBonusXp ?? 0) > 0 ? 'STREAK BONUS' : 'STREAK'}
               </span>
-              <span className="text-[#00ff41] text-right">
+              <span className="text-[var(--c-primary)] text-right">
                 {(xpResult.streakBonusXp ?? 0) > 0
                   ? `+${xpResult.streakBonusXp} XP · Day ${xpResult.streakDay}`
                   : `Day ${xpResult.streakDay} (bonus already earned today)`}
@@ -192,30 +192,30 @@ export function RoundSummary({ score, total, totalScore, results, mode, sessionI
       )}
       {/* Rate limit notice */}
       {signedIn && rateLimited && (
-        <div className="term-border border-[rgba(255,170,0,0.4)] bg-[#060c06] px-3 py-3 space-y-1">
+        <div className="term-border border-[rgba(255,170,0,0.4)] bg-[var(--c-bg)] px-3 py-3 space-y-1">
           <div className="text-[#ffaa00] text-sm font-mono font-bold tracking-widest">COOLDOWN_ACTIVE</div>
-          <div className="text-[#1a5c2a] text-sm font-mono">
+          <div className="text-[var(--c-muted)] text-sm font-mono">
             XP earning is paused. You can still play — XP resumes after cooldown.
           </div>
         </div>
       )}
       {/* Score header */}
-      <div className="term-border bg-[#060c06]">
-        <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5 flex items-center justify-between">
-          <span className="text-[#00aa28] text-sm tracking-widest">
+      <div className="term-border bg-[var(--c-bg)]">
+        <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] px-3 py-1.5 flex items-center justify-between">
+          <span className="text-[var(--c-secondary)] text-sm tracking-widest">
             {mode === 'daily' ? 'DAILY_COMPLETE' : 'SESSION_COMPLETE'}
           </span>
-          <span className="text-[#003a0e] text-sm font-mono">ANALYST_TERMINAL</span>
+          <span className="text-[var(--c-dark)] text-sm font-mono">ANALYST_TERMINAL</span>
         </div>
         <div className="px-3 py-5 text-center space-y-2">
-          <div className="text-sm font-mono text-[#00aa28] tracking-widest">ACCURACY RATING</div>
-          <div className="text-6xl font-black font-mono text-[#00ff41]">
-            {score}<span className="text-2xl text-[#003a0e]">/{total}</span>
+          <div className="text-sm font-mono text-[var(--c-secondary)] tracking-widest">ACCURACY RATING</div>
+          <div className="text-6xl font-black font-mono text-[var(--c-primary)]">
+            {score}<span className="text-2xl text-[var(--c-dark)]">/{total}</span>
           </div>
           <div className={`text-sm font-black font-mono tracking-widest ${tier.color}`}>
             {tier.label}
           </div>
-          <div className="text-sm font-mono text-[#00aa28]">{tier.sub}</div>
+          <div className="text-sm font-mono text-[var(--c-secondary)]">{tier.sub}</div>
           {rank && (
             <div
               className="text-sm font-mono font-bold tracking-widest mt-1"
@@ -225,65 +225,65 @@ export function RoundSummary({ score, total, totalScore, results, mode, sessionI
             </div>
           )}
         </div>
-        <div className="border-t border-[rgba(0,255,65,0.25)] px-3 py-2 flex items-center justify-between">
+        <div className="border-t border-[color-mix(in_srgb,var(--c-primary)_25%,transparent)] px-3 py-2 flex items-center justify-between">
           <div className="text-center">
-            <div className="text-lg font-black font-mono text-[#00ff41]">{displayScore}</div>
-            <div className="text-sm font-mono text-[#003a0e]">TOTAL PTS</div>
+            <div className="text-lg font-black font-mono text-[var(--c-primary)]">{displayScore}</div>
+            <div className="text-sm font-mono text-[var(--c-dark)]">TOTAL PTS</div>
           </div>
           <div className="text-center">
             <div className="text-lg font-black font-mono text-[#ffaa00]">{efficiency}%</div>
-            <div className="text-sm font-mono text-[#003a0e]">EFFICIENCY</div>
+            <div className="text-sm font-mono text-[var(--c-dark)]">EFFICIENCY</div>
           </div>
           <div className="text-center">
-            <div className="text-lg font-black font-mono text-[#00ff41]">{maxPossible}</div>
-            <div className="text-sm font-mono text-[#003a0e]">MAX POSSIBLE</div>
+            <div className="text-lg font-black font-mono text-[var(--c-primary)]">{maxPossible}</div>
+            <div className="text-sm font-mono text-[var(--c-dark)]">MAX POSSIBLE</div>
           </div>
         </div>
       </div>
 
       {/* Breakdown */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="term-border bg-[#060c06] border-[rgba(255,51,51,0.3)] text-center px-3 py-3">
+        <div className="term-border bg-[var(--c-bg)] border-[rgba(255,51,51,0.3)] text-center px-3 py-3">
           <div className="text-[#ff3333] text-2xl font-black font-mono">{phishingCaught}/{phishingTotal}</div>
-          <div className="text-sm font-mono text-[#00aa28] mt-1 tracking-wider">PHISHING CAUGHT</div>
+          <div className="text-sm font-mono text-[var(--c-secondary)] mt-1 tracking-wider">PHISHING CAUGHT</div>
         </div>
-        <div className="term-border bg-[#060c06] border-[rgba(0,255,65,0.3)] text-center px-3 py-3">
-          <div className="text-[#00ff41] text-2xl font-black font-mono">{legitCorrect}/{legitTotal}</div>
-          <div className="text-sm font-mono text-[#00aa28] mt-1 tracking-wider">LEGIT CLEARED</div>
+        <div className="term-border bg-[var(--c-bg)] border-[color-mix(in_srgb,var(--c-primary)_30%,transparent)] text-center px-3 py-3">
+          <div className="text-[var(--c-primary)] text-2xl font-black font-mono">{legitCorrect}/{legitTotal}</div>
+          <div className="text-sm font-mono text-[var(--c-secondary)] mt-1 tracking-wider">LEGIT CLEARED</div>
         </div>
       </div>
 
       {/* Round log */}
-      <div className="term-border bg-[#060c06]">
-        <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5">
-          <span className="text-[#00aa28] text-sm tracking-widest">ROUND_LOG</span>
+      <div className="term-border bg-[var(--c-bg)]">
+        <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] px-3 py-1.5">
+          <span className="text-[var(--c-secondary)] text-sm tracking-widest">ROUND_LOG</span>
         </div>
-        <div className="divide-y divide-[rgba(0,255,65,0.1)]">
+        <div className="divide-y divide-[color-mix(in_srgb,var(--c-primary)_10%,transparent)]">
           {results.map((r) => (
             <div key={r.card.id} className="flex items-center gap-2 px-3 py-2">
-              <span className={`text-sm font-mono font-bold w-4 ${r.correct ? 'text-[#00ff41]' : 'text-[#ff3333]'}`}>
+              <span className={`text-sm font-mono font-bold w-4 ${r.correct ? 'text-[var(--c-primary)]' : 'text-[#ff3333]'}`}>
                 {r.correct ? '✓' : '✗'}
               </span>
               <div className="flex-1 min-w-0">
-                <div className="text-[#00aa28] text-sm font-mono truncate">
+                <div className="text-[var(--c-secondary)] text-sm font-mono truncate">
                   {r.card.subject ?? r.card.from}
                 </div>
-                <div className="text-[#003a0e] text-sm font-mono">
+                <div className="text-[var(--c-dark)] text-sm font-mono">
                   {r.card.isPhishing ? 'PHISH' : 'LEGIT'} · {r.card.difficulty?.toUpperCase() ?? '—'}
                 </div>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className={`text-sm font-mono px-1 border ${
-                  r.confidence === 'certain' ? 'text-[#00ff41] border-[rgba(0,255,65,0.4)]'
+                  r.confidence === 'certain' ? 'text-[var(--c-primary)] border-[color-mix(in_srgb,var(--c-primary)_40%,transparent)]'
                   : r.confidence === 'likely' ? 'text-[#ffaa00] border-[rgba(255,170,0,0.4)]'
-                  : 'text-[#00aa28] border-[rgba(0,255,65,0.2)]'
+                  : 'text-[var(--c-secondary)] border-[color-mix(in_srgb,var(--c-primary)_20%,transparent)]'
                 }`}>
                   {CONFIDENCE_LABEL[r.confidence]}
                 </span>
                 <span className={`text-sm font-mono font-bold ${
-                  r.pointsEarned > 0 ? 'text-[#00ff41]'
+                  r.pointsEarned > 0 ? 'text-[var(--c-primary)]'
                   : r.pointsEarned < 0 ? 'text-[#ff3333]'
-                  : 'text-[#003a0e]'
+                  : 'text-[var(--c-dark)]'
                 }`}>
                   {r.pointsEarned > 0 ? `+${r.pointsEarned}` : r.pointsEarned}
                 </span>
@@ -295,20 +295,20 @@ export function RoundSummary({ score, total, totalScore, results, mode, sessionI
 
       {/* Weakness tracking — research mode only */}
       {mode === 'research' && weakPoints.length > 0 && (
-        <div className="term-border bg-[#060c06]">
-          <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5">
-            <span className="text-[#00aa28] text-sm tracking-widest">COGNITIVE_BLIND_SPOTS</span>
+        <div className="term-border bg-[var(--c-bg)]">
+          <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] px-3 py-1.5">
+            <span className="text-[var(--c-secondary)] text-sm tracking-widest">COGNITIVE_BLIND_SPOTS</span>
           </div>
-          <div className="divide-y divide-[rgba(0,255,65,0.08)]">
+          <div className="divide-y divide-[color-mix(in_srgb,var(--c-primary)_8%,transparent)]">
             {weakPoints.map(({ technique, missRate, missed, attempts }) => (
               <div key={technique} className="flex items-center px-3 py-2 gap-3">
                 <span className="text-[#ff3333] text-sm font-mono flex-1">{technique}</span>
-                <span className="text-[#003a0e] text-sm font-mono">{missed}/{attempts}</span>
+                <span className="text-[var(--c-dark)] text-sm font-mono">{missed}/{attempts}</span>
                 <span className="text-[#ff3333] text-sm font-mono font-bold">{missRate}% miss</span>
               </div>
             ))}
           </div>
-          <div className="px-3 py-2 text-sm font-mono text-[#003a0e]">
+          <div className="px-3 py-2 text-sm font-mono text-[var(--c-dark)]">
             Based on your session history. Stored locally.
           </div>
         </div>
@@ -317,19 +317,19 @@ export function RoundSummary({ score, total, totalScore, results, mode, sessionI
       {/* Share results */}
       <button
         onClick={handleShare}
-        className="w-full py-2 text-[#00aa28] font-mono text-sm tracking-widest hover:text-[#00ff41] active:scale-95 transition-all"
+        className="w-full py-2 text-[var(--c-secondary)] font-mono text-sm tracking-widest hover:text-[var(--c-primary)] active:scale-95 transition-all"
       >
         {copied ? '[ COPIED ✓ ]' : '[ SHARE RESULTS ]'}
       </button>
 
       {/* Sign-in prompt for guests */}
       {!signedIn && (
-        <div className="term-border bg-[#060c06]">
-          <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5">
-            <span className="text-[#00aa28] text-sm tracking-widest">XP_TRACKING</span>
+        <div className="term-border bg-[var(--c-bg)]">
+          <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] px-3 py-1.5">
+            <span className="text-[var(--c-secondary)] text-sm tracking-widest">XP_TRACKING</span>
           </div>
           <div className="px-3 py-3 space-y-3">
-            <div className="text-[#003a0e] text-sm font-mono">
+            <div className="text-[var(--c-dark)] text-sm font-mono">
               SIGN IN TO TRACK XP AND RANK UP
             </div>
             <AuthFlow onSignIn={signInWithEmail} onVerifyCode={verifyOtp} onCancel={() => {}} />
@@ -339,7 +339,7 @@ export function RoundSummary({ score, total, totalScore, results, mode, sessionI
 
       <button
         onClick={onPlayAgain}
-        className="w-full py-4 term-border text-[#00ff41] font-mono font-bold tracking-widest text-sm hover:bg-[rgba(0,255,65,0.05)] active:scale-95 transition-all"
+        className="w-full py-4 term-border text-[var(--c-primary)] font-mono font-bold tracking-widest text-sm hover:bg-[color-mix(in_srgb,var(--c-primary)_5%,transparent)] active:scale-95 transition-all"
       >
         [ BACK TO TERMINAL ]
       </button>

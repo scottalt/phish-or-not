@@ -81,7 +81,7 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
     return () => clearInterval(interval);
   }, [headline]);
 
-  const headlineColor = correct ? 'text-[#00ff41]' : 'text-[#ff3333]';
+  const headlineColor = correct ? 'text-[var(--c-primary)]' : 'text-[#ff3333]';
   const headlineGlow = '';
 
   const headers = (() => {
@@ -118,12 +118,12 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
 
       <div className="anim-fade-in-up flex flex-col gap-4">
         {/* Result header */}
-        <div className={`term-border bg-[#060c06] ${correct ? 'border-[rgba(0,255,65,0.6)]' : 'border-[rgba(255,51,51,0.6)]'} ${!correct ? 'anim-glitch' : ''}`}>
-          <div className={`border-b px-3 py-2 flex items-center justify-between ${correct ? 'border-[rgba(0,255,65,0.4)]' : 'border-[rgba(255,51,51,0.4)]'}`}>
-            <span className={`text-sm font-mono tracking-widest ${correct ? 'text-[#00aa28]' : 'text-[#aa2222]'}`}>
+        <div className={`term-border bg-[var(--c-bg)] ${correct ? 'border-[color-mix(in_srgb,var(--c-primary)_60%,transparent)]' : 'border-[rgba(255,51,51,0.6)]'} ${!correct ? 'anim-glitch' : ''}`}>
+          <div className={`border-b px-3 py-2 flex items-center justify-between ${correct ? 'border-[color-mix(in_srgb,var(--c-primary)_40%,transparent)]' : 'border-[rgba(255,51,51,0.4)]'}`}>
+            <span className={`text-sm font-mono tracking-widest ${correct ? 'text-[var(--c-secondary)]' : 'text-[#aa2222]'}`}>
               ANALYSIS_RESULT
             </span>
-            <span className="text-sm font-mono text-[#003a0e]">Q{questionNumber}/{total}</span>
+            <span className="text-sm font-mono text-[var(--c-dark)]">Q{questionNumber}/{total}</span>
           </div>
           <div className="px-3 py-4 text-center space-y-1">
             <div className="flex items-center justify-center gap-3">
@@ -131,39 +131,39 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
                 {displayedHeadline}{!headlineDone && <span className="cursor" />}
               </div>
               {headlineDone && (
-                <span className={`text-sm font-mono ${correct ? 'text-[#00aa28]' : 'text-[#aa2222]'}`}>
+                <span className={`text-sm font-mono ${correct ? 'text-[var(--c-secondary)]' : 'text-[#aa2222]'}`}>
                   {correct ? (streak >= 6 ? '[^_^]' : streak >= 3 ? '[o_o]' : '[._.]') : '[x_x]'}
                 </span>
               )}
             </div>
-            <div className="text-sm font-mono text-[#00aa28]">
+            <div className="text-sm font-mono text-[var(--c-secondary)]">
               {wasPhishing
                 ? `This was a PHISHING attempt. You said: ${userAnswer.toUpperCase()}.`
                 : `This was LEGIT. You said: ${userAnswer.toUpperCase()}.`}
             </div>
           </div>
-          <div className={`border-t px-3 py-2 flex items-center justify-between ${correct ? 'border-[rgba(0,255,65,0.25)]' : 'border-[rgba(255,51,51,0.25)]'}`}>
-            <span className="text-sm font-mono text-[#00aa28]">
-              CONFIDENCE: <span className="text-[#00ff41]">{CONFIDENCE_LABEL[confidence]}</span>
+          <div className={`border-t px-3 py-2 flex items-center justify-between ${correct ? 'border-[color-mix(in_srgb,var(--c-primary)_25%,transparent)]' : 'border-[rgba(255,51,51,0.25)]'}`}>
+            <span className="text-sm font-mono text-[var(--c-secondary)]">
+              CONFIDENCE: <span className="text-[var(--c-primary)]">{CONFIDENCE_LABEL[confidence]}</span>
               {' '}({CONFIDENCE_MULTI[confidence]})
             </span>
             <span className="text-sm font-mono">
               {xpThisAnswer > 0 ? (
-                <span className="text-[#00ff41]">+{xpThisAnswer} XP</span>
+                <span className="text-[var(--c-primary)]">+{xpThisAnswer} XP</span>
               ) : (
-                <span className="text-[#003a0e]">+0 XP</span>
+                <span className="text-[var(--c-dark)]">+0 XP</span>
               )}
             </span>
             <span className={`text-sm font-black font-mono ${
-              pointsEarned > 0 ? 'text-[#00ff41]'
+              pointsEarned > 0 ? 'text-[var(--c-primary)]'
               : pointsEarned < 0 ? 'text-[#ff3333]'
-              : 'text-[#003a0e]'
+              : 'text-[var(--c-dark)]'
             }`}>
               {pointsEarned > 0 ? `+${pointsEarned}` : pointsEarned} PTS
             </span>
           </div>
           {streakMilestone && (
-            <div className="border-t border-[rgba(0,255,65,0.25)] px-3 py-1.5 text-center">
+            <div className="border-t border-[color-mix(in_srgb,var(--c-primary)_25%,transparent)] px-3 py-1.5 text-center">
               <span className="text-sm font-mono text-[#ffaa00]">
                 ★ STREAK BONUS x{streak / 3} — +50 PTS INCLUDED ★
               </span>
@@ -172,16 +172,16 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
         </div>
 
         {/* Score bar */}
-        <div className="term-border bg-[#060c06] px-3 py-2 flex items-center justify-between text-sm font-mono">
-          <span className="text-[#00aa28]">TOTAL SCORE</span>
-          <span className="text-[#00ff41] font-black text-sm">{totalScore} PTS</span>
-          <span className="text-[#00aa28]">STREAK: <span className="text-[#00ff41]">{streak}</span></span>
+        <div className="term-border bg-[var(--c-bg)] px-3 py-2 flex items-center justify-between text-sm font-mono">
+          <span className="text-[var(--c-secondary)]">TOTAL SCORE</span>
+          <span className="text-[var(--c-primary)] font-black text-sm">{totalScore} PTS</span>
+          <span className="text-[var(--c-secondary)]">STREAK: <span className="text-[var(--c-primary)]">{streak}</span></span>
         </div>
 
         {/* Technique + difficulty banner */}
         {wasPhishing && card.technique && (
-          <div className="term-border bg-[#060c06] border-[rgba(255,51,51,0.2)] px-3 py-2 flex items-center justify-between text-sm font-mono">
-            <span className="text-[#003a0e]">
+          <div className="term-border bg-[var(--c-bg)] border-[rgba(255,51,51,0.2)] px-3 py-2 flex items-center justify-between text-sm font-mono">
+            <span className="text-[var(--c-dark)]">
               TECHNIQUE: <span className="text-[#ff3333]">{card.technique.toUpperCase().replace(/-/g, ' ')}</span>
             </span>
             <span className={{
@@ -196,20 +196,20 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
         )}
 
         {/* Interactive card review */}
-        <div className="term-border bg-[#060c06]">
-          <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5 flex items-center justify-between">
-            <span className="text-[#00aa28] text-sm tracking-widest">
+        <div className="term-border bg-[var(--c-bg)]">
+          <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] px-3 py-1.5 flex items-center justify-between">
+            <span className="text-[var(--c-secondary)] text-sm tracking-widest">
               {card.type === 'sms' ? 'INCOMING_SMS' : 'INCOMING_EMAIL'}
             </span>
             {card.type === 'email' ? (
               <button
                 onClick={() => setHeadersOpen((o) => !o)}
-                className="text-[#00aa28] text-sm font-mono hover:text-[#00ff41] transition-colors"
+                className="text-[var(--c-secondary)] text-sm font-mono hover:text-[var(--c-primary)] transition-colors"
               >
                 [HEADERS]
               </button>
             ) : (
-              <span className="text-[#003a0e] text-sm font-mono">■ □ □</span>
+              <span className="text-[var(--c-dark)] text-sm font-mono">■ □ □</span>
             )}
           </div>
 
@@ -225,10 +225,10 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
                   )
                 : text;
             return (
-          <div className="px-3 py-2 border-b border-[rgba(0,255,65,0.2)] space-y-1">
+          <div className="px-3 py-2 border-b border-[color-mix(in_srgb,var(--c-primary)_20%,transparent)] space-y-1">
             <div className="flex gap-2 text-sm font-mono">
-              <span className="text-[#003a0e] w-10 shrink-0">FROM:</span>
-              <span className="text-[#00aa28] font-mono">
+              <span className="text-[var(--c-dark)] w-10 shrink-0">FROM:</span>
+              <span className="text-[var(--c-secondary)] font-mono">
                 {displayName ? (
                   <>
                     <span className="break-all">{hl(displayName)}</span>
@@ -241,8 +241,8 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
             </div>
             {card.subject && (
               <div className="flex gap-2 text-sm font-mono">
-                <span className="text-[#003a0e] w-10 shrink-0">SUBJ:</span>
-                <span className="text-[#00aa28]">
+                <span className="text-[var(--c-dark)] w-10 shrink-0">SUBJ:</span>
+                <span className="text-[var(--c-secondary)]">
                   {wasPhishing && card.highlights?.length
                     ? highlightBody(card.subject, card.highlights).map((seg, i) =>
                         seg.highlighted
@@ -255,13 +255,13 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
             )}
             {card.sentAt && (
               <div className="flex gap-2 text-sm font-mono">
-                <span className="text-[#003a0e] w-10 shrink-0">SENT:</span>
-                <span className="text-[#00aa28] text-sm">{card.sentAt}</span>
+                <span className="text-[var(--c-dark)] w-10 shrink-0">SENT:</span>
+                <span className="text-[var(--c-secondary)] text-sm">{card.sentAt}</span>
               </div>
             )}
             {card.attachmentName && (
               <div className="flex gap-2 text-sm font-mono">
-                <span className="text-[#003a0e] w-10 shrink-0">ATCH:</span>
+                <span className="text-[var(--c-dark)] w-10 shrink-0">ATCH:</span>
                 <span className="text-[#ffaa00] font-mono">📎 {card.attachmentName}</span>
               </div>
             )}
@@ -271,43 +271,43 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
 
           {/* Expandable headers panel */}
           {headersOpen && card.type === 'email' && (
-            <div className="border-b border-[rgba(0,255,65,0.2)] px-3 py-2 bg-[rgba(0,255,65,0.02)]">
+            <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_20%,transparent)] px-3 py-2 bg-[color-mix(in_srgb,var(--c-primary)_2%,transparent)]">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[#ffaa00] text-sm font-mono tracking-widest">HEADERS</span>
                 <button
                   onClick={() => setHeadersOpen(false)}
-                  className="text-[#003a0e] text-sm font-mono hover:text-[#00aa28] transition-colors"
+                  className="text-[var(--c-dark)] text-sm font-mono hover:text-[var(--c-secondary)] transition-colors"
                 >
                   [ × ]
                 </button>
               </div>
               <div className="space-y-1 text-sm font-mono">
                 <div className="flex gap-2">
-                  <span className="text-[#00aa28] w-14 shrink-0">SPF:</span>
+                  <span className="text-[var(--c-secondary)] w-14 shrink-0">SPF:</span>
                   <span style={{ color: headers.color.spf }}>{headers.spf}</span>
                 </div>
                 <div className="flex gap-2">
-                  <span className="text-[#00aa28] w-14 shrink-0">DKIM:</span>
+                  <span className="text-[var(--c-secondary)] w-14 shrink-0">DKIM:</span>
                   <span style={{ color: headers.color.dkim }}>{headers.dkim}</span>
                 </div>
                 <div className="flex gap-2">
-                  <span className="text-[#00aa28] w-14 shrink-0">DMARC:</span>
+                  <span className="text-[var(--c-secondary)] w-14 shrink-0">DMARC:</span>
                   <span style={{ color: headers.color.dmarc }}>{headers.dmarc}</span>
                 </div>
                 <div className="flex gap-2">
-                  <span className="text-[#00aa28] w-14 shrink-0">Reply-To:</span>
-                  <span className="text-[#00ff41] break-all">{headers.replyTo}</span>
+                  <span className="text-[var(--c-secondary)] w-14 shrink-0">Reply-To:</span>
+                  <span className="text-[var(--c-primary)] break-all">{headers.replyTo}</span>
                 </div>
                 <div className="flex gap-2">
-                  <span className="text-[#00aa28] w-14 shrink-0">Ret-Path:</span>
-                  <span className="text-[#00ff41] break-all">{headers.returnPath}</span>
+                  <span className="text-[var(--c-secondary)] w-14 shrink-0">Ret-Path:</span>
+                  <span className="text-[var(--c-primary)] break-all">{headers.returnPath}</span>
                 </div>
               </div>
             </div>
           )}
 
           {/* Body */}
-          <pre className="px-3 py-3 text-sm text-[#00aa28] font-mono leading-relaxed whitespace-pre-wrap break-words max-h-52 momentum-scroll scroll-fade-bottom">
+          <pre className="px-3 py-3 text-sm text-[var(--c-secondary)] font-mono leading-relaxed whitespace-pre-wrap break-words max-h-52 momentum-scroll scroll-fade-bottom">
             {parseBodySegments(card.body).map((seg, i) =>
               seg.type === 'url' ? (
                 <span
@@ -336,7 +336,7 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
                 <span className="text-[#ffaa00] text-sm font-mono tracking-widest">URL_INSPECTOR</span>
                 <button
                   onClick={() => setInspectedUrl(null)}
-                  className="text-[#003a0e] text-sm font-mono hover:text-[#00aa28] transition-colors"
+                  className="text-[var(--c-dark)] text-sm font-mono hover:text-[var(--c-secondary)] transition-colors"
                 >
                   [ × ]
                 </button>
@@ -347,11 +347,11 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
         </div>
 
         {/* Explanation */}
-        <div className="term-border bg-[#060c06]">
-          <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5">
-            <span className="text-[#00aa28] text-sm tracking-widest">ANALYST_NOTES</span>
+        <div className="term-border bg-[var(--c-bg)]">
+          <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] px-3 py-1.5">
+            <span className="text-[var(--c-secondary)] text-sm tracking-widest">ANALYST_NOTES</span>
           </div>
-          <p className="px-3 py-3 text-sm text-[#00aa28] leading-relaxed font-mono">{card.explanation}</p>
+          <p className="px-3 py-3 text-sm text-[var(--c-secondary)] leading-relaxed font-mono">{card.explanation}</p>
         </div>
 
         {/* Forensic signals */}
@@ -409,7 +409,7 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
               </div>
               <ul className="px-3 py-3 space-y-2">
                 {signals.map((signal, i) => (
-                  <li key={i} className="flex gap-2 text-sm text-[#00aa28] font-mono">
+                  <li key={i} className="flex gap-2 text-sm text-[var(--c-secondary)] font-mono">
                     <span className="text-[#ffaa00] shrink-0">▸</span>
                     <span>{signal}</span>
                   </li>

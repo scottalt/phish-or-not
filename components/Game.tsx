@@ -18,13 +18,13 @@ class SummaryErrorBoundary extends Component<
     if (this.state.error) {
       return (
         <div className="anim-fade-in-up w-full max-w-sm px-4 flex flex-col gap-4">
-          <div className="term-border bg-[#060c06] border-[rgba(255,51,51,0.3)] px-3 py-6 text-center space-y-2">
+          <div className="term-border bg-[var(--c-bg)] border-[rgba(255,51,51,0.3)] px-3 py-6 text-center space-y-2">
             <div className="text-[#ff3333] text-sm font-mono tracking-widest">SUMMARY_ERROR</div>
-            <div className="text-[#003a0e] text-sm font-mono">{this.state.error.message}</div>
+            <div className="text-[var(--c-dark)] text-sm font-mono">{this.state.error.message}</div>
           </div>
           <button
             onClick={() => { this.setState({ error: null }); this.props.onReset(); }}
-            className="w-full py-4 term-border text-[#00aa28] font-mono font-bold tracking-widest text-sm hover:bg-[rgba(0,255,65,0.05)] active:scale-95 transition-all"
+            className="w-full py-4 term-border text-[var(--c-secondary)] font-mono font-bold tracking-widest text-sm hover:bg-[color-mix(in_srgb,var(--c-primary)_5%,transparent)] active:scale-95 transition-all"
           >
             [ BACK TO TERMINAL ]
           </button>
@@ -463,7 +463,7 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
   if (phase === ('loading' as GamePhase)) {
     return (
       <div className="flex items-center justify-center min-h-[200px]">
-        <span className="text-[#00aa28] font-mono text-sm tracking-widest">
+        <span className="text-[var(--c-secondary)] font-mono text-sm tracking-widest">
           {mode === 'expert' ? 'LOADING EXPERT DECK...' : 'LOADING RESEARCH DATA...'}
         </span>
       </div>
@@ -488,21 +488,21 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
   if (phase === 'research_unavailable') {
     return (
       <div className="anim-fade-in-up w-full max-w-sm px-4 flex flex-col gap-4">
-        <div className="term-border bg-[#060c06] border-[rgba(255,170,0,0.3)]">
+        <div className="term-border bg-[var(--c-bg)] border-[rgba(255,170,0,0.3)]">
           <div className="border-b border-[rgba(255,170,0,0.3)] px-3 py-1.5">
             <span className="text-[#ffaa00] text-sm tracking-widest">RESEARCH_MODE</span>
           </div>
           <div className="px-3 py-6 text-center space-y-2">
             <div className="text-[#ffaa00] text-sm font-mono font-black tracking-wide">DATASET UNAVAILABLE</div>
-            <p className="text-[#00aa28] text-sm font-mono leading-relaxed">
+            <p className="text-[var(--c-secondary)] text-sm font-mono leading-relaxed">
               The research dataset is still being assembled. No cards are available yet.
             </p>
-            <p className="text-[#003a0e] text-sm font-mono">Check back soon.</p>
+            <p className="text-[var(--c-dark)] text-sm font-mono">Check back soon.</p>
           </div>
         </div>
         <button
           onClick={() => setPhase('start')}
-          className="w-full py-4 term-border text-[#00aa28] font-mono font-bold tracking-widest text-sm hover:bg-[rgba(0,255,65,0.05)] active:scale-95 transition-all"
+          className="w-full py-4 term-border text-[var(--c-secondary)] font-mono font-bold tracking-widest text-sm hover:bg-[color-mix(in_srgb,var(--c-primary)_5%,transparent)] active:scale-95 transition-all"
         >
           [ BACK TO TERMINAL ]
         </button>
@@ -529,22 +529,22 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
   if (phase === 'daily_complete') {
     return (
       <div className="anim-fade-in-up w-full max-w-sm px-4 flex flex-col gap-4">
-        <div className="term-border bg-[#060c06]">
-          <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5 flex items-center justify-between">
-            <span className="text-[#00aa28] text-sm tracking-widest">DAILY_CHALLENGE</span>
-            <span className="text-[#003a0e] text-sm font-mono">{getToday()}</span>
+        <div className="term-border bg-[var(--c-bg)]">
+          <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] px-3 py-1.5 flex items-center justify-between">
+            <span className="text-[var(--c-secondary)] text-sm tracking-widest">DAILY_CHALLENGE</span>
+            <span className="text-[var(--c-dark)] text-sm font-mono">{getToday()}</span>
           </div>
           <div className="px-3 py-6 text-center space-y-2">
-            <div className="text-sm font-mono text-[#00aa28] tracking-widest">ALREADY_DEPLOYED</div>
-            <div className="text-4xl font-black font-mono text-[#00ff41]">
+            <div className="text-sm font-mono text-[var(--c-secondary)] tracking-widest">ALREADY_DEPLOYED</div>
+            <div className="text-4xl font-black font-mono text-[var(--c-primary)]">
               {dailyResult?.totalScore ?? 0}
             </div>
-            <div className="text-sm font-mono text-[#00aa28]">Come back tomorrow.</div>
+            <div className="text-sm font-mono text-[var(--c-secondary)]">Come back tomorrow.</div>
           </div>
         </div>
         <button
           onClick={() => setPhase('start')}
-          className="w-full py-4 term-border text-[#00aa28] font-mono font-bold tracking-widest text-sm hover:bg-[rgba(0,255,65,0.05)] active:scale-95 transition-all"
+          className="w-full py-4 term-border text-[var(--c-secondary)] font-mono font-bold tracking-widest text-sm hover:bg-[color-mix(in_srgb,var(--c-primary)_5%,transparent)] active:scale-95 transition-all"
         >
           [ BACK TO TERMINAL ]
         </button>
@@ -555,8 +555,8 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
   if (phase === 'checking') {
     return (
       <div className="anim-fade-in-up w-full max-w-sm px-4 flex flex-col items-center gap-4">
-        <div className="term-border bg-[#060c06] px-6 py-8 text-center">
-          <div className="text-[#00aa28] text-sm font-mono tracking-widest animate-pulse">VERIFYING_ANSWER...</div>
+        <div className="term-border bg-[var(--c-bg)] px-6 py-8 text-center">
+          <div className="text-[var(--c-secondary)] text-sm font-mono tracking-widest animate-pulse">VERIFYING_ANSWER...</div>
         </div>
       </div>
     );
