@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getSupabaseAdminClient } from '@/lib/supabase';
+import { getSupabaseAdminClient, fetchAllRows } from '@/lib/supabase';
 import { requireAdmin } from '@/lib/adminAuth';
 
 const TECHNIQUES = ['urgency', 'authority-impersonation', 'credential-harvest', 'hyper-personalization', 'pretexting', 'fluent-prose'];
@@ -14,18 +14,19 @@ export async function GET() {
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
 
-    const [answersResult, todayResult, playersResult] = await Promise.all([
-      supabase.from('answers').select('correct, technique, is_phishing, confidence, player_id, session_id').eq('game_mode', 'research'),
+    const [answers, todayResult, players] = await Promise.all([
+      fetchAllRows(({ from, to }) =>
+        supabase.from('answers').select('correct, technique, is_phishing, confidence, player_id, session_id').eq('game_mode', 'research').range(from, to),
+      ),
       supabase.from('answers').select('id', { count: 'exact', head: true }).eq('game_mode', 'research').gte('created_at', today.toISOString()),
-      supabase.from('players').select('research_sessions_completed, research_graduated').gte('research_sessions_completed', 1),
+      fetchAllRows(({ from, to }) =>
+        supabase.from('players').select('research_sessions_completed, research_graduated').gte('research_sessions_completed', 1).range(from, to),
+      ),
     ]);
-
-    const answers = answersResult.data ?? [];
     const total = answers.length;
     const correct = answers.filter(a => a.correct).length;
     const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
     const sessions = new Set(answers.map(a => a.session_id)).size;
-    const players = playersResult.data ?? [];
     const graduatedCount = players.filter(p => p.research_graduated).length;
 
     // Per-technique breakdown (no minimum threshold — show all data)
