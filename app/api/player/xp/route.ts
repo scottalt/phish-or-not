@@ -61,11 +61,28 @@ export async function PATCH(req: NextRequest) {
       redis.get<number>(dailyKey),
     ]);
 
-    if ((hourlyCount ?? 0) >= MAX_XP_SESSIONS_PER_HOUR) {
-      return NextResponse.json({ error: 'XP rate limit exceeded — try again later' }, { status: 429 });
-    }
-    if ((dailyCount ?? 0) >= MAX_XP_SESSIONS_PER_DAY) {
-      return NextResponse.json({ error: 'Daily XP limit reached' }, { status: 429 });
+    const hCount = hourlyCount ?? 0;
+    const dCount = dailyCount ?? 0;
+
+    if (hCount >= MAX_XP_SESSIONS_PER_HOUR || dCount >= MAX_XP_SESSIONS_PER_DAY) {
+      // Next hour boundary
+      const nextHour = new Date(nowHour + ':00:00.000Z');
+      nextHour.setUTCHours(nextHour.getUTCHours() + 1);
+      // Next day boundary (midnight UTC)
+      const nextDay = new Date(todayStr + 'T00:00:00.000Z');
+      nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+
+      return NextResponse.json({
+        error: hCount >= MAX_XP_SESSIONS_PER_HOUR
+          ? 'XP rate limit exceeded — try again later'
+          : 'Daily XP limit reached',
+        cooldown: {
+          hourlyRemaining: Math.max(0, MAX_XP_SESSIONS_PER_HOUR - hCount),
+          dailyRemaining: Math.max(0, MAX_XP_SESSIONS_PER_DAY - dCount),
+          hourlyResetsAt: nextHour.toISOString(),
+          dailyResetsAt: nextDay.toISOString(),
+        },
+      }, { status: 429 });
     }
   }
 
@@ -216,6 +233,7 @@ export async function PATCH(req: NextRequest) {
   }
 
   // Increment rate limit counters after successful XP award (freeplay/expert/daily only)
+  let cooldown: { hourlyRemaining: number; dailyRemaining: number; hourlyResetsAt: string; dailyResetsAt: string } | undefined;
   if (verifiedGameMode !== 'research') {
     const nowHour = new Date().toISOString().slice(0, 13);
     const todayStr = new Date().toISOString().slice(0, 10);
@@ -229,6 +247,18 @@ export async function PATCH(req: NextRequest) {
     // Set TTLs only on first increment to avoid resetting them
     if (hCount === 1) await redis.expire(hourlyKey, 3600);
     if (dCount === 1) await redis.expire(dailyKey, 86400);
+
+    const nextHour = new Date(nowHour + ':00:00.000Z');
+    nextHour.setUTCHours(nextHour.getUTCHours() + 1);
+    const nextDay = new Date(todayStr + 'T00:00:00.000Z');
+    nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+
+    cooldown = {
+      hourlyRemaining: Math.max(0, MAX_XP_SESSIONS_PER_HOUR - hCount),
+      dailyRemaining: Math.max(0, MAX_XP_SESSIONS_PER_DAY - dCount),
+      hourlyResetsAt: nextHour.toISOString(),
+      dailyResetsAt: nextDay.toISOString(),
+    };
   }
 
   // Commit streak update only after successful XP write
@@ -289,5 +319,6 @@ export async function PATCH(req: NextRequest) {
     newAchievements,
     streakDay,
     streakBonusXp,
+    ...(cooldown ? { cooldown } : {}),
   });
 }

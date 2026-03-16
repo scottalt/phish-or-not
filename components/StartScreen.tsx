@@ -65,6 +65,60 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
   const [lbExpanded, setLbExpanded] = useState(false);
   const [lbExpandLoading, setLbExpandLoading] = useState(false);
 
+  // XP cooldown indicator
+  const [cooldownLabel, setCooldownLabel] = useState<string | null>(null);
+  useEffect(() => {
+    function check() {
+      try {
+        const raw = localStorage.getItem('xp_cooldown');
+        if (!raw) { setCooldownLabel(null); return; }
+        const cd = JSON.parse(raw) as { hourlyRemaining: number; dailyRemaining: number; hourlyResetsAt: string; dailyResetsAt: string };
+        const now = Date.now();
+        const hourlyReset = new Date(cd.hourlyResetsAt).getTime();
+        const dailyReset = new Date(cd.dailyResetsAt).getTime();
+
+        // If both resets are in the past, cooldown is stale
+        if (hourlyReset <= now && dailyReset <= now) {
+          localStorage.removeItem('xp_cooldown');
+          setCooldownLabel(null);
+          return;
+        }
+
+        // At cap — show countdown
+        if (cd.hourlyRemaining === 0 || cd.dailyRemaining === 0) {
+          const resetMs = cd.dailyRemaining === 0 ? dailyReset : hourlyReset;
+          const diff = Math.max(0, resetMs - now);
+          const mins = Math.floor(diff / 60000);
+          const secs = Math.floor((diff % 60000) / 1000);
+          if (diff <= 0) {
+            localStorage.removeItem('xp_cooldown');
+            setCooldownLabel(null);
+          } else {
+            setCooldownLabel(`XP COOLDOWN · ${mins}m ${secs.toString().padStart(2, '0')}s`);
+          }
+          return;
+        }
+
+        // Low remaining — show warning
+        if (cd.hourlyRemaining <= 3) {
+          setCooldownLabel(`${cd.hourlyRemaining} XP SESSION${cd.hourlyRemaining === 1 ? '' : 'S'} LEFT THIS HOUR`);
+          return;
+        }
+        if (cd.dailyRemaining <= 5) {
+          setCooldownLabel(`${cd.dailyRemaining} XP SESSIONS LEFT TODAY`);
+          return;
+        }
+
+        setCooldownLabel(null);
+      } catch {
+        setCooldownLabel(null);
+      }
+    }
+    check();
+    const interval = setInterval(check, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   const fetchLeaderboard = useCallback(async () => {
     const d = new Date();
     const today = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
@@ -297,6 +351,14 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* XP cooldown indicator */}
+          {signedIn && cooldownLabel && (
+            <div className="term-border border-[rgba(255,170,0,0.3)] bg-[#060c06] px-3 py-2 flex items-center justify-between">
+              <span className="text-[#ffaa00] text-sm font-mono tracking-wider">{cooldownLabel}</span>
+              <span className="text-[#1a5c2a] text-sm font-mono">RESEARCH MODE UNAFFECTED</span>
             </div>
           )}
 

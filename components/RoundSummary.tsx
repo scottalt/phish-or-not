@@ -122,12 +122,25 @@ export function RoundSummary({ score, total, totalScore, results, mode, sessionI
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ xpEarned, score: totalScore, gameMode: mode, sessionCompleted: true, sessionId }),
     })
-      .then(r => {
-        if (r.status === 429) { setRateLimited(true); return null; }
+      .then(async (r) => {
+        if (r.status === 429) {
+          const body = await r.json().catch(() => null);
+          if (body?.cooldown) {
+            try { localStorage.setItem('xp_cooldown', JSON.stringify(body.cooldown)); } catch {}
+          }
+          setRateLimited(true);
+          return null;
+        }
         return r.ok ? r.json() : null;
       })
       .then(data => {
-        if (data) { setXpResult(data); refreshProfile(); }
+        if (data) {
+          setXpResult(data);
+          refreshProfile();
+          if (data.cooldown) {
+            try { localStorage.setItem('xp_cooldown', JSON.stringify(data.cooldown)); } catch {}
+          }
+        }
       })
       .catch(() => {});
   }, [signedIn]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -181,8 +194,8 @@ export function RoundSummary({ score, total, totalScore, results, mode, sessionI
       {signedIn && rateLimited && (
         <div className="term-border border-[rgba(255,170,0,0.4)] bg-[#060c06] px-3 py-3 space-y-1">
           <div className="text-[#ffaa00] text-sm font-mono font-bold tracking-widest">COOLDOWN_ACTIVE</div>
-          <div className="text-[#003a0e] text-sm font-mono">
-            You&apos;ve been grinding hard, agent. XP earning is paused — take a break and come back later to keep ranking up.
+          <div className="text-[#1a5c2a] text-sm font-mono">
+            XP earning is paused. You can still play — XP resumes after cooldown.
           </div>
         </div>
       )}
