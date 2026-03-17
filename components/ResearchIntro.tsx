@@ -27,9 +27,9 @@ export function ResearchIntro({ onBegin }: Props) {
           </div>
         </div>
 
-        <div className="term-border bg-[var(--c-bg)] border-[rgba(255,170,0,0.3)]">
-          <div className="border-b border-[rgba(255,170,0,0.3)] px-3 py-1.5">
-            <span className="text-[#ffaa00] text-sm tracking-widest">WHAT TO CHECK</span>
+        <div className="term-border bg-[var(--c-bg)] border-[color-mix(in_srgb,var(--c-accent)_30%,transparent)]">
+          <div className="border-b border-[color-mix(in_srgb,var(--c-accent)_30%,transparent)] px-3 py-1.5">
+            <span className="text-[var(--c-accent)] text-sm tracking-widest">WHAT TO CHECK</span>
           </div>
           <ul className="px-3 py-3 space-y-2">
             {[
@@ -41,7 +41,7 @@ export function ResearchIntro({ onBegin }: Props) {
               'URL destinations — tap any link to inspect the full URL',
             ].map((signal, i) => (
               <li key={i} className="flex gap-2 text-sm text-[var(--c-secondary)] font-mono">
-                <span className="text-[#ffaa00] shrink-0">▸</span>
+                <span className="text-[var(--c-accent)] shrink-0">▸</span>
                 <span>{signal}</span>
               </li>
             ))}

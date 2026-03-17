@@ -71,7 +71,7 @@ export function NavBar() {
           >
             WHAT&apos;S NEW
             {hasUnread && (
-              <span className="absolute -top-0.5 -right-2 w-2 h-2 rounded-full bg-[#ffaa00] animate-pulse" />
+              <span className="absolute -top-0.5 -right-2 w-2 h-2 rounded-full bg-[var(--c-accent)] animate-pulse" />
             )}
           </Link>
           <button

@@ -291,7 +291,7 @@ export default function ProfilePage() {
                   <span className="text-[var(--c-secondary)] text-sm lg:text-xs font-mono tracking-wider">{label}</span>
                   <span className={`text-sm font-mono font-bold ${
                     label === 'GRADUATION' && profile.researchGraduated
-                      ? 'text-[#ffaa00]'
+                      ? 'text-[var(--c-accent)]'
                       : 'text-[var(--c-primary)]'
                   }`}>
                     {value}

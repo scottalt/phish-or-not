@@ -5,6 +5,8 @@ export interface ThemeColors {
   dark: string;
   bg: string;
   bgAlt: string;
+  accent: string;
+  accentDim: string;
 }
 
 export interface ThemeDef {
@@ -30,6 +32,8 @@ export const THEMES: ThemeDef[] = [
       dark: '#003a0e',
       bg: '#060c06',
       bgAlt: '#020902',
+      accent: '#ffaa00',
+      accentDim: '#cc8800',
     },
   },
   {
@@ -45,6 +49,8 @@ export const THEMES: ThemeDef[] = [
       dark: '#3d2d00',
       bg: '#0c0a04',
       bgAlt: '#080600',
+      accent: '#00d4ff',
+      accentDim: '#0099bb',
     },
   },
   {
@@ -60,6 +66,8 @@ export const THEMES: ThemeDef[] = [
       dark: '#003a52',
       bg: '#040a0c',
       bgAlt: '#020608',
+      accent: '#ffaa00',
+      accentDim: '#cc8800',
     },
   },
   {
@@ -75,6 +83,8 @@ export const THEMES: ThemeDef[] = [
       dark: '#2e0a50',
       bg: '#0a060e',
       bgAlt: '#060208',
+      accent: '#00ff41',
+      accentDim: '#00bb33',
     },
   },
   {
@@ -90,6 +100,8 @@ export const THEMES: ThemeDef[] = [
       dark: '#500a0a',
       bg: '#0e0404',
       bgAlt: '#080202',
+      accent: '#00d4ff',
+      accentDim: '#0099bb',
     },
   },
   {
@@ -105,6 +117,8 @@ export const THEMES: ThemeDef[] = [
       dark: '#333333',
       bg: '#0a0a0a',
       bgAlt: '#050505',
+      accent: '#ffaa00',
+      accentDim: '#cc8800',
     },
   },
 ];

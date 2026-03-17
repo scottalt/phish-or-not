@@ -37,21 +37,21 @@ export default function ChangelogPage() {
         {signedIn && milestones.length > 0 && (
           <div className="term-border bg-[var(--c-bg)]">
             <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] px-3 py-1.5">
-              <span className="text-[#ffaa00] text-sm tracking-widest">RESEARCH_TIMELINE</span>
+              <span className="text-[var(--c-accent)] text-sm tracking-widest">RESEARCH_TIMELINE</span>
             </div>
             <div className="px-4 py-4 space-y-0">
               {milestones.map((entry, i) => (
                 <div key={i} className="flex gap-4">
                   {/* Timeline rail */}
                   <div className="flex flex-col items-center">
-                    <div className="w-2 h-2 rounded-full bg-[#ffaa00] mt-1.5 shrink-0" />
+                    <div className="w-2 h-2 rounded-full bg-[var(--c-accent)] mt-1.5 shrink-0" />
                     {i < milestones.length - 1 && (
-                      <div className="w-px flex-1 bg-[rgba(255,170,0,0.3)] my-1" />
+                      <div className="w-px flex-1 bg-[color-mix(in_srgb,var(--c-accent)_30%,transparent)] my-1" />
                     )}
                   </div>
                   {/* Content */}
                   <div className={i < milestones.length - 1 ? 'pb-4' : ''}>
-                    <div className="text-[#ffaa00] text-xs font-mono tracking-wider">{formatDate(entry.date)}</div>
+                    <div className="text-[var(--c-accent)] text-xs font-mono tracking-wider">{formatDate(entry.date)}</div>
                     <div className="text-[var(--c-primary)] text-sm font-mono mt-0.5">{entry.title}</div>
                     {entry.body && (
                       <div className="text-[var(--c-secondary)] text-sm font-mono mt-1 leading-relaxed">{entry.body}</div>

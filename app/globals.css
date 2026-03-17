@@ -16,6 +16,8 @@
   --c-dark: #003a0e;
   --c-bg: #060c06;
   --c-bg-alt: #020902;
+  --c-accent: #ffaa00;
+  --c-accent-dim: #cc8800;
 }
 
 @theme inline {

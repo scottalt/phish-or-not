@@ -488,12 +488,12 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
   if (phase === 'research_unavailable') {
     return (
       <div className="anim-fade-in-up w-full max-w-sm px-4 flex flex-col gap-4">
-        <div className="term-border bg-[var(--c-bg)] border-[rgba(255,170,0,0.3)]">
-          <div className="border-b border-[rgba(255,170,0,0.3)] px-3 py-1.5">
-            <span className="text-[#ffaa00] text-sm tracking-widest">RESEARCH_MODE</span>
+        <div className="term-border bg-[var(--c-bg)] border-[color-mix(in_srgb,var(--c-accent)_30%,transparent)]">
+          <div className="border-b border-[color-mix(in_srgb,var(--c-accent)_30%,transparent)] px-3 py-1.5">
+            <span className="text-[var(--c-accent)] text-sm tracking-widest">RESEARCH_MODE</span>
           </div>
           <div className="px-3 py-6 text-center space-y-2">
-            <div className="text-[#ffaa00] text-sm font-mono font-black tracking-wide">DATASET UNAVAILABLE</div>
+            <div className="text-[var(--c-accent)] text-sm font-mono font-black tracking-wide">DATASET UNAVAILABLE</div>
             <p className="text-[var(--c-secondary)] text-sm font-mono leading-relaxed">
               The research dataset is still being assembled. No cards are available yet.
             </p>

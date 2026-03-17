@@ -25,7 +25,7 @@ const components: Components = {
     <strong className="text-[var(--c-primary)] font-bold">{children}</strong>
   ),
   em: ({ children }) => (
-    <em className="text-[#ffaa00] not-italic">{children}</em>
+    <em className="text-[var(--c-accent)] not-italic">{children}</em>
   ),
   ul: ({ children }) => (
     <ul className="mb-3 space-y-1 pl-3">{children}</ul>

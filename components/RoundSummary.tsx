@@ -162,11 +162,11 @@ export function RoundSummary({ score, total, totalScore, results, mode, sessionI
             <span className="text-[var(--c-primary)] font-bold">+{xpResult.xpEarned} XP</span>
           </div>
           {xpResult.levelUp && (
-            <div className="text-[#ffaa00] text-sm font-mono text-center">LEVEL UP → {xpResult.level}</div>
+            <div className="text-[var(--c-accent)] text-sm font-mono text-center">LEVEL UP → {xpResult.level}</div>
           )}
           {xpResult.graduated && (
-            <div className="term-border border-[rgba(255,170,0,0.4)] px-2 py-2 text-center">
-              <div className="text-[#ffaa00] text-sm font-mono font-bold">RESEARCH GRADUATED</div>
+            <div className="term-border border-[color-mix(in_srgb,var(--c-accent)_40%,transparent)] px-2 py-2 text-center">
+              <div className="text-[var(--c-accent)] text-sm font-mono font-bold">RESEARCH GRADUATED</div>
               <div className="text-[var(--c-dark)] text-sm font-mono mt-0.5">Expert Mode unlocked. You&apos;ve submitted all 30 research answers.</div>
             </div>
           )}
@@ -231,7 +231,7 @@ export function RoundSummary({ score, total, totalScore, results, mode, sessionI
             <div className="text-sm font-mono text-[var(--c-dark)]">TOTAL PTS</div>
           </div>
           <div className="text-center">
-            <div className="text-lg font-black font-mono text-[#ffaa00]">{efficiency}%</div>
+            <div className="text-lg font-black font-mono text-[var(--c-accent)]">{efficiency}%</div>
             <div className="text-sm font-mono text-[var(--c-dark)]">EFFICIENCY</div>
           </div>
           <div className="text-center">

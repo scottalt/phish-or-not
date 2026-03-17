@@ -40,8 +40,8 @@ export function TutorialCard({ onComplete }: Props) {
     <div className="anim-fade-in-up w-full max-w-sm px-4 flex flex-col gap-4 pb-safe">
 
       {/* Annotation strip */}
-      <div className="term-border border-[rgba(255,170,0,0.5)] bg-[var(--c-bg)] px-3 py-3 space-y-1">
-        <div className="text-[#ffaa00] text-sm font-mono font-bold tracking-widest">TRAINING_SIMULATION</div>
+      <div className="term-border border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] bg-[var(--c-bg)] px-3 py-3 space-y-1">
+        <div className="text-[var(--c-accent)] text-sm font-mono font-bold tracking-widest">TRAINING_SIMULATION</div>
         <div className="text-[var(--c-secondary)] text-sm font-mono leading-relaxed">
           Explore the forensic tools below, then set your confidence and classify this email.
         </div>
@@ -227,11 +227,11 @@ export function TutorialCard({ onComplete }: Props) {
             {answer === 'PHISHING' ? '✓ PHISHING — CORRECT' : '✗ LEGIT — INCORRECT'}
           </div>
           <div className="text-[var(--c-secondary)] text-sm font-mono space-y-0.5">
-            <div>• <span className="text-[#ffaa00]">FROM:</span> paypa1.com — typosquatted domain</div>
-            <div>• <span className="text-[#ffaa00]">HEADERS:</span> SPF / DKIM / DMARC all FAIL</div>
-            <div>• <span className="text-[#ffaa00]">SENT:</span> 3:14 AM — unusual send time</div>
-            <div>• <span className="text-[#ffaa00]">REPLY-TO:</span> free provider, domain mismatch</div>
-            <div>• <span className="text-[#ffaa00]">URL:</span> paypa1-secure.com — typosquatted</div>
+            <div>• <span className="text-[var(--c-accent)]">FROM:</span> paypa1.com — typosquatted domain</div>
+            <div>• <span className="text-[var(--c-accent)]">HEADERS:</span> SPF / DKIM / DMARC all FAIL</div>
+            <div>• <span className="text-[var(--c-accent)]">SENT:</span> 3:14 AM — unusual send time</div>
+            <div>• <span className="text-[var(--c-accent)]">REPLY-TO:</span> free provider, domain mismatch</div>
+            <div>• <span className="text-[var(--c-accent)]">URL:</span> paypa1-secure.com — typosquatted</div>
           </div>
         </div>
       )}

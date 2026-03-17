@@ -369,7 +369,7 @@ export function GameCard({ card, onAnswer, questionNumber, total, streak, totalS
             [QUIT]
           </button>
           {mode === 'research' && (
-            <span className="text-[#ffaa00] text-sm font-mono">[RES]</span>
+            <span className="text-[var(--c-accent)] text-sm font-mono">[RES]</span>
           )}
           <span className="font-mono text-sm">
             <span className="text-[var(--c-dark)]">[</span>

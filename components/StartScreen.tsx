@@ -356,7 +356,7 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                   <div className="flex items-center gap-3">
                     <Link href="/profile" className="text-[var(--c-primary)] text-sm tracking-widest font-bold hover:text-[var(--c-primary)] border border-[color-mix(in_srgb,var(--c-primary)_30%,transparent)] px-2 py-0.5 hover:bg-[color-mix(in_srgb,var(--c-primary)_6%,transparent)] transition-colors">[ {profile.displayName} ]</Link>
                     {profile.researchGraduated && (
-                      <span className="text-[#ffaa00] text-sm font-mono hidden lg:inline">⬡ GRADUATED</span>
+                      <span className="text-[var(--c-accent)] text-sm font-mono hidden lg:inline">⬡ GRADUATED</span>
                     )}
                   </div>
                   <div className="flex items-center gap-3">
@@ -374,7 +374,7 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                   {/* Mobile-only: show graduation + achievements below XP bar */}
                   <div className="flex items-center justify-between lg:hidden">
                     {profile.researchGraduated && (
-                      <div className="text-[#ffaa00] text-sm font-mono">⬡ RESEARCH GRADUATED</div>
+                      <div className="text-[var(--c-accent)] text-sm font-mono">⬡ RESEARCH GRADUATED</div>
                     )}
                     {(profile.achievements?.length ?? 0) > 0 && (
                       <Link href="/profile#achievements" className="text-[var(--c-secondary)] text-sm font-mono hover:text-[var(--c-primary)]">
@@ -440,13 +440,13 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
               </div>
 
               {/* Signal guide */}
-              <div className="term-border bg-[var(--c-bg)] border-[rgba(255,170,0,0.3)]">
+              <div className="term-border bg-[var(--c-bg)] border-[color-mix(in_srgb,var(--c-accent)_30%,transparent)]">
             <button
               onClick={() => setShowGuide((o) => !o)}
-              className="w-full px-3 py-2 flex items-center justify-between text-sm font-mono hover:bg-[rgba(255,170,0,0.05)] transition-colors"
+              className="w-full px-3 py-2 flex items-center justify-between text-sm font-mono hover:bg-[color-mix(in_srgb,var(--c-accent)_5%,transparent)] transition-colors"
             >
-              <span className="text-[#ffaa00] tracking-widest">[?] SIGNAL GUIDE</span>
-              <span className="text-[#ffaa00]">{showGuide ? '▲' : '▼'}</span>
+              <span className="text-[var(--c-accent)] tracking-widest">[?] SIGNAL GUIDE</span>
+              <span className="text-[var(--c-accent)]">{showGuide ? '▲' : '▼'}</span>
             </button>
             {showGuide && (
               <div className="border-t border-[color-mix(in_srgb,var(--c-primary)_15%,transparent)] px-3 py-3 space-y-3">
@@ -477,7 +477,7 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                   },
                 ].map(({ label, body }) => (
                   <div key={label} className="space-y-0.5">
-                    <div className="text-[#ffaa00] text-sm font-mono tracking-widest">{label}</div>
+                    <div className="text-[var(--c-accent)] text-sm font-mono tracking-widest">{label}</div>
                     <p className="text-[var(--c-secondary)] text-sm lg:text-base font-mono leading-relaxed">{body}</p>
                   </div>
                 ))}
@@ -533,9 +533,9 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                     }}
                     className={`w-full py-3 term-border font-mono font-bold tracking-widest text-sm active:scale-95 transition-all ${
                       !signedIn
-                        ? 'border-[rgba(255,170,0,0.5)] text-[#ffaa00] hover:bg-[rgba(255,170,0,0.06)]'
+                        ? 'border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] text-[var(--c-accent)] hover:bg-[color-mix(in_srgb,var(--c-accent)_6%,transparent)]'
                         : isResearch
-                          ? 'border-[rgba(255,170,0,0.5)] text-[#ffaa00] hover:bg-[rgba(255,170,0,0.06)]'
+                          ? 'border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] text-[var(--c-accent)] hover:bg-[color-mix(in_srgb,var(--c-accent)_6%,transparent)]'
                           : 'text-[var(--c-secondary)] hover:bg-[color-mix(in_srgb,var(--c-primary)_5%,transparent)]'
                     }`}
                   >
@@ -544,19 +544,19 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                 )}
                 {/* Inline onboarding: sign-in (State 1) or callsign setup (State 2) */}
                 {!signedIn && showInlineAuth && (
-                  <div ref={inlineAuthRef} className="anim-slide-down term-border bg-[var(--c-bg)] border-[rgba(255,170,0,0.5)]">
+                  <div ref={inlineAuthRef} className="anim-slide-down term-border bg-[var(--c-bg)] border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)]">
                     <div className="px-3 py-3 space-y-3">
                       <div className="flex items-center justify-between">
-                        <div className="text-[#ffaa00] text-sm font-mono font-bold tracking-widest">SIGN IN TO START</div>
-                        <button onClick={() => setShowInlineAuth(false)} aria-label="Close sign-in" className="text-[#ffaa00] text-sm font-mono hover:text-[#cc8800] p-1">✕</button>
+                        <div className="text-[var(--c-accent)] text-sm font-mono font-bold tracking-widest">SIGN IN TO START</div>
+                        <button onClick={() => setShowInlineAuth(false)} aria-label="Close sign-in" className="text-[var(--c-accent)] text-sm font-mono hover:text-[var(--c-accent-dim)] p-1">✕</button>
                       </div>
                       <div className="text-[var(--c-secondary)] text-sm font-mono">New or returning — enter your email to begin or continue</div>
                       <div className="space-y-1 text-sm font-mono">
-                        <div className="text-[var(--c-secondary)]"><span className="text-[#ffaa00]">▸</span> Track your XP + climb the leaderboard</div>
-                        <div className="text-[var(--c-secondary)]"><span className="text-[#ffaa00]">▸</span> Contribute to phishing research</div>
-                        <div className="text-[var(--c-secondary)]"><span className="text-[#ffaa00]">▸</span> Unlock Daily Challenge + Expert Mode</div>
+                        <div className="text-[var(--c-secondary)]"><span className="text-[var(--c-accent)]">▸</span> Track your XP + climb the leaderboard</div>
+                        <div className="text-[var(--c-secondary)]"><span className="text-[var(--c-accent)]">▸</span> Contribute to phishing research</div>
+                        <div className="text-[var(--c-secondary)]"><span className="text-[var(--c-accent)]">▸</span> Unlock Daily Challenge + Expert Mode</div>
                       </div>
-                      <div className="text-[#cc8800] text-xs font-mono">Magic code · no password · 10 seconds</div>
+                      <div className="text-[var(--c-accent-dim)] text-xs font-mono">Magic code · no password · 10 seconds</div>
                       <AuthFlow headless onSignIn={signInWithEmail} onVerifyCode={verifyOtp} onCancel={() => setShowInlineAuth(false)} />
                     </div>
                   </div>
@@ -581,7 +581,7 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                           className="w-full bg-transparent border border-[color-mix(in_srgb,var(--c-primary)_30%,transparent)] text-[var(--c-primary)] font-mono text-sm px-2 py-1.5 placeholder:text-[var(--c-dark)] focus:outline-none focus:border-[color-mix(in_srgb,var(--c-primary)_70%,transparent)]"
                         />
                         <div ref={backgroundRef} className="space-y-1.5 pt-1">
-                          <div className="text-[var(--c-secondary)] text-sm font-mono tracking-wider">BACKGROUND <span className="text-[#ffaa00]">*REQUIRED</span></div>
+                          <div className="text-[var(--c-secondary)] text-sm font-mono tracking-wider">BACKGROUND <span className="text-[var(--c-accent)]">*REQUIRED</span></div>
                           <div className="text-[var(--c-secondary)] text-sm font-mono leading-relaxed opacity-70">Required for research. Helps us understand how expertise affects detection accuracy. Not stored with any personal information.</div>
                           <div className="grid grid-cols-2 gap-1.5">
                             {BACKGROUND_OPTIONS.map((opt) => (
@@ -613,12 +613,12 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                   </div>
                 )}
                 {researchCapped && (
-                  <p className="text-[#ffaa00] text-sm text-center font-mono">
+                  <p className="text-[var(--c-accent)] text-sm text-center font-mono">
                     RESEARCH COMPLETE — 30/30 answers submitted. Thank you!
                   </p>
                 )}
                 {isResearch && profile && (
-                  <p className="text-[#cc8800] text-sm text-center font-mono">
+                  <p className="text-[var(--c-accent-dim)] text-sm text-center font-mono">
                     {profile.researchAnswersSubmitted} of 30 answers submitted
                   </p>
                 )}
@@ -646,7 +646,7 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
               <button
                 onClick={() => tryStart('expert')}
-                className="col-span-2 lg:col-span-1 py-3 term-border border-[rgba(255,170,0,0.4)] text-center text-[#ffaa00] font-mono font-bold tracking-widest text-sm hover:bg-[rgba(255,170,0,0.05)] transition-all"
+                className="col-span-2 lg:col-span-1 py-3 term-border border-[color-mix(in_srgb,var(--c-accent)_40%,transparent)] text-center text-[var(--c-accent)] font-mono font-bold tracking-widest text-sm hover:bg-[color-mix(in_srgb,var(--c-accent)_5%,transparent)] transition-all"
               >
                 [ EXPERT ]
               </button>
@@ -683,7 +683,7 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
             >
               v{version}
               {hasUnreadChangelog && (
-                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-[#ffaa00] animate-pulse" />
+                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-[var(--c-accent)] animate-pulse" />
               )}
             </Link>
           </div>
@@ -721,7 +721,7 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                       <div key={i} className="flex items-center gap-2 px-3 py-1.5 lg:py-2.5 text-sm lg:text-base font-mono anim-fade-in-up" style={{ animationDelay: `${i * 40}ms` }}>
                         <span className="text-[var(--c-muted)] w-4">{i + 1}.</span>
                         <span className="text-[var(--c-secondary)] flex-1 truncate">{row.display_name ?? 'ANON'}</span>
-                        {row.research_graduated && <span className="text-[#ffaa00] text-sm">★</span>}
+                        {row.research_graduated && <span className="text-[var(--c-accent)] text-sm">★</span>}
                         {(() => { const r = getRankFromLevel(row.level); return (
                           <span className={`text-sm font-mono shrink-0`} style={{ color: r.color }}>
                             {r.label}
@@ -736,7 +736,7 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                   <div key={`daily-${dailyLeaderboard.length}`} className="divide-y divide-[color-mix(in_srgb,var(--c-primary)_8%,transparent)]">
                     {dailyLeaderboard.map((entry, i) => (
                       <div key={i} className="flex items-center gap-3 px-3 py-1.5 lg:py-2.5 anim-fade-in-up" style={{ animationDelay: `${Math.min(i, 10) * 40}ms` }}>
-                        <span className={`text-sm font-mono w-4 shrink-0 ${i === 0 ? 'text-[#ffaa00]' : 'text-[var(--c-muted)]'}`}>{i + 1}</span>
+                        <span className={`text-sm font-mono w-4 shrink-0 ${i === 0 ? 'text-[var(--c-accent)]' : 'text-[var(--c-muted)]'}`}>{i + 1}</span>
                         <span className="text-[var(--c-secondary)] text-sm font-mono flex-1 truncate">{entry.name}</span>
                         {(() => { const r = getRankFromLevel(entry.level ?? 1); return (
                           <span className={`text-sm font-mono shrink-0`} style={{ color: r.color }}>{r.label}</span>

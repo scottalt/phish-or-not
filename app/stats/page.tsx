@@ -74,7 +74,7 @@ export default function StatsPage() {
     return (
       <main className="min-h-screen bg-[var(--c-bg-alt)] flex items-center justify-center px-4 lg:pt-16 pb-20 lg:pb-8">
         <div className="w-full max-w-sm term-border bg-[var(--c-bg)] px-4 py-6 text-center space-y-3">
-          <div className="text-[#ffaa00] text-sm font-mono tracking-widest">STATS_LOCKED</div>
+          <div className="text-[var(--c-accent)] text-sm font-mono tracking-widest">STATS_LOCKED</div>
           <div className="text-[var(--c-muted)] text-sm font-mono">Complete 30 research answers to unlock your personal stats.</div>
         </div>
       </main>

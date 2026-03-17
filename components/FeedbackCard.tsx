@@ -164,7 +164,7 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
           </div>
           {streakMilestone && (
             <div className="border-t border-[color-mix(in_srgb,var(--c-primary)_25%,transparent)] px-3 py-1.5 text-center">
-              <span className="text-sm font-mono text-[#ffaa00]">
+              <span className="text-sm font-mono text-[var(--c-accent)]">
                 ★ STREAK BONUS x{streak / 3} — +50 PTS INCLUDED ★
               </span>
             </div>
@@ -403,14 +403,14 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
           if (signals.length === 0) return null;
 
           return (
-            <div className="term-border bg-[var(--c-bg)] border-[rgba(255,170,0,0.3)]">
-              <div className="border-b border-[rgba(255,170,0,0.3)] px-3 py-1.5">
-                <span className="text-[#ffaa00] text-sm tracking-widest">FORENSIC_SIGNALS</span>
+            <div className="term-border bg-[var(--c-bg)] border-[color-mix(in_srgb,var(--c-accent)_30%,transparent)]">
+              <div className="border-b border-[color-mix(in_srgb,var(--c-accent)_30%,transparent)] px-3 py-1.5">
+                <span className="text-[var(--c-accent)] text-sm tracking-widest">FORENSIC_SIGNALS</span>
               </div>
               <ul className="px-3 py-3 space-y-2">
                 {signals.map((signal, i) => (
                   <li key={i} className="flex gap-2 text-sm text-[var(--c-secondary)] font-mono">
-                    <span className="text-[#ffaa00] shrink-0">▸</span>
+                    <span className="text-[var(--c-accent)] shrink-0">▸</span>
                     <span>{signal}</span>
                   </li>
                 ))}

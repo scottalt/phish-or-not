@@ -22,6 +22,8 @@ function applyThemeVars(theme: ThemeDef) {
   root.style.setProperty('--c-dark', c.dark);
   root.style.setProperty('--c-bg', c.bg);
   root.style.setProperty('--c-bg-alt', c.bgAlt);
+  root.style.setProperty('--c-accent', c.accent);
+  root.style.setProperty('--c-accent-dim', c.accentDim);
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
