@@ -61,12 +61,12 @@ body::after {
   z-index: 9998;
 }
 
-/* Phosphor glow */
+/* Phosphor glow — adapts to theme */
 .glow {
-  text-shadow: 0 0 6px rgba(0, 255, 65, 0.95), 0 0 16px rgba(0, 255, 65, 0.6), 0 0 40px rgba(0, 255, 65, 0.2);
+  text-shadow: 0 0 6px color-mix(in srgb, var(--c-primary) 95%, transparent), 0 0 16px color-mix(in srgb, var(--c-primary) 60%, transparent), 0 0 40px color-mix(in srgb, var(--c-primary) 20%, transparent);
 }
 .glow-soft {
-  text-shadow: 0 0 3px rgba(0, 255, 65, 0.45), 0 0 8px rgba(0, 255, 65, 0.12);
+  text-shadow: 0 0 3px color-mix(in srgb, var(--c-primary) 45%, transparent), 0 0 8px color-mix(in srgb, var(--c-primary) 12%, transparent);
 }
 
 .glow-red {
@@ -93,10 +93,10 @@ body::after {
   display: inline-block;
   width: 0.55em;
   height: 1em;
-  background: var(--phosphor);
+  background: var(--c-primary);
   vertical-align: text-bottom;
   animation: blink 1s step-end infinite;
-  box-shadow: 0 0 8px rgba(0, 255, 65, 0.9);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--c-primary) 90%, transparent);
   margin-left: 2px;
 }
 
@@ -268,9 +268,9 @@ body::after {
   background: linear-gradient(
     to bottom,
     transparent 0%,
-    rgba(0, 255, 65, 0.025) 45%,
-    rgba(0, 255, 65, 0.04) 50%,
-    rgba(0, 255, 65, 0.025) 55%,
+    color-mix(in srgb, var(--c-primary) 2.5%, transparent) 45%,
+    color-mix(in srgb, var(--c-primary) 4%, transparent) 50%,
+    color-mix(in srgb, var(--c-primary) 2.5%, transparent) 55%,
     transparent 100%
   );
   pointer-events: none;
