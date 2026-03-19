@@ -131,7 +131,8 @@ export function RoundSummary({ score, total, totalScore, results, mode, sessionI
           setRateLimited(true);
           return null;
         }
-        return r.ok ? r.json() : null;
+        if (!r.ok) { console.error('[player/xp] non-ok response:', r.status); return null; }
+        return r.json();
       })
       .then(data => {
         if (data) {
@@ -142,7 +143,7 @@ export function RoundSummary({ score, total, totalScore, results, mode, sessionI
           }
         }
       })
-      .catch(() => {});
+      .catch((err) => { console.error('[player/xp] award failed:', err); });
   }, [signedIn]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const phishingCaught = results.filter((r) => r.card.isPhishing && r.correct).length;

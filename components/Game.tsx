@@ -312,8 +312,9 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
 
           setPhase('feedback');
         })
-        .catch(() => {
+        .catch((err) => {
           // If check fails, fall back to start — don't reveal answers
+          console.error('[cards/check] failed:', err);
           setPhase('start');
         });
       return;
@@ -422,7 +423,7 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ answer: answerEvent, session: sessionPayload }),
-    }).catch(() => {});
+    }).catch((err) => { console.error('[answers] submit failed:', err); });
   }
 
   function handleNext() {
@@ -447,7 +448,7 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
             completedAt: new Date().toISOString(),
             cardsAnswered: Math.min(deck.length, ROUND_SIZE),
           }),
-        }).then(() => {}).catch(() => {});
+        }).then((r) => { if (!r.ok) console.error('[sessions] finalize failed:', r.status); }).catch((err) => { console.error('[sessions] finalize failed:', err); });
       }
       setPhase('summary');
     } else {

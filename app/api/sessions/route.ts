@@ -46,7 +46,8 @@ export async function PATCH(req: NextRequest) {
       .eq('session_id', sessionId);
 
     return NextResponse.json({ ok: true });
-  } catch {
+  } catch (err) {
+    console.error('[sessions] PATCH failed:', err);
     return NextResponse.json({ ok: true });
   }
 }
