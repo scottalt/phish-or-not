@@ -52,12 +52,6 @@ export default async function LandingPage() {
           >
             How It Works
           </a>
-          <a
-            href="#research"
-            className="text-[#a1a1aa] text-sm hover:text-white transition-colors"
-          >
-            Research
-          </a>
           <Link
             href="/play"
             className="px-[18px] py-2 bg-[#fafafa] text-[#09090b] text-[13px] font-semibold rounded-lg hover:bg-white transition-colors"
