@@ -7,7 +7,8 @@ async function getStats() {
     const [participants, total, correct] = await Promise.all([
       supabase
         .from('players')
-        .select('id', { count: 'exact', head: true }),
+        .select('id', { count: 'exact', head: true })
+        .gte('total_sessions', 1),
       supabase
         .from('answers')
         .select('id', { count: 'exact', head: true })
