@@ -379,7 +379,7 @@ export function GameCard({ card, onAnswer, questionNumber, total, streak, totalS
   const streakAtBonus = streak > 0 && streak % 3 === 0;
 
   return (
-    <div className="flex flex-col items-center gap-4 w-full max-w-sm px-4 pb-safe">
+    <div className="flex flex-col items-center gap-4 w-full max-w-sm lg:max-w-lg px-4 pb-safe">
       {/* HUD */}
       <div className="w-full flex flex-wrap items-center justify-between gap-y-1 text-sm font-mono">
         <div className="flex items-center gap-2">

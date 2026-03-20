@@ -154,7 +154,7 @@ export function RoundSummary({ score, total, totalScore, results, mode, sessionI
   const efficiency = Math.round((totalScore / maxPossible) * 100);
 
   return (
-    <div className="anim-fade-in-up w-full max-w-sm px-4 pb-safe flex flex-col gap-4">
+    <div className="anim-fade-in-up w-full max-w-sm lg:max-w-lg px-4 pb-safe flex flex-col gap-4">
       {/* XP award — only shown when signed in and API has responded */}
       {signedIn && xpResult && (
         <div className="term-border bg-[var(--c-bg)] px-3 py-3 space-y-2">

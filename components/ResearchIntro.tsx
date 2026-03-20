@@ -8,7 +8,7 @@ interface Props {
 
 export function ResearchIntro({ onBegin }: Props) {
   return (
-    <div className="w-full max-w-sm px-4">
+    <div className="w-full max-w-sm lg:max-w-lg px-4">
       <div className="anim-fade-in-up flex flex-col gap-4">
         <div className="term-border bg-[var(--c-bg)]">
           <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] px-3 py-2">

@@ -107,7 +107,7 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
   })();
 
   return (
-    <div className="w-full max-w-sm px-4 pb-safe relative">
+    <div className="w-full max-w-sm lg:max-w-lg px-4 pb-safe relative">
       {showFlash && (
         <div
           className={`fixed inset-0 pointer-events-none z-50 ${
