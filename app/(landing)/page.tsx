@@ -62,6 +62,7 @@ export default async function LandingPage() {
             className="text-[#a1a1aa] text-sm hover:text-white transition-colors"
             target="_blank"
             rel="noopener noreferrer"
+            rel="noopener noreferrer"
           >
             Research
           </a>
