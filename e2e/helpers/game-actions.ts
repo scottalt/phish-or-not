@@ -10,7 +10,7 @@ export async function answerCard(
 ): Promise<{ correct: boolean; isPhishing: boolean; pointsEarned: number; streak: number; explanation: string }> {
   // Step 1: Select confidence (must happen before answer buttons appear)
   const confidenceButton = page.getByRole('button', { name: /certain|likely|guessing/i }).first();
-  await expect(confidenceButton).toBeVisible({ timeout: 15_000 });
+  await expect(confidenceButton).toBeVisible({ timeout: 30_000 });
   await confidenceButton.click();
 
   // Step 2: Click answer

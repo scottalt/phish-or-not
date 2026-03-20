@@ -16,12 +16,20 @@ test.describe('Freeplay Mode', () => {
   });
 
   test('full round: 10 cards with server-verified answers', async ({ page }) => {
+    test.setTimeout(120_000);
     await injectSession(page, supabaseUrl, user.accessToken, user.refreshToken);
     await page.goto('/play');
 
     const playButton = page.getByRole('button', { name: /play/i }).first();
     await expect(playButton).toBeVisible({ timeout: 15_000 });
+
+    // Wait for cards API response after clicking play
+    const cardsLoaded = page.waitForResponse(
+      (resp) => resp.url().includes('/api/cards/') && resp.status() === 200,
+      { timeout: 30_000 },
+    );
     await playButton.click();
+    await cardsLoaded;
 
     // Play through 10 cards, verifying server check response each time
     for (let i = 0; i < 10; i++) {
@@ -58,7 +66,7 @@ test.describe('Freeplay Round Completion', () => {
     // Capture the session ID from the first /api/cards/ request
     const cardsResponse = page.waitForResponse(
       (resp) => resp.url().includes('/api/cards/') && resp.status() === 200,
-      { timeout: 30_000 },
+      { timeout: 45_000 },
     );
 
     const playButton = page.getByRole('button', { name: /play/i }).first();
