@@ -156,7 +156,9 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
 
     if (newMode === 'research' || newMode === 'preview') {
       setPhase('loading' as GamePhase);
-      fetch(`/api/cards/research?sessionId=${encodeURIComponent(sessionId.current)}`)
+      // Preview mode: don't pass sessionId so the server doesn't create a session row or store dealt cards
+      const qs = newMode === 'preview' ? '' : `?sessionId=${encodeURIComponent(sessionId.current)}`;
+      fetch(`/api/cards/research${qs}`)
         .then((r) => r.json())
         .then((cards: Card[]) => {
           if (!cards.length) {
