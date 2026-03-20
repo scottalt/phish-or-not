@@ -214,7 +214,7 @@ function EmailDisplay({ card, onScroll, onHeadersOpened, onUrlInspected }: {
       <div className="relative">
         <div
           ref={bodyRef}
-          className={`px-3 py-3 text-sm text-[var(--c-secondary)] leading-relaxed whitespace-pre-wrap font-mono ${bodyExpanded ? '' : 'max-h-52 lg:max-h-none momentum-scroll scroll-fade-bottom lg:[mask-image:none]'}`}
+          className={`px-3 py-3 text-sm text-[var(--c-secondary)] leading-relaxed whitespace-pre-wrap font-mono ${bodyExpanded ? '' : 'max-h-52 lg:max-h-none momentum-scroll lg:overflow-auto scroll-fade-bottom lg:scroll-fade-none'}`}
           onScroll={(e) => {
             const el = e.currentTarget;
             const pct = Math.round(((el.scrollTop + el.clientHeight) / el.scrollHeight) * 100);
@@ -299,7 +299,7 @@ function SMSDisplay({ card, onScroll, onUrlInspected }: {
       <div className="relative">
         <div
           ref={bodyRef}
-          className={`px-3 py-3 text-sm text-[var(--c-secondary)] leading-relaxed whitespace-pre-wrap font-mono ${bodyExpanded ? '' : 'max-h-52 lg:max-h-none momentum-scroll scroll-fade-bottom lg:[mask-image:none]'}`}
+          className={`px-3 py-3 text-sm text-[var(--c-secondary)] leading-relaxed whitespace-pre-wrap font-mono ${bodyExpanded ? '' : 'max-h-52 lg:max-h-none momentum-scroll lg:overflow-auto scroll-fade-bottom lg:scroll-fade-none'}`}
           onScroll={(e) => {
             const el = e.currentTarget;
             const pct = Math.round(((el.scrollTop + el.clientHeight) / el.scrollHeight) * 100);
