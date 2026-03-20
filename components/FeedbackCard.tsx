@@ -124,7 +124,7 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
         {/* Result header */}
         <div className={`term-border bg-[var(--c-bg)] ${correct ? 'border-[color-mix(in_srgb,var(--c-primary)_60%,transparent)]' : 'border-[rgba(255,51,51,0.6)]'} ${!correct ? 'anim-glitch' : ''}`}>
           <div className={`border-b px-3 py-2 flex items-center justify-between ${correct ? 'border-[color-mix(in_srgb,var(--c-primary)_40%,transparent)]' : 'border-[rgba(255,51,51,0.4)]'}`}>
-            <span className={`text-sm font-mono tracking-widest ${correct ? 'text-[var(--c-secondary)]' : 'text-[#aa2222]'}`}>
+            <span className={`text-sm font-mono tracking-widest ${correct ? 'text-[var(--c-primary)]' : 'text-[#ff3333]'}`}>
               ANALYSIS_RESULT
             </span>
             <span className="text-sm font-mono text-[var(--c-dark)]">Q{questionNumber}/{total}</span>
@@ -177,7 +177,7 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
 
         {/* Score bar */}
         <div className="term-border bg-[var(--c-bg)] px-3 py-2 flex items-center justify-between text-sm font-mono">
-          <span className="text-[var(--c-secondary)]">TOTAL SCORE</span>
+          <span className="text-[var(--c-muted)]">TOTAL SCORE</span>
           <span className="text-[var(--c-primary)] font-black text-sm">{totalScore} PTS</span>
           <span className="text-[var(--c-secondary)]">STREAK: <span className="text-[var(--c-primary)]">{streak}</span></span>
         </div>
@@ -200,9 +200,9 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
         )}
 
         {/* Explanation — in left column on desktop */}
-        <div className="term-border bg-[var(--c-bg)] hidden lg:block">
-          <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] px-3 py-1.5">
-            <span className="text-[var(--c-secondary)] text-sm tracking-widest">ANALYST_NOTES</span>
+        <div className="term-border bg-[var(--c-bg)] border-[color-mix(in_srgb,var(--c-accent)_25%,transparent)] hidden lg:block">
+          <div className="border-b border-[color-mix(in_srgb,var(--c-accent)_25%,transparent)] px-3 py-1.5">
+            <span className="text-[var(--c-accent)] text-sm tracking-widest">ANALYST_NOTES</span>
           </div>
           <p className="px-3 py-3 text-sm text-[var(--c-secondary)] leading-relaxed font-mono">{card.explanation}</p>
         </div>
@@ -211,9 +211,9 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
         {/* Right column: email review + signals */}
         <div className="flex flex-col gap-4 lg:flex-1 lg:min-w-0">
         {/* Interactive card review */}
-        <div className="term-border bg-[var(--c-bg)]">
-          <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] px-3 py-1.5 flex items-center justify-between">
-            <span className="text-[var(--c-secondary)] text-sm tracking-widest">
+        <div className="term-border bg-[var(--c-bg)] border-[color-mix(in_srgb,var(--c-primary)_20%,transparent)]">
+          <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_20%,transparent)] px-3 py-1.5 flex items-center justify-between">
+            <span className="text-[var(--c-dark)] text-sm tracking-widest">
               {card.type === 'sms' ? 'INCOMING_SMS' : 'INCOMING_EMAIL'}
             </span>
             {card.type === 'email' ? (
@@ -362,9 +362,9 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
         </div>
 
         {/* Explanation — mobile only (desktop shows in left column) */}
-        <div className="term-border bg-[var(--c-bg)] lg:hidden">
-          <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] px-3 py-1.5">
-            <span className="text-[var(--c-secondary)] text-sm tracking-widest">ANALYST_NOTES</span>
+        <div className="term-border bg-[var(--c-bg)] border-[color-mix(in_srgb,var(--c-accent)_25%,transparent)] lg:hidden">
+          <div className="border-b border-[color-mix(in_srgb,var(--c-accent)_25%,transparent)] px-3 py-1.5">
+            <span className="text-[var(--c-accent)] text-sm tracking-widest">ANALYST_NOTES</span>
           </div>
           <p className="px-3 py-3 text-sm text-[var(--c-secondary)] leading-relaxed font-mono">{card.explanation}</p>
         </div>
