@@ -98,6 +98,12 @@ export default async function LandingPage() {
               Learn More
             </a>
           </div>
+          <div className="mt-4 text-[13px] text-[#71717a]">
+            Already have an account?{' '}
+            <Link href="/play" className="text-[#a1a1aa] hover:text-white underline transition-colors">
+              Sign in
+            </Link>
+          </div>
 
           {/* Terminal Preview */}
           <div className="mt-[60px] max-w-[420px] mx-auto bg-[#060c06] border border-[rgba(0,255,65,0.15)] rounded-xl overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.5),0_0_40px_rgba(0,255,65,0.05)]">
