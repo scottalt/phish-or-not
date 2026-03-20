@@ -8,8 +8,9 @@ interface Props {
 
 export function ResearchIntro({ onBegin }: Props) {
   return (
-    <div className="w-full max-w-sm lg:max-w-lg px-4">
+    <div className="w-full max-w-sm lg:max-w-3xl px-4">
       <div className="anim-fade-in-up flex flex-col gap-4">
+        {/* Research intro header */}
         <div className="term-border bg-[var(--c-bg)]">
           <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] px-3 py-2">
             <span className="text-[var(--c-secondary)] text-sm tracking-widest">RESEARCH_MODE</span>
@@ -27,47 +28,50 @@ export function ResearchIntro({ onBegin }: Props) {
           </div>
         </div>
 
-        <div className="term-border bg-[var(--c-bg)] border-[color-mix(in_srgb,var(--c-accent)_30%,transparent)]">
-          <div className="border-b border-[color-mix(in_srgb,var(--c-accent)_30%,transparent)] px-3 py-1.5">
-            <span className="text-[var(--c-accent)] text-sm tracking-widest">WHAT TO CHECK</span>
+        {/* Two-column on desktop: signals + data collection side by side */}
+        <div className="flex flex-col lg:flex-row gap-4">
+          <div className="term-border bg-[var(--c-bg)] border-[color-mix(in_srgb,var(--c-accent)_30%,transparent)] lg:flex-1">
+            <div className="border-b border-[color-mix(in_srgb,var(--c-accent)_30%,transparent)] px-3 py-1.5">
+              <span className="text-[var(--c-accent)] text-sm tracking-widest">WHAT TO CHECK</span>
+            </div>
+            <ul className="px-3 py-3 space-y-2">
+              {[
+                'Sender domain \u2014 tap [\u2197] next to the sender name to reveal the actual email address',
+                'Send time \u2014 check [SENT] for odd hours or mismatched timezones',
+                'Attachment name \u2014 check [ATCH] for suspicious filenames',
+                'Authentication headers \u2014 tap [HEADERS] for SPF/DKIM/DMARC',
+                'Reply-To mismatch \u2014 visible in [HEADERS] panel',
+                'URL destinations \u2014 tap any link to inspect the full URL',
+              ].map((signal, i) => (
+                <li key={i} className="flex gap-2 text-sm text-[var(--c-secondary)] font-mono">
+                  <span className="text-[var(--c-accent)] shrink-0">\u25B8</span>
+                  <span>{signal}</span>
+                </li>
+              ))}
+            </ul>
           </div>
-          <ul className="px-3 py-3 space-y-2">
-            {[
-              'Sender domain — tap [↗] next to the sender name to reveal the actual email address, then compare the domain to any domain referenced in the body',
-              'Send time — check [SENT] for odd hours or mismatched timezones',
-              'Attachment name — check [ATCH] for suspicious filenames or unexpected file types',
-              'Authentication headers — tap [HEADERS] for SPF/DKIM/DMARC result',
-              'Reply-To mismatch — visible in [HEADERS] panel',
-              'URL destinations — tap any link to inspect the full URL',
-            ].map((signal, i) => (
-              <li key={i} className="flex gap-2 text-sm text-[var(--c-secondary)] font-mono">
-                <span className="text-[var(--c-accent)] shrink-0">▸</span>
-                <span>{signal}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
 
-        <div className="term-border bg-[var(--c-bg)] border-[color-mix(in_srgb,var(--c-primary)_15%,transparent)]">
-          <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_15%,transparent)] px-3 py-1.5">
-            <span className="text-[var(--c-dark)] text-sm font-mono tracking-widest">DATA_COLLECTION</span>
-          </div>
-          <div className="px-3 py-3 space-y-2">
-            <p className="text-[var(--c-dark)] text-sm font-mono leading-relaxed">
-              A sign-in is required to contribute answers to the study. No password — just a 6-digit code to your email.
-            </p>
-            <p className="text-[var(--c-dark)] text-sm font-mono leading-relaxed">
-              <span className="text-[var(--c-secondary)]">Recorded:</span>{' '}
-              your answer, confidence level, response time, whether you opened headers or clicked URLs, position within the session, and your self-reported background (expertise level).
-            </p>
-            <p className="text-[var(--c-dark)] text-sm font-mono leading-relaxed">
-              <span className="text-[var(--c-secondary)]">Not recorded:</span>{' '}
-              email address, IP address, location, or any identifying information. Your email is used only for sign-in and is never associated with your answers.
-            </p>
-            <p className="text-[var(--c-dark)] text-sm font-mono leading-relaxed">
-              Each player contributes 30 research answers. After that, Expert Mode and the Intel Briefing unlock.{' '}
-              <Link href="/intel/player" className="text-[var(--c-secondary)] hover:underline">Preview</Link>.
-            </p>
+          <div className="term-border bg-[var(--c-bg)] border-[color-mix(in_srgb,var(--c-primary)_25%,transparent)] lg:flex-1">
+            <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_25%,transparent)] px-3 py-1.5">
+              <span className="text-[var(--c-secondary)] text-sm font-mono tracking-widest">DATA_COLLECTION</span>
+            </div>
+            <div className="px-3 py-3 space-y-2">
+              <p className="text-[var(--c-secondary)] text-sm font-mono leading-relaxed">
+                Sign-in required. No password \u2014 just a 6-digit code to your email.
+              </p>
+              <p className="text-[var(--c-muted)] text-sm font-mono leading-relaxed">
+                <span className="text-[var(--c-secondary)]">Recorded:</span>{' '}
+                answer, confidence, response time, header/URL inspection, session position, self-reported background.
+              </p>
+              <p className="text-[var(--c-muted)] text-sm font-mono leading-relaxed">
+                <span className="text-[var(--c-secondary)]">Not recorded:</span>{' '}
+                email, IP, location, or any identifying information.
+              </p>
+              <p className="text-[var(--c-muted)] text-sm font-mono leading-relaxed">
+                30 research answers to contribute. After that, Expert Mode and Intel unlock.{' '}
+                <Link href="/intel/player" className="text-[var(--c-secondary)] hover:underline">Preview</Link>.
+              </p>
+            </div>
           </div>
         </div>
 
