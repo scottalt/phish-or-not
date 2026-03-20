@@ -7,8 +7,7 @@ async function getStats() {
     const [participants, total, correct] = await Promise.all([
       supabase
         .from('players')
-        .select('id', { count: 'exact', head: true })
-        .gte('research_sessions_completed', 1),
+        .select('id', { count: 'exact', head: true }),
       supabase
         .from('answers')
         .select('id', { count: 'exact', head: true })
@@ -40,10 +39,14 @@ export default async function LandingPage() {
     <>
       {/* Nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 py-4 px-6 flex items-center justify-between bg-[rgba(9,9,11,0.8)] backdrop-blur-xl border-b border-white/[0.06]">
-        <div className="flex items-center gap-2 font-bold text-[15px] tracking-tight">
-          <div className="w-7 h-7 bg-[#00ff41] rounded-md flex items-center justify-center font-[family-name:var(--font-jetbrains)] text-sm font-bold text-black">
-            T
-          </div>
+        <div className="flex items-center gap-2.5 font-bold text-[15px] tracking-tight">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 32 32" className="shrink-0">
+            <rect width="32" height="32" rx="6" fill="#060c06"/>
+            <rect x="1" y="1" width="30" height="30" rx="5" fill="none" stroke="#00ff41" strokeOpacity="0.4" strokeWidth="1"/>
+            <rect x="5" y="7" width="22" height="3" rx="1" fill="#00ff41" fillOpacity="0.15"/>
+            <text x="16" y="24" textAnchor="middle" fontFamily="monospace" fontWeight="900" fontSize="16" fill="#00ff41" letterSpacing="1">TT</text>
+            <rect x="24" y="22" width="2" height="3" fill="#00ff41" opacity="0.8"/>
+          </svg>
           Threat Terminal
         </div>
         <div className="hidden sm:flex gap-6 items-center">
@@ -54,8 +57,10 @@ export default async function LandingPage() {
             How It Works
           </a>
           <a
-            href="#research"
+            href="https://scottaltiparmak.com/research"
             className="text-[#a1a1aa] text-sm hover:text-white transition-colors"
+            target="_blank"
+            rel="noopener noreferrer"
           >
             Research
           </a>
@@ -99,7 +104,9 @@ export default async function LandingPage() {
               Take the Challenge
             </Link>
             <a
-              href="#research"
+              href="https://scottaltiparmak.com/research"
+              target="_blank"
+              rel="noopener noreferrer"
               className="px-8 py-3.5 text-[#a1a1aa] text-[15px] font-semibold rounded-[10px] border border-white/10 hover:text-white hover:border-white/20 transition-all"
             >
               Learn More
@@ -205,7 +212,7 @@ export default async function LandingPage() {
               </div>
               <h3 className="text-base font-bold mb-2">Read the email</h3>
               <p className="text-sm text-[#a1a1aa] leading-relaxed">
-                You&apos;ll see AI-generated emails — some phishing, some
+                You&apos;ll see AI-generated emails, some phishing, some
                 legitimate. Grammar and spelling will be perfect in both.
               </p>
             </div>
@@ -215,8 +222,8 @@ export default async function LandingPage() {
               </div>
               <h3 className="text-base font-bold mb-2">Make your call</h3>
               <p className="text-sm text-[#a1a1aa] leading-relaxed">
-                Use forensic tools — sender verification, URL inspection, header
-                analysis — to decide: phishing or legit?
+                Use forensic tools like sender verification, URL inspection, and
+                header analysis to decide: phishing or legit?
               </p>
             </div>
             <div className="text-center">
@@ -245,19 +252,21 @@ export default async function LandingPage() {
             About the research
           </h2>
           <p className="text-[15px] text-[#a1a1aa] leading-relaxed mb-4">
-            Threat Terminal is a live empirical study measuring how humans detect
-            AI-generated phishing when linguistic quality is no longer a reliable
-            signal. Every answer you submit contributes to real research data.
+            Threat Terminal is a live research study on how people detect
+            AI-generated phishing. When grammar and spelling are no longer
+            reliable signals, what do humans actually look for?
           </p>
           <p className="text-[15px] text-[#a1a1aa] leading-relaxed mb-4">
-            We&apos;re studying which phishing techniques are most effective when
-            AI eliminates grammar and spelling mistakes — the traditional red
-            flags that security training teaches people to look for.
+            Every answer you submit contributes to real data. Your responses
+            help us understand which forensic cues matter most when traditional
+            red flags have been eliminated by AI.
           </p>
           <div className="text-[13px] text-[#71717a] mt-6">
             A research project by{' '}
             <a
-              href="https://scottaltiparmak.com"
+              href="https://scottaltiparmak.com/research"
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-[#00ff41] hover:underline"
             >
               Scott Altiparmak
