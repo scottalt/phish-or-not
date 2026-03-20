@@ -78,6 +78,17 @@ function EmailDisplay({ card, onScroll, onHeadersOpened, onUrlInspected }: {
   const [bodyExpanded, setBodyExpanded] = useState(false);
   const bodyRef = useRef<HTMLDivElement>(null);
   const [bodyOverflows, setBodyOverflows] = useState(false);
+
+  // Callback ref: scroll URL inspector into view when it mounts
+  const urlInspectorRef = (el: HTMLDivElement | null) => {
+    if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'end' }), 50);
+  };
+
+  function toggleUrl(url: string) {
+    onUrlInspected?.();
+    setInspectedUrl((prev) => prev === url ? null : url);
+  }
+
   const segments = parseBody(card.body);
   const { displayName, email } = parseFrom(card.from);
 
@@ -215,9 +226,9 @@ function EmailDisplay({ card, onScroll, onHeadersOpened, onUrlInspected }: {
               <span
                 key={i}
                 className="text-[#ffaa00] underline cursor-pointer hover:text-[#ffcc44] transition-colors"
-                onClick={(e) => { e.stopPropagation(); onUrlInspected?.(); setInspectedUrl(seg.actual); }}
+                onClick={(e) => { e.stopPropagation(); toggleUrl(seg.actual); }}
               >
-                {seg.display}<span className="opacity-50 text-sm ml-0.5">[↗]</span>
+                {seg.display}<span className="opacity-50 text-sm ml-0.5">{inspectedUrl === seg.actual ? '[−]' : '[↗]'}</span>
               </span>
             ) : (
               <span key={i}>{seg.content}</span>
@@ -234,7 +245,7 @@ function EmailDisplay({ card, onScroll, onHeadersOpened, onUrlInspected }: {
         )}
       </div>
       {inspectedUrl && (
-        <div className="border-t border-[rgba(255,170,0,0.3)] px-3 py-2 bg-[rgba(255,170,0,0.04)]">
+        <div ref={urlInspectorRef} className="border-t border-[rgba(255,170,0,0.3)] px-3 py-2 bg-[rgba(255,170,0,0.04)]">
           <div className="flex items-center justify-between mb-1">
             <span className="text-[#ffaa00] text-sm font-mono tracking-widest">URL_INSPECTOR</span>
             <button onClick={() => setInspectedUrl(null)} className="text-[var(--c-dark)] text-sm font-mono hover:text-[var(--c-secondary)] transition-colors p-2 -m-2" aria-label="Close URL inspector">[ × ]</button>
@@ -255,6 +266,17 @@ function SMSDisplay({ card, onScroll, onUrlInspected }: {
   const [bodyExpanded, setBodyExpanded] = useState(false);
   const bodyRef = useRef<HTMLDivElement>(null);
   const [bodyOverflows, setBodyOverflows] = useState(false);
+
+  // Callback ref: scroll URL inspector into view when it mounts
+  const urlInspectorRef = (el: HTMLDivElement | null) => {
+    if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'end' }), 50);
+  };
+
+  function toggleUrl(url: string) {
+    onUrlInspected?.();
+    setInspectedUrl((prev) => prev === url ? null : url);
+  }
+
   const segments = parseBody(card.body);
 
   useEffect(() => {
@@ -289,9 +311,9 @@ function SMSDisplay({ card, onScroll, onUrlInspected }: {
               <span
                 key={i}
                 className="text-[#ffaa00] underline cursor-pointer hover:text-[#ffcc44] transition-colors"
-                onClick={(e) => { e.stopPropagation(); onUrlInspected?.(); setInspectedUrl(seg.actual); }}
+                onClick={(e) => { e.stopPropagation(); toggleUrl(seg.actual); }}
               >
-                {seg.display}<span className="opacity-50 text-sm ml-0.5">[↗]</span>
+                {seg.display}<span className="opacity-50 text-sm ml-0.5">{inspectedUrl === seg.actual ? '[−]' : '[↗]'}</span>
               </span>
             ) : (
               <span key={i}>{seg.content}</span>
@@ -308,7 +330,7 @@ function SMSDisplay({ card, onScroll, onUrlInspected }: {
         )}
       </div>
       {inspectedUrl && (
-        <div className="border-t border-[rgba(255,170,0,0.3)] px-3 py-2 bg-[rgba(255,170,0,0.04)]">
+        <div ref={urlInspectorRef} className="border-t border-[rgba(255,170,0,0.3)] px-3 py-2 bg-[rgba(255,170,0,0.04)]">
           <div className="flex items-center justify-between mb-1">
             <span className="text-[#ffaa00] text-sm font-mono tracking-widest">URL_INSPECTOR</span>
             <button onClick={() => setInspectedUrl(null)} className="text-[var(--c-dark)] text-sm font-mono hover:text-[var(--c-secondary)] transition-colors p-2 -m-2" aria-label="Close URL inspector">[ × ]</button>
