@@ -1,36 +1,29 @@
 import Link from 'next/link';
-import { getSupabaseAdminClient } from '@/lib/supabase';
+import { getSupabaseAdminClient, fetchAllRows } from '@/lib/supabase';
+
+export const revalidate = 300; // 5-minute ISR cache
 
 async function getStats() {
   try {
     const supabase = getSupabaseAdminClient();
-    const [participantRows, total, correct] = await Promise.all([
-      supabase
-        .from('answers')
-        .select('player_id')
-        .eq('game_mode', 'research')
-        .not('player_id', 'is', null),
-      supabase
-        .from('answers')
-        .select('id', { count: 'exact', head: true })
-        .eq('game_mode', 'research'),
-      supabase
-        .from('answers')
-        .select('id', { count: 'exact', head: true })
-        .eq('game_mode', 'research')
-        .eq('correct', true),
+
+    // Use fetchAllRows (same as admin endpoint) to paginate past Supabase's 1000-row limit
+    const [answers, players] = await Promise.all([
+      fetchAllRows(({ from, to }) =>
+        supabase.from('answers').select('correct, player_id').eq('game_mode', 'research').range(from, to),
+      ),
+      fetchAllRows(({ from, to }) =>
+        supabase.from('players').select('research_sessions_completed').gte('research_sessions_completed', 1).range(from, to),
+      ),
     ]);
-    const uniqueParticipants = new Set(
-      (participantRows.data ?? []).map((r) => r.player_id)
-    ).size;
-    const totalAnswers = total.count ?? 0;
+
+    const totalAnswers = answers.length;
+    const correctAnswers = answers.filter(a => a.correct).length;
+
     return {
-      participants: uniqueParticipants,
+      participants: players.length,
       totalAnswers,
-      overallAccuracy:
-        totalAnswers > 0
-          ? Math.round(((correct.count ?? 0) / totalAnswers) * 100)
-          : 0,
+      overallAccuracy: totalAnswers > 0 ? Math.round((correctAnswers / totalAnswers) * 100) : 0,
     };
   } catch {
     return { participants: 0, totalAnswers: 0, overallAccuracy: 0 };
