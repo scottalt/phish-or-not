@@ -37,7 +37,7 @@ export function TutorialCard({ onComplete }: Props) {
   const [answer, setAnswer] = useState<'PHISHING' | 'LEGIT' | null>(null);
 
   return (
-    <div className="anim-fade-in-up w-full max-w-sm px-4 flex flex-col gap-4 pb-safe">
+    <div className="anim-fade-in-up w-full max-w-sm lg:max-w-lg px-4 flex flex-col gap-4 pb-safe">
 
       {/* Annotation strip */}
       <div className="term-border border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] bg-[var(--c-bg)] px-3 py-3 space-y-1">

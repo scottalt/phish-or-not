@@ -340,6 +340,12 @@ body {
   -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
   mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
 }
+@media (min-width: 1024px) {
+  .lg\:scroll-fade-none {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+}
 
 /* iOS momentum scroll */
 .momentum-scroll {

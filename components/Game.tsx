@@ -17,7 +17,7 @@ class SummaryErrorBoundary extends Component<
   render() {
     if (this.state.error) {
       return (
-        <div className="anim-fade-in-up w-full max-w-sm px-4 flex flex-col gap-4">
+        <div className="anim-fade-in-up w-full max-w-sm lg:max-w-lg px-4 flex flex-col gap-4">
           <div className="term-border bg-[var(--c-bg)] border-[rgba(255,51,51,0.3)] px-3 py-6 text-center space-y-2">
             <div className="text-[#ff3333] text-sm font-mono tracking-widest">SUMMARY_ERROR</div>
             <div className="text-[var(--c-dark)] text-sm font-mono">{this.state.error.message}</div>
@@ -490,7 +490,7 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
 
   if (phase === 'research_unavailable') {
     return (
-      <div className="anim-fade-in-up w-full max-w-sm px-4 flex flex-col gap-4">
+      <div className="anim-fade-in-up w-full max-w-sm lg:max-w-lg px-4 flex flex-col gap-4">
         <div className="term-border bg-[var(--c-bg)] border-[color-mix(in_srgb,var(--c-accent)_30%,transparent)]">
           <div className="border-b border-[color-mix(in_srgb,var(--c-accent)_30%,transparent)] px-3 py-1.5">
             <span className="text-[var(--c-accent)] text-sm tracking-widest">RESEARCH_MODE</span>
@@ -531,7 +531,7 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
 
   if (phase === 'daily_complete') {
     return (
-      <div className="anim-fade-in-up w-full max-w-sm px-4 flex flex-col gap-4">
+      <div className="anim-fade-in-up w-full max-w-sm lg:max-w-lg px-4 flex flex-col gap-4">
         <div className="term-border bg-[var(--c-bg)]">
           <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] px-3 py-1.5 flex items-center justify-between">
             <span className="text-[var(--c-secondary)] text-sm tracking-widest">DAILY_CHALLENGE</span>
@@ -557,7 +557,7 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
 
   if (phase === 'checking') {
     return (
-      <div className="anim-fade-in-up w-full max-w-sm px-4 flex flex-col items-center gap-4">
+      <div className="anim-fade-in-up w-full max-w-sm lg:max-w-lg px-4 flex flex-col items-center gap-4">
         <div className="term-border bg-[var(--c-bg)] px-6 py-8 text-center">
           <div className="text-[var(--c-secondary)] text-sm font-mono tracking-widest animate-pulse">VERIFYING_ANSWER...</div>
         </div>
