@@ -66,6 +66,12 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
     title: 'v1.7.0 — Terminal themes, XP cooldown, and QoL fixes',
     body: '6 unlockable terminal color themes (Phosphor, Amber Alert, Frost Bite, Phantom, Red Team, Ghost Protocol) — graduate research and rank up to unlock them. XP cooldown indicator with live countdown timer. "What\'s New" unread dot. Intel stats now show full dataset beyond 1,000 answers.',
   },
+  {
+    date: '2026-03-20',
+    category: 'update',
+    title: 'v1.8.0 — Landing page and desktop improvements',
+    body: 'New landing page for first-time visitors with live research stats. Wider email cards on desktop with full email body visible (no scrolling required). Two-column research intro layout on desktop. Improved text readability across the board.',
+  },
 ];
 
 /*
