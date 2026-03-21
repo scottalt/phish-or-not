@@ -56,6 +56,8 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
   const [headlineDone, setHeadlineDone] = useState(false);
   const [headersOpen, setHeadersOpen] = useState(false);
   const [inspectedUrl, setInspectedUrl] = useState<string | null>(null);
+  const [showSignals, setShowSignals] = useState(false);
+  const [showClues, setShowClues] = useState(false);
 
   const headline = correct
     ? wasPhishing ? 'THREAT NEUTRALIZED' : 'ASSET CLEARED'
@@ -107,7 +109,7 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
   })();
 
   return (
-    <div className="w-full max-w-sm lg:max-w-lg px-4 pb-safe relative">
+    <div className="w-full max-w-sm lg:max-w-4xl px-4 pb-safe relative">
       {showFlash && (
         <div
           className={`fixed inset-0 pointer-events-none z-50 ${
@@ -117,10 +119,14 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
       )}
 
       <div className="anim-fade-in-up flex flex-col gap-4">
+        {/* Two-column on desktop: left = result/score, right = email review */}
+        <div className="flex flex-col lg:flex-row gap-4">
+        {/* Left column: result + score */}
+        <div className="flex flex-col gap-4 lg:w-[340px] lg:shrink-0">
         {/* Result header */}
         <div className={`term-border bg-[var(--c-bg)] ${correct ? 'border-[color-mix(in_srgb,var(--c-primary)_60%,transparent)]' : 'border-[rgba(255,51,51,0.6)]'} ${!correct ? 'anim-glitch' : ''}`}>
           <div className={`border-b px-3 py-2 flex items-center justify-between ${correct ? 'border-[color-mix(in_srgb,var(--c-primary)_40%,transparent)]' : 'border-[rgba(255,51,51,0.4)]'}`}>
-            <span className={`text-sm font-mono tracking-widest ${correct ? 'text-[var(--c-secondary)]' : 'text-[#aa2222]'}`}>
+            <span className={`text-sm font-mono tracking-widest ${correct ? 'text-[var(--c-primary)]' : 'text-[#ff3333]'}`}>
               ANALYSIS_RESULT
             </span>
             <span className="text-sm font-mono text-[var(--c-dark)]">Q{questionNumber}/{total}</span>
@@ -173,7 +179,7 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
 
         {/* Score bar */}
         <div className="term-border bg-[var(--c-bg)] px-3 py-2 flex items-center justify-between text-sm font-mono">
-          <span className="text-[var(--c-secondary)]">TOTAL SCORE</span>
+          <span className="text-[var(--c-muted)]">TOTAL SCORE</span>
           <span className="text-[var(--c-primary)] font-black text-sm">{totalScore} PTS</span>
           <span className="text-[var(--c-secondary)]">STREAK: <span className="text-[var(--c-primary)]">{streak}</span></span>
         </div>
@@ -195,10 +201,21 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
           </div>
         )}
 
+        {/* Explanation — in left column on desktop */}
+        <div className="term-border bg-[var(--c-bg)] border-[color-mix(in_srgb,var(--c-accent)_25%,transparent)] hidden lg:block">
+          <div className="border-b border-[color-mix(in_srgb,var(--c-accent)_25%,transparent)] px-3 py-1.5">
+            <span className="text-[var(--c-accent)] text-sm tracking-widest">ANALYST_NOTES</span>
+          </div>
+          <p className="px-3 py-3 text-sm text-[var(--c-secondary)] leading-relaxed font-mono">{card.explanation}</p>
+        </div>
+        </div>{/* end left column */}
+
+        {/* Right column: email review + signals */}
+        <div className="flex flex-col gap-4 lg:flex-1 lg:min-w-0">
         {/* Interactive card review */}
-        <div className="term-border bg-[var(--c-bg)]">
-          <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] px-3 py-1.5 flex items-center justify-between">
-            <span className="text-[var(--c-secondary)] text-sm tracking-widest">
+        <div className="term-border bg-[var(--c-bg)] border-[color-mix(in_srgb,var(--c-primary)_20%,transparent)]">
+          <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_20%,transparent)] px-3 py-1.5 flex items-center justify-between">
+            <span className="text-[var(--c-dark)] text-sm tracking-widest">
               {card.type === 'sms' ? 'INCOMING_SMS' : 'INCOMING_EMAIL'}
             </span>
             {card.type === 'email' ? (
@@ -307,7 +324,7 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
           )}
 
           {/* Body */}
-          <pre className="px-3 py-3 text-sm text-[var(--c-secondary)] font-mono leading-relaxed whitespace-pre-wrap break-words max-h-52 momentum-scroll scroll-fade-bottom">
+          <pre className="px-3 py-3 text-xs text-[var(--c-muted)] font-mono leading-relaxed whitespace-pre-wrap break-words max-h-40 lg:max-h-52 momentum-scroll scroll-fade-bottom">
             {parseBodySegments(card.body).map((seg, i) =>
               seg.type === 'url' ? (
                 <span
@@ -346,10 +363,10 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
           )}
         </div>
 
-        {/* Explanation */}
-        <div className="term-border bg-[var(--c-bg)]">
-          <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] px-3 py-1.5">
-            <span className="text-[var(--c-secondary)] text-sm tracking-widest">ANALYST_NOTES</span>
+        {/* Explanation — mobile only (desktop shows in left column) */}
+        <div className="term-border bg-[var(--c-bg)] border-[color-mix(in_srgb,var(--c-accent)_25%,transparent)] lg:hidden">
+          <div className="border-b border-[color-mix(in_srgb,var(--c-accent)_25%,transparent)] px-3 py-1.5">
+            <span className="text-[var(--c-accent)] text-sm tracking-widest">ANALYST_NOTES</span>
           </div>
           <p className="px-3 py-3 text-sm text-[var(--c-secondary)] leading-relaxed font-mono">{card.explanation}</p>
         </div>
@@ -404,10 +421,15 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
 
           return (
             <div className="term-border bg-[var(--c-bg)] border-[color-mix(in_srgb,var(--c-accent)_30%,transparent)]">
-              <div className="border-b border-[color-mix(in_srgb,var(--c-accent)_30%,transparent)] px-3 py-1.5">
+              <button
+                onClick={() => setShowSignals((o) => !o)}
+                className="w-full px-3 py-1.5 flex items-center justify-between hover:bg-[color-mix(in_srgb,var(--c-accent)_4%,transparent)] transition-colors"
+              >
                 <span className="text-[var(--c-accent)] text-sm tracking-widest">FORENSIC_SIGNALS</span>
-              </div>
-              <ul className="px-3 py-3 space-y-2">
+                <span className="text-[var(--c-accent)] text-sm">{showSignals ? '▲' : '▼'}</span>
+              </button>
+              {showSignals && (
+              <ul className="border-t border-[color-mix(in_srgb,var(--c-accent)_30%,transparent)] px-3 py-3 space-y-2">
                 {signals.map((signal, i) => (
                   <li key={i} className="flex gap-2 text-sm text-[var(--c-secondary)] font-mono">
                     <span className="text-[var(--c-accent)] shrink-0">▸</span>
@@ -415,6 +437,7 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
                   </li>
                 ))}
               </ul>
+              )}
             </div>
           );
         })()}
@@ -422,10 +445,15 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
         {/* Red flags */}
         {wasPhishing && card.clues.length > 0 && (
           <div className="term-border bg-[var(--c-bg)] border-[rgba(255,51,51,0.3)]">
-            <div className="border-b border-[rgba(255,51,51,0.3)] px-3 py-1.5">
-              <span className="text-[#aa2222] text-sm tracking-widest">RED_FLAGS_DETECTED</span>
-            </div>
-            <ul className="px-3 py-3 space-y-2">
+            <button
+              onClick={() => setShowClues((o) => !o)}
+              className="w-full px-3 py-1.5 flex items-center justify-between hover:bg-[rgba(255,51,51,0.04)] transition-colors"
+            >
+              <span className="text-[#ff3333] text-sm tracking-widest">RED_FLAGS_DETECTED</span>
+              <span className="text-[#ff3333] text-sm">{showClues ? '▲' : '▼'}</span>
+            </button>
+            {showClues && (
+            <ul className="border-t border-[rgba(255,51,51,0.3)] px-3 py-3 space-y-2">
               {card.clues.map((clue, i) => (
                 <li key={i} className="flex gap-2 text-sm text-[var(--c-secondary)] font-mono">
                   <span className="text-[#ff3333] shrink-0">▸</span>
@@ -433,8 +461,12 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
                 </li>
               ))}
             </ul>
+            )}
           </div>
         )}
+
+        </div>{/* end right column */}
+        </div>{/* end two-column wrapper */}
 
         <button
           onClick={onNext}
