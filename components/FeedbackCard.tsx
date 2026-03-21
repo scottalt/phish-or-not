@@ -56,6 +56,8 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
   const [headlineDone, setHeadlineDone] = useState(false);
   const [headersOpen, setHeadersOpen] = useState(false);
   const [inspectedUrl, setInspectedUrl] = useState<string | null>(null);
+  const [showSignals, setShowSignals] = useState(false);
+  const [showClues, setShowClues] = useState(false);
 
   const headline = correct
     ? wasPhishing ? 'THREAT NEUTRALIZED' : 'ASSET CLEARED'
@@ -419,10 +421,15 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
 
           return (
             <div className="term-border bg-[var(--c-bg)] border-[color-mix(in_srgb,var(--c-accent)_30%,transparent)]">
-              <div className="border-b border-[color-mix(in_srgb,var(--c-accent)_30%,transparent)] px-3 py-1.5">
+              <button
+                onClick={() => setShowSignals((o) => !o)}
+                className="w-full px-3 py-1.5 flex items-center justify-between hover:bg-[color-mix(in_srgb,var(--c-accent)_4%,transparent)] transition-colors"
+              >
                 <span className="text-[var(--c-accent)] text-sm tracking-widest">FORENSIC_SIGNALS</span>
-              </div>
-              <ul className="px-3 py-3 space-y-2">
+                <span className="text-[var(--c-accent)] text-sm">{showSignals ? '▲' : '▼'}</span>
+              </button>
+              {showSignals && (
+              <ul className="border-t border-[color-mix(in_srgb,var(--c-accent)_30%,transparent)] px-3 py-3 space-y-2">
                 {signals.map((signal, i) => (
                   <li key={i} className="flex gap-2 text-sm text-[var(--c-secondary)] font-mono">
                     <span className="text-[var(--c-accent)] shrink-0">▸</span>
@@ -430,6 +437,7 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
                   </li>
                 ))}
               </ul>
+              )}
             </div>
           );
         })()}
@@ -437,10 +445,15 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
         {/* Red flags */}
         {wasPhishing && card.clues.length > 0 && (
           <div className="term-border bg-[var(--c-bg)] border-[rgba(255,51,51,0.3)]">
-            <div className="border-b border-[rgba(255,51,51,0.3)] px-3 py-1.5">
-              <span className="text-[#aa2222] text-sm tracking-widest">RED_FLAGS_DETECTED</span>
-            </div>
-            <ul className="px-3 py-3 space-y-2">
+            <button
+              onClick={() => setShowClues((o) => !o)}
+              className="w-full px-3 py-1.5 flex items-center justify-between hover:bg-[rgba(255,51,51,0.04)] transition-colors"
+            >
+              <span className="text-[#ff3333] text-sm tracking-widest">RED_FLAGS_DETECTED</span>
+              <span className="text-[#ff3333] text-sm">{showClues ? '▲' : '▼'}</span>
+            </button>
+            {showClues && (
+            <ul className="border-t border-[rgba(255,51,51,0.3)] px-3 py-3 space-y-2">
               {card.clues.map((clue, i) => (
                 <li key={i} className="flex gap-2 text-sm text-[var(--c-secondary)] font-mono">
                   <span className="text-[#ff3333] shrink-0">▸</span>
@@ -448,6 +461,7 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
                 </li>
               ))}
             </ul>
+            )}
           </div>
         )}
 
