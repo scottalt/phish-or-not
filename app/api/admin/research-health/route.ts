@@ -222,7 +222,7 @@ export async function GET() {
     // Build health signals
     const signals: string[] = [];
     if (abandonedSessions.length > 0) {
-      signals.push(`CRITICAL: ${abandonedSessions.length} research session(s) had cards dealt but ZERO answers saved — answers are being silently dropped`);
+      signals.push(`${abandonedSessions.length} research session(s) had cards dealt but no answers — likely bounced before answering`);
     }
     if ((answersLast24h.count ?? 0) === 0 && (recentAuthUsers.length > 0)) {
       signals.push('WARNING: Auth users active in last 7d but ZERO research answers in last 24h');
@@ -243,6 +243,70 @@ export async function GET() {
     }
     if (signals.length === 0) {
       signals.push('No anomalies detected');
+    }
+
+    // Fetch recent error/warning logs from Vercel runtime (if configured)
+    let vercelLogs: { time: string; method: string; path: string; status: number; level: string; message: string }[] = [];
+    let vercelLogsError: string | null = null;
+    const vercelToken = process.env.VERCEL_TOKEN;
+    const vercelProjectId = process.env.VERCEL_PROJECT_ID;
+    const vercelTeamId = process.env.VERCEL_TEAM_ID;
+
+    if (vercelToken && vercelProjectId && vercelTeamId) {
+      try {
+        const logsParams = new URLSearchParams({
+          projectId: vercelProjectId,
+          teamId: vercelTeamId,
+          environment: 'production',
+          query: 'answers',
+          since: oneDayAgo,
+          limit: '50',
+        });
+        // Fetch error and warning level logs
+        for (const level of ['error', 'warning'] as const) {
+          logsParams.set('level', level);
+          const res = await fetch(`https://api.vercel.com/v3/runtime/logs?${logsParams}`, {
+            headers: { Authorization: `Bearer ${vercelToken}` },
+          });
+          if (res.ok) {
+            const json = await res.json();
+            const entries = json?.logs ?? json?.data ?? [];
+            for (const entry of entries) {
+              vercelLogs.push({
+                time: entry.timestamp ?? entry.createdAt ?? entry.date ?? '',
+                method: entry.method ?? entry.proxy?.method ?? '',
+                path: entry.path ?? entry.proxy?.path ?? '',
+                status: entry.statusCode ?? entry.proxy?.statusCode ?? 0,
+                level,
+                message: typeof entry.message === 'string' ? entry.message.slice(0, 200) : JSON.stringify(entry.message ?? '').slice(0, 200),
+              });
+            }
+          } else if (res.status !== 404) {
+            vercelLogsError = `Vercel API returned ${res.status}`;
+          }
+        }
+        // Sort by time descending
+        vercelLogs.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+        vercelLogs = vercelLogs.slice(0, 50);
+
+        // Add signal if there are actual errors (not just warnings)
+        const errorCount = vercelLogs.filter((l) => l.level === 'error').length;
+        if (errorCount > 0) {
+          signals.push(`CRITICAL: ${errorCount} runtime error(s) in Vercel logs in last 24h — check vercelLogs below`);
+        }
+
+        // Summarize warning types
+        const warningTypes: Record<string, number> = {};
+        for (const log of vercelLogs.filter((l) => l.level === 'warning')) {
+          const type = log.message.match(/\[answers\] reject: (.+?)(?:,|$)/)?.[1] ?? 'unknown';
+          warningTypes[type] = (warningTypes[type] ?? 0) + 1;
+        }
+        if (Object.keys(warningTypes).length > 0) {
+          signals.push(`Vercel warnings (24h): ${Object.entries(warningTypes).map(([k, v]) => `${k} (${v})`).join(', ')}`);
+        }
+      } catch (err) {
+        vercelLogsError = `Failed to fetch Vercel logs: ${err instanceof Error ? err.message : String(err)}`;
+      }
     }
 
     return NextResponse.json({
@@ -270,6 +334,9 @@ export async function GET() {
         correct: a.correct,
         createdAt: a.created_at,
       })),
+      vercelLogs: vercelLogs.length > 0 ? vercelLogs : undefined,
+      vercelLogsError: vercelLogsError ?? undefined,
+      vercelLogsConfigured: Boolean(vercelToken && vercelProjectId && vercelTeamId),
     });
   } catch (err) {
     console.error('[research-health] error:', err);

@@ -17,6 +17,9 @@ interface HealthData {
   cappedPlayers: { playerId: string; displayName: string | null; count: number; capped: boolean }[];
   abandonedSessions: { sessionId: string; cardsDealt: number; startedAt: string }[];
   recentResearchAnswers: { playerId: string; sessionId: string; cardId: string; correct: boolean; createdAt: string }[];
+  vercelLogs?: { time: string; method: string; path: string; status: number; level: string; message: string }[];
+  vercelLogsError?: string;
+  vercelLogsConfigured: boolean;
 }
 
 function timeAgo(dateStr: string): string {
@@ -167,8 +170,8 @@ export default function ResearchHealthPage() {
                       </div>
                     ))}
                   </div>
-                  <div className="text-[#ff3333] text-[10px] font-mono px-1">
-                    These sessions loaded research cards but no answers were recorded. This confirms answers are being silently dropped — likely an auth cookie issue where getPlayerId() returns null.
+                  <div className="text-[#003a0e] text-[10px] font-mono px-1">
+                    These sessions loaded research cards but no answers were recorded — most likely users who opened the game and left without answering.
                   </div>
                 </div>
               )}
@@ -277,6 +280,40 @@ export default function ResearchHealthPage() {
                         </span>
                         <span className="text-[#00aa28] truncate flex-1">{a.cardId.slice(0, 12)}</span>
                         <span className="text-[#003a0e] text-[10px] shrink-0">{timeAgo(a.createdAt)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Vercel Runtime Logs */}
+              <div className="space-y-2">
+                <div className="text-[#003a0e] text-[10px] font-mono tracking-widest">
+                  VERCEL RUNTIME LOGS (24H)
+                </div>
+                {!data.vercelLogsConfigured ? (
+                  <div className="term-border border-[rgba(0,170,255,0.2)] px-3 py-2 text-[#003a0e] text-xs font-mono">
+                    Not configured — add VERCEL_TOKEN env var to enable
+                  </div>
+                ) : data.vercelLogsError ? (
+                  <div className="term-border border-[rgba(255,51,51,0.3)] px-3 py-2 text-[#ff3333] text-xs font-mono">
+                    {data.vercelLogsError}
+                  </div>
+                ) : !data.vercelLogs || data.vercelLogs.length === 0 ? (
+                  <div className="term-border border-[rgba(0,255,65,0.2)] px-3 py-2 text-[#00ff41] text-xs font-mono text-center">
+                    No errors or warnings in last 24h
+                  </div>
+                ) : (
+                  <div className="term-border px-3 py-2 space-y-1 max-h-56 overflow-y-auto">
+                    {data.vercelLogs.map((log, i) => (
+                      <div key={i} className="flex items-start gap-2 text-[10px] font-mono">
+                        <span className={`shrink-0 ${log.level === 'error' ? 'text-[#ff3333]' : 'text-[#ffaa00]'}`}>
+                          {log.level === 'error' ? 'ERR' : 'WRN'}
+                        </span>
+                        <span className="text-[#00aa28] truncate flex-1 min-w-0" title={log.message}>
+                          {log.message}
+                        </span>
+                        <span className="text-[#003a0e] shrink-0">{log.time ? timeAgo(log.time) : ''}</span>
                       </div>
                     ))}
                   </div>
