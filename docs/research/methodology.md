@@ -180,10 +180,10 @@ Approved, curated live dataset:
 | highlights | TEXT[] | Phrases to highlight in feedback |
 | clues | TEXT[] | Analyst clues |
 | explanation | TEXT | Why this is/isn't phishing |
-| auth_status | TEXT | verified / unverified / fail — simulated SPF/DKIM/DMARC result |
-| reply_to | TEXT | Mismatched reply-to address (hard/extreme phishing only) |
+| auth_status | TEXT | verified / unverified / fail — simulated SPF/DKIM/DMARC result (retained in schema; not displayed to players since v1.9.0) |
+| reply_to | TEXT | Mismatched reply-to address (retained in schema; not displayed to players since v1.9.0 — only existed on phishing cards) |
 | attachment_name | TEXT | Filename shown in ATCH row (when card references an attachment) |
-| sent_at | TEXT | RFC 2822 timestamp — odd hours for phishing, business hours for legit |
+| sent_at | TEXT | RFC 2822 timestamp (retained in schema; not displayed to players since v1.9.0 — inconsistently populated) |
 | ai_model | TEXT | Which model generated the card |
 | ai_preprocessing_version | TEXT | Prompt template version |
 | dataset_version | TEXT | v1 |
@@ -341,22 +341,27 @@ Background is optional and a significant portion of players may not disclose it.
 
 ### Secondary Analysis — Tool Usage
 
-Six signals are available to players during gameplay. Three are passive (always visible), three are active (require deliberate interaction):
+Three signals are available to players during gameplay. Two are passive (always visible), one is active (requires deliberate interaction):
 
 | Signal | Type | Behavioral field |
 |--------|------|-----------------|
 | Sender domain (FROM vs body) | Passive | — |
-| Send time (SENT row) | Passive | — |
 | Attachment name (ATCH row) | Passive | `has_attachment` on card |
-| Authentication headers ([HEADERS]) | Active | `headers_opened` |
-| Reply-To mismatch ([HEADERS]) | Active | `headers_opened` |
 | URL destinations (URL inspector) | Active | `url_inspected` |
 
+**Removed signals (pre-collection instrument refinement):**
+
+| Signal | Removed | Reason |
+|--------|---------|--------|
+| Authentication headers ([HEADERS]) | v1.9.0 | Created a near-deterministic shortcut on easy/medium cards — players could bypass technique recognition entirely by checking SPF/DKIM/DMARC. Confounded difficulty with tool availability. |
+| Reply-To mismatch | v1.9.0 | Only populated on phishing cards (298 phishing, 0 legit) — presence alone was a binary classifier. |
+| Send time (SENT row) | v1.9.0 | Inconsistently populated across the dataset (~60% missing on both phishing and legit cards). Inconsistent availability creates an uncontrolled variable. |
+
+These signals were removed before meaningful data collection volume was reached. The `auth_visible` column on answers partitions data collected before and after the auth header removal for phase comparison analysis. `has_reply_to` and `has_sent_at` remain in the answers schema as metadata for completeness but were not visible to players at the time of removal.
+
 Active tool interactions are logged per answer. Analysis questions:
-- What percentage of players open the headers panel? Inspect URLs?
-- Does opening headers improve accuracy on phishing cards? By technique?
 - Does URL inspection improve accuracy?
-- On cards where auth status is PASS (sophisticated attacker with valid domain), do players who open headers still detect the phishing?
+- What percentage of players inspect URLs before answering?
 
 ### Descriptive Statistics
 
@@ -408,14 +413,11 @@ The same card can be served to multiple distinct sessions. There is no within-se
 
 `fluent-prose` phishing cards are defined by polished natural language with no traditional tells. This technique partially overlaps with the GenAI baseline condition shared by all cards in this dataset — all cards are grammatically fluent by construction. As a result, `fluent-prose` cards may be harder to distinguish from legitimate cards not because of superior technique, but because the technique definition is closest to the baseline condition. This is a design confound that will be disclosed in the publication. The technique is retained in the dataset because it represents a real and distinct category of attack. Readers should interpret elevated bypass rates for `fluent-prose` as an upper bound that includes baseline noise.
 
-### Auth Header Shortcut
+### Auth Header Shortcut (Resolved)
 
-Players who open the `[HEADERS]` panel and observe `SPF/DKIM/DMARC: FAIL` have a near-deterministic signal on easy and medium phishing cards, where authentication always fails by design. A player using headers as their primary detection heuristic will produce correct answers that are not attributable to technique recognition — their accuracy reflects forensic hygiene, not response to the technique content.
+Prior to v1.9.0, players who opened the `[HEADERS]` panel and observed `SPF/DKIM/DMARC: FAIL` had a near-deterministic signal on easy and medium phishing cards. This confound was identified during early collection and resolved by removing authentication headers from the game interface entirely.
 
-**How this is controlled for in analysis:**
-- Primary analysis uses all answers combined.
-- A sensitivity analysis segments results by `headers_opened = false` (answers made without opening headers) as the "content-only" detection signal. If the technique ranking is consistent across both cuts, the finding is robust to this confound.
-- For hard/extreme phishing cards where `auth_status` may be `verified` (attacker registered their own domain with passing authentication), header inspection provides no correct-direction signal — the technique effect is cleanest in this difficulty stratum and should be reported separately.
+Data collected before and after this change is partitioned by the `auth_visible` column on the answers table (`true`/`null` = Phase 1, `false` = Phase 2). Phase comparison analysis is available in the intel dashboard. Primary analysis uses Phase 2 data where this confound does not apply.
 
 ### Difficulty Distribution During Collection
 
@@ -447,3 +449,4 @@ The `answers` table records answers from all game modes (`research`, `freeplay`,
 | 1.4 | 2026-03-04 | Removed SMS from dataset scope (email only). Added Extreme difficulty tier (15/15/15/15 per technique). Switched research deck from stratified to purely random sampling. Updated collection target to ~1,000 (math updated for random sampling). Updated data collection section: pseudonymous UUID model, corrected anonymity claims. Added secondary_technique to cards_real schema and approve pipeline. |
 | 1.5 | 2026-03-04 | Scaled dataset from 550 to 1,000 cards. Phishing: 690 (6 × 35 easy/medium/hard + 6 × 10 extreme). Legit: 310 (110/100/100). Extreme capped at 10 per technique — sufficient for expert mode coverage without over-representing near-indistinguishable attacks. Collection target math updated. |
 | 1.6 | 2026-03-06 | Status updated to active collection (dataset frozen at v1). Corrected session UUID claim — sessions ARE persisted to the sessions table. Corrected returning-player claim — player_id FK enables cross-session analysis. Added per-player collection cap (30 answers / 3 sessions, server-side enforced). Added missing answers table fields: player_id, card_source, is_genai_suspected, genai_confidence, grammar_quality, prose_fluency, personalization_level, contextual_coherence, secondary_technique, has_sent_at. Corrected game_mode values across schema tables. |
+| 1.7 | 2026-03-22 | **Instrument refinement:** Removed three signals from player-visible UI — authentication headers (near-deterministic shortcut confounding difficulty with tool availability), Reply-To (only populated on phishing cards, acting as a binary classifier), and Send Time (inconsistently populated across both card types, creating an uncontrolled variable). All removals made before meaningful collection volume. `auth_visible` column partitions Phase 1/Phase 2 data for comparison analysis. Tool usage section updated from 6 signals to 3. Auth header shortcut limitation marked as resolved. |
