@@ -9,6 +9,7 @@ import {
   getRankFromPoints,
   calculatePointsDelta,
 } from '@/lib/h2h';
+import { XP_PER_CORRECT, getLevelFromXp } from '@/lib/xp';
 import type { Card } from '@/lib/types';
 
 // ── Auth helper ──
@@ -33,6 +34,46 @@ async function getAuthenticatedPlayerId(): Promise<string | null> {
     .single();
 
   return player?.id ?? null;
+}
+
+// ── Award XP to a player for an H2H match (server-side only) ──
+
+const H2H_WIN_BONUS_XP = 20;
+const H2H_COMPLETION_BONUS_XP = 25;
+const H2H_PERFECT_BONUS_XP = 50;
+
+async function awardH2HXp(
+  admin: ReturnType<typeof getSupabaseAdminClient>,
+  playerId: string,
+  correctCount: number,
+  isWinner: boolean,
+) {
+  // XP: 10 per correct + completion bonus + win bonus
+  let xpEarned = correctCount * XP_PER_CORRECT;
+  if (correctCount >= H2H_CARDS_PER_MATCH) {
+    xpEarned += (correctCount === H2H_CARDS_PER_MATCH) ? H2H_PERFECT_BONUS_XP : H2H_COMPLETION_BONUS_XP;
+  }
+  if (isWinner) xpEarned += H2H_WIN_BONUS_XP;
+
+  if (xpEarned <= 0) return;
+
+  // Fetch current player XP
+  const { data: player } = await admin
+    .from('players')
+    .select('xp, level')
+    .eq('id', playerId)
+    .single();
+
+  if (!player) return;
+
+  const newXp = (player.xp as number) + xpEarned;
+  const newLevel = getLevelFromXp(newXp);
+
+  await admin.from('players').update({
+    xp: newXp,
+    level: newLevel,
+    updated_at: new Date().toISOString(),
+  }).eq('id', playerId);
 }
 
 // ── Finalize a completed match ──
@@ -163,6 +204,19 @@ async function finalizeMatch(
       },
       { onConflict: 'player_id,season' },
     );
+
+    // Award XP to both players — count correct answers from DB (not stale match snapshot)
+    const [{ count: winnerCorrect }, { count: loserCorrect }] = await Promise.all([
+      admin.from('h2h_match_answers').select('id', { count: 'exact', head: true })
+        .eq('match_id', matchId).eq('player_id', winnerId).eq('correct', true),
+      admin.from('h2h_match_answers').select('id', { count: 'exact', head: true })
+        .eq('match_id', matchId).eq('player_id', loserId).eq('correct', true),
+    ]);
+
+    await Promise.all([
+      awardH2HXp(admin, winnerId, winnerCorrect ?? 0, true),
+      awardH2HXp(admin, loserId, loserCorrect ?? 0, false),
+    ]);
   } else {
     // Unrated / ghost match — atomically mark complete only if still active
     const { data: updated } = await admin
@@ -177,6 +231,15 @@ async function finalizeMatch(
       .select('id');
 
     if (!updated || updated.length === 0) return; // already finalized by another thread
+
+    // Award XP even for ghost matches (still practiced)
+    if (match.player1_id) {
+      const { count: p1Correct } = await admin.from('h2h_match_answers')
+        .select('id', { count: 'exact', head: true })
+        .eq('match_id', matchId).eq('player_id', match.player1_id).eq('correct', true);
+      const isP1Winner = winnerId === match.player1_id;
+      await awardH2HXp(admin, match.player1_id, p1Correct ?? 0, isP1Winner);
+    }
   }
 }
 
