@@ -57,13 +57,38 @@ export async function GET() {
           }));
       })(),
 
-      // 2. Recently created/updated players (last 7 days)
-      supabase
-        .from('players')
-        .select('id, auth_id, display_name, research_sessions_completed, research_graduated, created_at, updated_at')
-        .or(`created_at.gte.${sevenDaysAgo},updated_at.gte.${sevenDaysAgo}`)
-        .order('created_at', { ascending: false })
-        .limit(50),
+      // 2. Players with recent activity (answered in last 7 days)
+      (async () => {
+        // Find distinct player_ids who submitted answers in the last 7 days
+        const { data: recentAnswerRows } = await supabase
+          .from('answers')
+          .select('player_id, created_at')
+          .gte('created_at', sevenDaysAgo)
+          .order('created_at', { ascending: false });
+
+        // Deduplicate to get unique player IDs (most recent answer first)
+        const seenIds = new Set<string>();
+        const uniquePlayerIds: string[] = [];
+        for (const row of recentAnswerRows ?? []) {
+          if (!seenIds.has(row.player_id)) {
+            seenIds.add(row.player_id);
+            uniquePlayerIds.push(row.player_id);
+          }
+        }
+        const topPlayerIds = uniquePlayerIds.slice(0, 50);
+
+        if (topPlayerIds.length === 0) return { data: [] };
+
+        // Fetch player details for those active players
+        const { data: players } = await supabase
+          .from('players')
+          .select('id, auth_id, display_name, research_sessions_completed, research_graduated, created_at, updated_at')
+          .in('id', topPlayerIds);
+
+        // Sort by most recent activity (same order as uniquePlayerIds)
+        const playerMap = new Map((players ?? []).map((p) => [p.id, p]));
+        return { data: topPlayerIds.map((id) => playerMap.get(id)).filter(Boolean) };
+      })(),
 
       // 3. Recent research answers (last 24h) — the key metric
       supabase
