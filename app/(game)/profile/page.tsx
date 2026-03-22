@@ -38,6 +38,7 @@ export default function ProfilePage() {
   const [backgroundSaving, setBackgroundSaving] = useState(false);
   const [showRanks, setShowRanks] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
+  const [h2hStats, setH2HStats] = useState<{ rankLabel: string; rankIcon: string; rankPoints: number; rankColor: string; wins: number; losses: number } | null>(null);
 
   // Admin override panel
   const [isAdmin, setIsAdmin] = useState(false);
@@ -53,6 +54,14 @@ export default function ProfilePage() {
   useEffect(() => {
     fetch('/api/player/admin-check').then(r => { if (r.ok) setIsAdmin(true); });
   }, []);
+
+  useEffect(() => {
+    if (!profile?.researchGraduated) return;
+    fetch('/api/h2h/stats')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setH2HStats(data); })
+      .catch(() => {});
+  }, [profile?.researchGraduated]);
 
   useEffect(() => {
     if (!profile) return;
@@ -319,11 +328,11 @@ export default function ProfilePage() {
               onClick={() => setShowRanks(o => !o)}
               className="lg:hidden w-full border-b border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] px-3 py-2 flex items-center justify-between hover:bg-[color-mix(in_srgb,var(--c-primary)_3%,transparent)] transition-colors"
             >
-              <span className="text-[var(--c-secondary)] text-sm tracking-widest">RANK_PROGRESSION</span>
+              <span className="text-[var(--c-secondary)] text-sm tracking-widest">XP_RANK</span>
               <span className="text-[var(--c-secondary)] text-sm">{showRanks ? '▲' : '▼'}</span>
             </button>
             <div className="hidden lg:block border-b border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] px-3 py-1.5">
-              <span className="text-[var(--c-secondary)] text-sm lg:text-base tracking-widest">RANK_PROGRESSION</span>
+              <span className="text-[var(--c-secondary)] text-sm lg:text-base tracking-widest">XP_RANK</span>
             </div>
             <div className={`${showRanks ? '' : 'hidden'} lg:block divide-y divide-[color-mix(in_srgb,var(--c-primary)_8%,transparent)]`}>
               {RANKS.map((rank) => {
@@ -346,6 +355,24 @@ export default function ProfilePage() {
               })}
             </div>
           </div>
+
+          {/* H2H rank — only for graduated players */}
+          {profile.researchGraduated && h2hStats && (
+            <div className="term-border bg-[var(--c-bg)]">
+              <div className="border-b border-[rgba(255,0,128,0.25)] px-3 py-1.5">
+                <span className="text-[#ff0080] text-sm lg:text-base tracking-widest">H2H_RANK</span>
+              </div>
+              <div className="px-3 py-3 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-lg" style={{ color: h2hStats.rankColor }}>{h2hStats.rankIcon}</span>
+                  <span className="text-sm lg:text-base font-mono font-bold" style={{ color: h2hStats.rankColor }}>{h2hStats.rankLabel}</span>
+                </div>
+                <div className="text-sm font-mono text-[var(--c-secondary)]">
+                  {h2hStats.rankPoints} pts · {h2hStats.wins}W {h2hStats.losses}L
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Achievements — collapsible on mobile */}
           <div className="term-border bg-[var(--c-bg)]">
