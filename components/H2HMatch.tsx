@@ -8,6 +8,7 @@ import {
   subscribeToMatch,
   broadcastProgress,
   broadcastResult,
+  broadcastReady,
   unsubscribeFromMatch,
 } from '@/lib/h2h-realtime';
 import type { MatchProgressEvent, MatchResultEvent } from '@/lib/h2h-realtime';
@@ -232,6 +233,11 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
   const [opponentIndex, setOpponentIndex] = useState(0);
   const [opponentEliminated, setOpponentEliminated] = useState(false);
 
+  // ── Ready-up lobby ──
+  const [ready, setReady] = useState(false);
+  const [opponentReady, setOpponentReady] = useState(false);
+  const [matchStarted, setMatchStarted] = useState(false);
+
   // ── Player state ──
   const [eliminated, setEliminated] = useState(false);
   const [eliminatedAt, setEliminatedAt] = useState<number>(0);
@@ -358,9 +364,20 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
                 setOpponentIndex(event.cardIndex + 1);
                 if (!event.correct) {
                   setOpponentEliminated(true);
+                  // Opponent eliminated — we win! End match immediately.
+                  if (!matchEndedRef.current) {
+                    matchEndedRef.current = true;
+                    onMatchEnd({
+                      winnerId: playerId,
+                      myPointsDelta: 0, // will be fetched from result screen
+                      opponentPointsDelta: 0,
+                      reason: 'eliminated',
+                    });
+                  }
                 }
               },
               handleMatchResult,
+              () => setOpponentReady(true), // opponent ready callback
             );
           } catch (rtErr) {
             // Realtime failure is non-fatal — match still works, just no live opponent updates
@@ -384,6 +401,44 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
       unsubscribeFromMatch();
     };
   }, [matchId, playerId, isGhost, onMatchEnd, handleMatchResult]);
+
+  // ── Poll match state as Realtime fallback (every 3s for real matches) ──
+  useEffect(() => {
+    if (isGhost || loading || matchEndedRef.current) return;
+
+    const interval = setInterval(async () => {
+      if (matchEndedRef.current) { clearInterval(interval); return; }
+      try {
+        const res = await fetch(`/api/h2h/match/${matchId}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const m = data.match;
+
+        // Update opponent progress from server
+        const isP1 = playerId === m.player1Id;
+        const oppCards = isP1 ? m.player2CardsCompleted : m.player1CardsCompleted;
+        if (oppCards > 0) setOpponentIndex(oppCards);
+
+        // Match finalized on server — end it
+        if (m.status === 'complete' && !matchEndedRef.current) {
+          matchEndedRef.current = true;
+          clearInterval(interval);
+          const myDelta = isP1 ? (m.player1PointsDelta ?? 0) : (m.player2PointsDelta ?? 0);
+          const oppDelta = isP1 ? (m.player2PointsDelta ?? 0) : (m.player1PointsDelta ?? 0);
+          onMatchEnd({
+            winnerId: m.winnerId,
+            myPointsDelta: myDelta,
+            opponentPointsDelta: oppDelta,
+            reason: m.winnerId === playerId ? 'completed' : 'eliminated',
+          });
+        }
+      } catch {
+        // polling failure is non-fatal
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [matchId, playerId, isGhost, loading, onMatchEnd]);
 
   // ── Ghost opponent simulation ──
   // Ghost speed and failure chance scale with card complexity (body length as proxy)
@@ -568,6 +623,82 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
       <div className="flex flex-col items-center gap-4 w-full max-w-sm lg:max-w-lg px-4 pb-safe">
         <div className="text-[#ff3333] font-mono text-sm tracking-widest">
           ERROR: {error}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Ready-up lobby (real matches only) ──
+  // Ghost matches skip the lobby and start immediately
+  useEffect(() => {
+    if (isGhost && !loading && cards.length > 0) {
+      setReady(true);
+      setOpponentReady(true);
+      setMatchStarted(true);
+    }
+  }, [isGhost, loading, cards.length]);
+
+  // Start match when both players are ready
+  useEffect(() => {
+    if (ready && opponentReady && !matchStarted) {
+      // Brief countdown feel
+      setTimeout(() => setMatchStarted(true), 500);
+    }
+  }, [ready, opponentReady, matchStarted]);
+
+  function handleReady() {
+    setReady(true);
+    broadcastReady(playerId);
+  }
+
+  if (!loading && !error && !matchStarted && !isGhost) {
+    return (
+      <div className="flex flex-col items-center gap-4 w-full max-w-sm lg:max-w-lg px-4 pb-safe">
+        <div className="w-full term-border bg-[var(--c-bg)]">
+          <div className="border-b border-[rgba(255,0,128,0.35)] px-3 py-2">
+            <span className="text-[#ff0080] text-sm tracking-widest">MATCH_LOBBY</span>
+          </div>
+          <div className="px-4 py-6 space-y-6 text-center">
+            <div className="text-[var(--c-primary)] text-sm font-mono font-bold tracking-widest">
+              OPPONENT FOUND
+            </div>
+            <div className="text-[var(--c-secondary)] text-sm font-mono">
+              {opponentName}
+            </div>
+
+            {/* Ready status */}
+            <div className="flex justify-around text-sm font-mono">
+              <div className="space-y-1">
+                <div className="text-[var(--c-dark)]">YOU</div>
+                <div className={ready ? 'text-[var(--c-primary)]' : 'text-[var(--c-muted)]'}>
+                  {ready ? 'READY' : 'NOT READY'}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <div className="text-[var(--c-dark)]">OPPONENT</div>
+                <div className={opponentReady ? 'text-[var(--c-primary)]' : 'text-[var(--c-muted)] animate-pulse'}>
+                  {opponentReady ? 'READY' : 'WAITING...'}
+                </div>
+              </div>
+            </div>
+
+            {!ready ? (
+              <button
+                onClick={handleReady}
+                className="w-full py-3 term-border border-2 border-[rgba(255,0,128,0.5)] text-[#ff0080] font-mono font-bold tracking-widest text-sm hover:bg-[rgba(255,0,128,0.06)] active:scale-95 transition-all"
+              >
+                [ READY ]
+              </button>
+            ) : !opponentReady ? (
+              <div className="text-[var(--c-muted)] text-sm font-mono animate-pulse">
+                Waiting for opponent to ready up...
+              </div>
+            ) : (
+              <div className="text-[var(--c-primary)] text-sm font-mono font-bold animate-pulse">
+                STARTING...
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );

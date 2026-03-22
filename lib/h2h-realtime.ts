@@ -34,6 +34,7 @@ export function subscribeToMatch(
   playerId: string,
   onOpponentProgress: (event: MatchProgressEvent) => void,
   onMatchResult: (event: MatchResultEvent) => void,
+  onOpponentReady?: () => void,
 ): RealtimeChannel {
   // Tear down any existing subscription before creating a new one
   if (channel) {
@@ -59,6 +60,12 @@ export function subscribeToMatch(
     .on('broadcast', { event: 'result' }, (payload: any) => {
       const data = payload.payload as MatchResultEvent;
       onMatchResult(data);
+    })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .on('broadcast', { event: 'ready' }, (payload: any) => {
+      if (payload.payload?.playerId !== playerId && onOpponentReady) {
+        onOpponentReady();
+      }
     })
     .subscribe();
 
@@ -104,6 +111,11 @@ export function broadcastResult(
 // ---------------------------------------------------------------------------
 // unsubscribeFromMatch
 // ---------------------------------------------------------------------------
+
+export function broadcastReady(playerId: string): void {
+  if (!channel) return;
+  channel.send({ type: 'broadcast', event: 'ready', payload: { playerId } });
+}
 
 export function unsubscribeFromMatch(): void {
   if (channel) {
