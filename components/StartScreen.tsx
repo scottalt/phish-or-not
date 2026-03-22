@@ -677,26 +677,55 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
             );
           })()}
 
-          {/* H2H button — unlocked at 10 research answers (graduation) */}
+          {/* H2H section — unlocked at 10 research answers (graduation) */}
           {signedIn && profile?.researchGraduated ? (
-            <button
-              onClick={() => handleStart('h2h')}
-              className="w-full py-4 term-border font-mono font-bold tracking-widest text-sm active:scale-95 transition-all border-2 border-[rgba(255,0,128,0.5)] text-[#ff0080] hover:bg-[rgba(255,0,128,0.04)]"
-            >
-              [ HEAD 2 HEAD ]
-              <div className="text-[#003a0e] text-xs mt-1 font-normal tracking-wide">
-                {h2hStats ? (
-                  <span>
-                    <span style={{ color: h2hStats.rankColor }}>{h2hStats.rankLabel}</span>
-                    {' '}{h2hStats.rankPoints} pts
-                    {' · '}{h2hStats.wins}W {h2hStats.losses}L
-                    {h2hStats.winStreak >= 2 && <span className="text-[var(--c-primary)]"> · {h2hStats.winStreak} streak</span>}
-                  </span>
-                ) : (
-                  'SEASON 0 — ranked competitive'
-                )}
+            <div className="space-y-2">
+              {/* Beta banner */}
+              <div className="w-full term-border border-[rgba(255,170,0,0.3)] bg-[rgba(255,170,0,0.03)] px-3 py-2 text-center">
+                <div className="text-[#ffaa00] text-xs font-mono tracking-widest font-bold">BETA</div>
+                <div className="text-[var(--c-muted)] text-[10px] font-mono mt-0.5">
+                  Head-to-Head is in early access. Ranks, points, and rules may change between seasons.
+                </div>
               </div>
-            </button>
+
+              {/* Season 0 info */}
+              <div className="w-full term-border border-[rgba(255,0,128,0.2)] px-3 py-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[#ff0080] text-xs font-mono tracking-widest font-bold">SEASON 0</span>
+                  <span className="text-[var(--c-dark)] text-[10px] font-mono">FOUNDING SEASON</span>
+                </div>
+                <div className="text-[var(--c-muted)] text-[10px] font-mono mt-1 leading-relaxed">
+                  The inaugural season. Every match shapes the meta. Climb from Bronze to Elite. Top players will be remembered.
+                </div>
+              </div>
+
+              {/* H2H button */}
+              <button
+                onClick={() => handleStart('h2h')}
+                className="w-full py-4 term-border font-mono font-bold tracking-widest text-sm active:scale-95 transition-all border-2 border-[rgba(255,0,128,0.5)] text-[#ff0080] hover:bg-[rgba(255,0,128,0.04)]"
+              >
+                {h2hStats ? (
+                  <>
+                    <div className="flex items-center justify-center gap-2">
+                      <span>[ HEAD 2 HEAD ]</span>
+                      <span className="text-xs px-1.5 py-0.5 border border-[rgba(255,0,128,0.4)]" style={{ color: h2hStats.rankColor }}>
+                        {h2hStats.rankLabel}
+                      </span>
+                    </div>
+                    <div className="text-[#003a0e] text-xs mt-1 font-normal tracking-wide">
+                      {h2hStats.rankPoints} pts
+                      {' · '}{h2hStats.wins}W {h2hStats.losses}L
+                      {h2hStats.winStreak >= 2 && <span className="text-[var(--c-primary)]"> · {h2hStats.winStreak} streak</span>}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    [ HEAD 2 HEAD ]
+                    <div className="text-[#003a0e] text-xs mt-1 font-normal tracking-wide">FIND A MATCH</div>
+                  </>
+                )}
+              </button>
+            </div>
           ) : signedIn ? (
             <div className="w-full py-4 term-border border-[rgba(255,0,128,0.15)] text-center font-mono text-sm tracking-widest text-[var(--c-muted)] cursor-not-allowed select-none">
               [ HEAD 2 HEAD — LOCKED ]
