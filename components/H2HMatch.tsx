@@ -390,12 +390,24 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
   useEffect(() => {
     if (!isGhost || loading || eliminated || finished) return;
 
-    // Generate ghost card times on mount (3-8s per card, randomized)
-    const ghostTimes = Array.from({ length: H2H_CARDS_PER_MATCH }, () =>
-      3000 + Math.random() * 5000
-    );
-    // 15% chance ghost gets eliminated on each card after card 2
-    const ghostEliminationCard = Math.random() < 0.15 ? 2 + Math.floor(Math.random() * 3) : -1;
+    // Generate ghost card times on mount — variable speed per card
+    // Earlier cards faster (more confident), later cards slower (harder decisions)
+    const ghostTimes = Array.from({ length: H2H_CARDS_PER_MATCH }, (_, i) => {
+      const baseMin = 2000 + i * 400;  // card 0: 2s min, card 4: 3.6s min
+      const baseMax = 5000 + i * 800;  // card 0: 5s max, card 4: 8.2s max
+      return baseMin + Math.random() * (baseMax - baseMin);
+    });
+
+    // Per-card elimination chance — increases on later cards (harder content)
+    // card 0-1: 2%, card 2: 5%, card 3: 8%, card 4: 12%
+    const elimChances = [0.02, 0.02, 0.05, 0.08, 0.12];
+    let ghostEliminationCard = -1;
+    for (let i = 0; i < H2H_CARDS_PER_MATCH; i++) {
+      if (Math.random() < elimChances[i]) {
+        ghostEliminationCard = i;
+        break;
+      }
+    }
 
     let ghostCard = 0;
     let totalElapsed = 0;
