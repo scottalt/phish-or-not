@@ -306,25 +306,7 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
         {(() => {
           const signals: string[] = [];
 
-          // Auth status — educational only (not visible during play)
           if (card.type === 'email') {
-            if (card.authStatus === 'fail') {
-              signals.push(wasPhishing
-                ? 'Behind the scenes: SPF/DKIM/DMARC checks would have FAILED for this email — the sender could not authenticate with the claimed domain.'
-                : 'Behind the scenes: SPF/DKIM/DMARC checks would have FAILED — but this was legitimate. Some real senders have misconfigured email infrastructure.'
-              );
-            } else if (card.authStatus === 'unverified') {
-              signals.push(wasPhishing
-                ? 'Behind the scenes: this email had no SPF/DKIM/DMARC authentication headers — consistent with domain spoofing.'
-                : 'Behind the scenes: this email had no authentication headers. Small senders often lack email authentication setup.'
-              );
-            } else if (card.authStatus === 'verified') {
-              signals.push(wasPhishing
-                ? 'Behind the scenes: SPF/DKIM/DMARC all PASSED — the attacker registered a lookalike domain with valid authentication. Clean headers don\'t guarantee safety.'
-                : 'Behind the scenes: SPF/DKIM/DMARC all PASSED — sender domain authenticated correctly.'
-              );
-            }
-
             // Reply-To mismatch — email only
             if (card.replyTo) {
               signals.push(

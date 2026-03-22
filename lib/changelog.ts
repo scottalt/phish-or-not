@@ -16,6 +16,13 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
     body: '1,000 AI-generated email samples finalized. Research mode, daily challenges, player accounts, XP progression, and intel analytics available from day one.',
   },
 
+  {
+    date: '2026-03-22',
+    category: 'milestone',
+    title: 'Phase 2 begins — authentication headers removed',
+    body: 'Email authentication headers (SPF/DKIM/DMARC) proved too specialized for most players, pulling focus from the core research question about phishing technique detection. Phase 1 data with headers visible is preserved and remains analytically valuable. Phase 2 isolates technique recognition without the authentication signal.',
+  },
+
   // Platform updates (chronological — page reverses for display)
   // Only significant, player-facing changes — not every commit
   {
@@ -72,6 +79,12 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
     title: 'v1.8.0 — Landing page and desktop improvements',
     body: 'New landing page for first-time visitors with live research stats. Wider email cards on desktop with full email body visible (no scrolling required). Two-column research intro layout on desktop. Improved text readability across the board.',
   },
+  {
+    date: '2026-03-22',
+    category: 'update',
+    title: 'v1.9.0 — Simplified email view',
+    body: 'Email authentication headers (SPF/DKIM/DMARC) have been removed from the game view. The game now focuses purely on identifying phishing techniques from email content, sender details, and URLs.',
+  },
 ];
 
 /*
@@ -119,4 +132,6 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
  * 2026-03-13  SFX defaults to off, sessionStorage instead of localStorage
  * 2026-03-13  Changelog page
  * 2026-03-15  Share results button on round summary (navigator.share + clipboard fallback)
+ * 2026-03-22  Remove auth headers from game UI (Phase 2) — confound with difficulty
+ * 2026-03-22  Add auth_visible column to answers for phase 1/2 partitioning
  */
