@@ -770,7 +770,7 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
 
           {/* Tabbed leaderboard */}
           {(() => {
-            const canSeeDailyLb = signedIn && (profile?.researchAnswersSubmitted ?? 0) >= 20;
+            const canSeeDailyLb = signedIn && profile?.researchGraduated;
             const canSeeH2HLb = signedIn && profile?.researchGraduated;
             const showLeaderboard = xpLeaderboard.length > 0 || (canSeeDailyLb && dailyLeaderboard.length > 0) || canSeeH2HLb;
             if (!showLeaderboard) return null;
