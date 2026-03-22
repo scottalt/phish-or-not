@@ -243,7 +243,7 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
   const [eliminatedAt, setEliminatedAt] = useState<number>(0);
   const [flash, setFlash] = useState<'correct' | 'wrong' | null>(null);
   const [finished, setFinished] = useState(false);
-  const [playingItOut, setPlayingItOut] = useState(false);
+  // playingItOut removed — elimination goes straight to result screen
   const [submitting, setSubmitting] = useState(false);
   const [showForfeitConfirm, setShowForfeitConfirm] = useState(false);
 
@@ -504,11 +504,9 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
     setSubmitting(true);
 
     const timeFromRenderMs = Date.now() - renderTime.current;
-    const isPlayingOut = playingItOut;
 
-    if (!isPlayingOut) {
-      // Submit to server
-      try {
+    // Submit to server
+    try {
         const res = await fetch(`/api/h2h/match/${matchId}/answer`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -558,24 +556,24 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
             }
           }, 200);
         } else {
-          // Red flash for elimination
+          // Wrong answer — match over immediately
           setFlash('wrong');
-          setTimeout(() => setFlash(null), 400);
-          setEliminated(true);
-          setEliminatedAt(cardIndex + 1);
+          // Brief red flash then go to result screen
+          setTimeout(() => {
+            if (!matchEndedRef.current) {
+              matchEndedRef.current = true;
+              onMatchEnd({
+                winnerId: null, // result screen fetches actual winner from server
+                myPointsDelta: 0,
+                opponentPointsDelta: 0,
+                reason: 'eliminated',
+              });
+            }
+          }, 600);
         }
-      } catch {
-        // Network error — allow retry
-      }
-    } else {
-      // Playing it out — just advance locally, no server submission
-      const nextIndex = cardIndex + 1;
-      setCardIndex(nextIndex);
-      if (nextIndex >= H2H_CARDS_PER_MATCH) {
-        setFinished(true);
-      }
+    } catch {
+      // Network error — allow retry
     }
-
     setSubmitting(false);
   }
 
@@ -597,14 +595,6 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
       opponentPointsDelta: 0,
       reason: 'forfeit',
     });
-  }
-
-  // ── Play it out (after elimination) ──
-  function handlePlayItOut() {
-    setPlayingItOut(true);
-    setEliminated(false);
-    const nextIndex = eliminatedAt;
-    setCardIndex(nextIndex);
   }
 
   // ── Ready-up lobby hooks (MUST be above early returns to avoid hook count mismatch) ──
@@ -791,65 +781,6 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
   }
 
   // ── Elimination screen ──
-  if (eliminated && !playingItOut) {
-    return (
-      <div className="flex flex-col items-center gap-4 w-full max-w-sm lg:max-w-lg px-4 pb-safe">
-        <div className="w-full term-border px-3 py-2">
-          <div className="flex items-center justify-between text-sm font-mono">
-            <span className="text-[var(--c-secondary)]">
-              OPP: <span className="text-[var(--c-primary)]">{opponentName}</span>
-            </span>
-            <div className="flex items-center gap-2">
-              <ProgressSquares completed={opponentIndex} total={H2H_CARDS_PER_MATCH} />
-              <span className="text-[var(--c-dark)]">{opponentIndex}/{H2H_CARDS_PER_MATCH}</span>
-            </div>
-          </div>
-          {opponentEliminated && (
-            <div className="text-[#ff3333] text-xs font-mono tracking-widest mt-1">
-              OPPONENT ELIMINATED
-            </div>
-          )}
-        </div>
-
-        <div className="term-border px-6 py-8 text-center w-full space-y-4">
-          <div className="text-[#ff3333] font-mono text-lg tracking-widest">
-            ELIMINATED
-          </div>
-          <div className="text-[var(--c-secondary)] font-mono text-sm">
-            Wrong answer on card {eliminatedAt}/{H2H_CARDS_PER_MATCH}
-          </div>
-
-          <div className="flex gap-3 pt-2">
-            {eliminatedAt < H2H_CARDS_PER_MATCH && (
-              <button
-                onClick={handlePlayItOut}
-                className="flex-1 py-3 border border-[color-mix(in_srgb,var(--c-primary)_50%,transparent)] text-[var(--c-primary)] font-mono text-sm tracking-widest hover:bg-[color-mix(in_srgb,var(--c-primary)_10%,transparent)] active:scale-95 transition-all"
-              >
-                PLAY IT OUT
-              </button>
-            )}
-            <button
-              onClick={() => {
-                if (!matchEndedRef.current) {
-                  matchEndedRef.current = true;
-                  onMatchEnd({
-                    winnerId: null,
-                    myPointsDelta: 0,
-                    opponentPointsDelta: 0,
-                    reason: 'eliminated',
-                  });
-                }
-              }}
-              className="flex-1 py-3 border border-[color-mix(in_srgb,var(--c-dark)_50%,transparent)] text-[var(--c-dark)] font-mono text-sm tracking-widest hover:text-[var(--c-secondary)] hover:border-[color-mix(in_srgb,var(--c-secondary)_50%,transparent)] active:scale-95 transition-all"
-            >
-              BACK
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // ── No card available (shouldn't happen) ──
   if (!currentCard) {
     return (
@@ -890,9 +821,6 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
                 [NO]
               </button>
             </div>
-          )}
-          {playingItOut && (
-            <span className="text-[var(--c-dark)] text-xs tracking-widest">[UNRANKED]</span>
           )}
         </div>
         <div className="flex items-center gap-2">
