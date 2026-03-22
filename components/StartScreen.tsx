@@ -59,8 +59,9 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
   const [callsignError, setCallsignError] = useState('');
   const [background, setBackground] = useState<PlayerBackground | null>(null);
   const [xpLeaderboard, setXpLeaderboard] = useState<{ display_name: string | null; xp: number; level: number; research_graduated: boolean }[]>([]);
-  const [activeTab, setActiveTab] = useState<'daily' | 'xp'>('xp');
+  const [activeTab, setActiveTab] = useState<'daily' | 'xp' | 'h2h'>('xp');
   const [h2hStats, setH2HStats] = useState<{ rankLabel: string; rankPoints: number; rankColor: string; wins: number; losses: number; winStreak: number } | null>(null);
+  const [h2hLeaderboard, setH2HLeaderboard] = useState<{ position: number; displayName: string; rankPoints: number; rankLabel: string; rankColor: string; wins: number; losses: number }[]>([]);
   // Collapse HOW_TO_PLAY for returning players who've completed at least 1 session
   const isExperiencedPlayer = !!profile && (profile.totalSessions ?? 0) >= 1;
   const [showHowToPlay, setShowHowToPlay] = useState(true);
@@ -178,14 +179,23 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
     fetchLeaderboard();
   }, [fetchLeaderboard]);
 
-  // Fetch H2H stats if graduated
+  // Fetch H2H stats + leaderboard if graduated
   useEffect(() => {
     if (!profile?.researchGraduated) return;
     let cancelled = false;
-    fetch('/api/h2h/stats').then(async (res) => {
-      if (cancelled || !res.ok) return;
-      const data = await res.json();
-      if (!cancelled) setH2HStats(data);
+    Promise.all([
+      fetch('/api/h2h/stats'),
+      fetch('/api/h2h/leaderboard'),
+    ]).then(async ([statsRes, lbRes]) => {
+      if (cancelled) return;
+      if (statsRes.ok) {
+        const data = await statsRes.json();
+        if (!cancelled) setH2HStats(data);
+      }
+      if (lbRes.ok) {
+        const data = await lbRes.json();
+        if (!cancelled) setH2HLeaderboard(data.leaderboard ?? []);
+      }
     }).catch(() => {});
     return () => { cancelled = true; };
   }, [profile?.researchGraduated]);
@@ -758,10 +768,11 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
           </div>
           </div>
 
-          {/* Tabbed leaderboard — XP always visible; Daily tab only for fully unlocked players */}
+          {/* Tabbed leaderboard */}
           {(() => {
             const canSeeDailyLb = signedIn && (profile?.researchAnswersSubmitted ?? 0) >= 20;
-            const showLeaderboard = xpLeaderboard.length > 0 || (canSeeDailyLb && dailyLeaderboard.length > 0);
+            const canSeeH2HLb = signedIn && profile?.researchGraduated;
+            const showLeaderboard = xpLeaderboard.length > 0 || (canSeeDailyLb && dailyLeaderboard.length > 0) || canSeeH2HLb;
             if (!showLeaderboard) return null;
             return (
               <div className="term-border bg-[var(--c-bg)]">
@@ -772,6 +783,17 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                   >
                     XP
                   </button>
+                  {canSeeH2HLb && (
+                    <>
+                      <span className="text-[var(--c-muted)] text-sm">|</span>
+                      <button
+                        onClick={() => setActiveTab('h2h')}
+                        className={`text-sm font-mono tracking-widest ${activeTab === 'h2h' ? 'text-[#ff0080]' : 'text-[var(--c-muted)] hover:text-[var(--c-secondary)]'}`}
+                      >
+                        H2H
+                      </button>
+                    </>
+                  )}
                   {canSeeDailyLb && (
                     <>
                       <span className="text-[var(--c-muted)] text-sm">|</span>
@@ -820,6 +842,22 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                 )}
                 {activeTab === 'xp' && xpLeaderboard.length === 0 && (
                   <div className="px-3 py-4 text-center text-[var(--c-muted)] text-sm font-mono">No players yet.</div>
+                )}
+                {canSeeH2HLb && activeTab === 'h2h' && h2hLeaderboard.length > 0 && (
+                  <div key={`h2h-${h2hLeaderboard.length}`} className="divide-y divide-[color-mix(in_srgb,var(--c-primary)_8%,transparent)]">
+                    {h2hLeaderboard.map((row, i) => (
+                      <div key={i} className="flex items-center gap-2 px-3 py-1.5 lg:py-2.5 text-sm lg:text-base font-mono anim-fade-in-up" style={{ animationDelay: `${i * 40}ms` }}>
+                        <span className="text-[var(--c-muted)] w-4">{row.position}.</span>
+                        <span className="text-[var(--c-secondary)] flex-1 truncate">{row.displayName}</span>
+                        <span className="text-sm font-mono shrink-0" style={{ color: row.rankColor }}>{row.rankLabel}</span>
+                        <span className="text-[var(--c-primary)]">{row.rankPoints} pts</span>
+                        <span className="text-[var(--c-muted)] text-xs">{row.wins}W/{row.losses}L</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {canSeeH2HLb && activeTab === 'h2h' && h2hLeaderboard.length === 0 && (
+                  <div className="px-3 py-4 text-center text-[var(--c-muted)] text-sm font-mono">No ranked matches yet. Be the first.</div>
                 )}
                 {!lbExpanded && (xpLeaderboard.length >= 10 || dailyLeaderboard.length >= 10) && (
                   <button
