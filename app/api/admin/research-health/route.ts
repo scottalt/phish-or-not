@@ -280,19 +280,27 @@ export async function GET() {
           });
           if (res.ok) {
             const json = await res.json();
-            const entries = json?.logs ?? json?.data ?? [];
-            for (const entry of entries) {
-              vercelLogs.push({
-                time: entry.timestamp ?? entry.createdAt ?? entry.date ?? '',
-                method: entry.method ?? entry.proxy?.method ?? '',
-                path: entry.path ?? entry.proxy?.path ?? '',
-                status: entry.statusCode ?? entry.proxy?.statusCode ?? 0,
-                level,
-                message: typeof entry.message === 'string' ? entry.message.slice(0, 200) : JSON.stringify(entry.message ?? '').slice(0, 200),
-              });
+            const entries = json?.logs ?? json?.data ?? json?.events ?? [];
+            if (Array.isArray(entries)) {
+              for (const entry of entries) {
+                vercelLogs.push({
+                  time: entry.timestamp ?? entry.createdAt ?? entry.date ?? entry.created ?? '',
+                  method: entry.method ?? entry.proxy?.method ?? entry.requestMethod ?? '',
+                  path: entry.path ?? entry.proxy?.path ?? entry.requestPath ?? '',
+                  status: entry.statusCode ?? entry.proxy?.statusCode ?? entry.responseStatusCode ?? 0,
+                  level,
+                  message: typeof entry.message === 'string' ? entry.message.slice(0, 200) : JSON.stringify(entry.message ?? entry.text ?? '').slice(0, 200),
+                });
+              }
             }
-          } else if (res.status !== 404) {
-            vercelLogsError = `Vercel API returned ${res.status}`;
+            // Debug: if no entries found, capture the response shape
+            if (vercelLogs.length === 0 && !vercelLogsError) {
+              const keys = Object.keys(json ?? {});
+              vercelLogsError = `API ok but 0 entries parsed (response keys: ${keys.join(', ') || 'empty'})`;
+            }
+          } else {
+            const body = await res.text().catch(() => '');
+            vercelLogsError = `Vercel API returned ${res.status}: ${body.slice(0, 200)}`;
           }
         }
         // Sort by time descending
