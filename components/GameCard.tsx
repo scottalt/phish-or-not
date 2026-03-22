@@ -66,14 +66,12 @@ function parseBody(text: string): Segment[] {
   return segments;
 }
 
-function EmailDisplay({ card, onScroll, onHeadersOpened, onUrlInspected }: {
+function EmailDisplay({ card, onScroll, onUrlInspected }: {
   card: DealCard | SafeDealCard;
   onScroll?: (pct: number) => void;
-  onHeadersOpened?: () => void;
   onUrlInspected?: () => void;
 }) {
   const [inspectedUrl, setInspectedUrl] = useState<string | null>(null);
-  const [headersOpen, setHeadersOpen] = useState(false);
   const [showFromEmail, setShowFromEmail] = useState(false);
   const [bodyExpanded, setBodyExpanded] = useState(false);
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -98,40 +96,11 @@ function EmailDisplay({ card, onScroll, onHeadersOpened, onUrlInspected }: {
     if (el) setBodyOverflows(el.scrollHeight > el.clientHeight);
   }, [card.body]);
 
-  const headers = (() => {
-    if (card.authStatus === 'verified') {
-      return {
-        spf: 'PASS', dkim: 'PASS', dmarc: 'PASS',
-        replyTo: card.replyTo ?? card.from, returnPath: `<${card.from}>`,
-        color: { spf: 'var(--c-secondary)', dkim: 'var(--c-secondary)', dmarc: 'var(--c-secondary)' },
-      };
-    }
-    if (card.authStatus === 'fail') {
-      return {
-        spf: 'FAIL', dkim: 'FAIL', dmarc: 'FAIL',
-        replyTo: card.replyTo ?? card.from, returnPath: `<${card.from}>`,
-        color: { spf: '#ff3333', dkim: '#ff3333', dmarc: '#ff3333' },
-      };
-    }
-    // unverified
-    return {
-      spf: 'NONE', dkim: 'NONE', dmarc: 'NONE',
-      replyTo: card.replyTo ?? card.from, returnPath: `<${card.from}>`,
-      color: { spf: '#ffaa00', dkim: '#ffaa00', dmarc: '#ffaa00' },
-    };
-  })();
-
   return (
     <div className="term-border bg-[var(--c-bg)] select-none scanline">
       <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] px-3 py-2 flex items-center justify-between">
         <span className="text-[var(--c-secondary)] text-sm tracking-widest">INCOMING_EMAIL</span>
-        <button
-          onClick={(e) => { e.stopPropagation(); if (!headersOpen) onHeadersOpened?.(); setHeadersOpen((o) => !o); }}
-          className="text-[var(--c-secondary)] text-sm font-mono hover:text-[var(--c-primary)] transition-colors p-2 -m-2"
-          aria-label={headersOpen ? 'Close email headers' : 'View email headers'}
-        >
-          [HEADERS]
-        </button>
+        <span className="text-[var(--c-dark)] text-sm font-mono">■ □ □</span>
       </div>
       <div className="px-3 py-2 border-b border-[color-mix(in_srgb,var(--c-primary)_20%,transparent)] space-y-1">
         <div className="flex gap-2 text-sm">
@@ -175,42 +144,6 @@ function EmailDisplay({ card, onScroll, onHeadersOpened, onUrlInspected }: {
           </div>
         )}
       </div>
-      {headersOpen && (
-        <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_20%,transparent)] px-3 py-2 bg-[color-mix(in_srgb,var(--c-primary)_2%,transparent)]">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[#ffaa00] text-sm font-mono tracking-widest">HEADERS</span>
-            <button
-              onClick={(e) => { e.stopPropagation(); setHeadersOpen(false); }}
-              className="text-[var(--c-dark)] text-sm font-mono hover:text-[var(--c-secondary)] transition-colors"
-              aria-label="Close headers"
-            >
-              [ × ]
-            </button>
-          </div>
-          <div className="space-y-1 text-sm font-mono">
-            <div className="flex gap-2">
-              <span className="text-[var(--c-secondary)] w-14 shrink-0">SPF:</span>
-              <span style={{ color: headers.color.spf }}>{headers.spf}</span>
-            </div>
-            <div className="flex gap-2">
-              <span className="text-[var(--c-secondary)] w-14 shrink-0">DKIM:</span>
-              <span style={{ color: headers.color.dkim }}>{headers.dkim}</span>
-            </div>
-            <div className="flex gap-2">
-              <span className="text-[var(--c-secondary)] w-14 shrink-0">DMARC:</span>
-              <span style={{ color: headers.color.dmarc }}>{headers.dmarc}</span>
-            </div>
-            <div className="flex gap-2">
-              <span className="text-[var(--c-secondary)] w-14 shrink-0">Reply-To:</span>
-              <span className="text-[var(--c-primary)] break-all">{headers.replyTo}</span>
-            </div>
-            <div className="flex gap-2">
-              <span className="text-[var(--c-secondary)] w-14 shrink-0">Ret-Path:</span>
-              <span className="text-[var(--c-primary)] break-all">{headers.returnPath}</span>
-            </div>
-          </div>
-        </div>
-      )}
       <div className="relative">
         <div
           ref={bodyRef}
@@ -432,7 +365,6 @@ export function GameCard({ card, onAnswer, questionNumber, total, streak, totalS
           ? <EmailDisplay
               card={card}
               onScroll={(pct) => { maxScrollDepth.current = Math.max(maxScrollDepth.current, pct); }}
-              onHeadersOpened={() => { headersEverOpened.current = true; }}
               onUrlInspected={() => { urlEverInspected.current = true; }}
             />
           : <SMSDisplay

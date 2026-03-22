@@ -15,7 +15,6 @@ export interface SafeDealCard {
   from: string;
   subject?: string;
   body: string;
-  authStatus: string;   // game mechanic — players inspect this
   replyTo?: string;
   attachmentName?: string;
   sentAt?: string;
@@ -29,7 +28,6 @@ export function toSafeCard(card: any, index: number): SafeDealCard {
     from: card.from,
     subject: card.subject ?? undefined,
     body: card.body,
-    authStatus: card.authStatus ?? 'unverified',
     replyTo: card.replyTo ?? undefined,
     attachmentName: card.attachmentName ?? undefined,
     sentAt: card.sentAt ?? undefined,

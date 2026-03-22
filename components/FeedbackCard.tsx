@@ -54,7 +54,6 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
   const [flagDone, setFlagDone] = useState(false);
   const [displayedHeadline, setDisplayedHeadline] = useState('');
   const [headlineDone, setHeadlineDone] = useState(false);
-  const [headersOpen, setHeadersOpen] = useState(false);
   const [inspectedUrl, setInspectedUrl] = useState<string | null>(null);
   const [showSignals, setShowSignals] = useState(false);
   const [showClues, setShowClues] = useState(false);
@@ -85,28 +84,6 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
 
   const headlineColor = correct ? 'text-[var(--c-primary)]' : 'text-[#ff3333]';
   const headlineGlow = '';
-
-  const headers = (() => {
-    if (card.authStatus === 'verified') {
-      return {
-        spf: 'PASS', dkim: 'PASS', dmarc: 'PASS',
-        replyTo: card.replyTo ?? card.from, returnPath: `<${card.from}>`,
-        color: { spf: 'var(--c-secondary)', dkim: 'var(--c-secondary)', dmarc: 'var(--c-secondary)' },
-      };
-    }
-    if (card.authStatus === 'fail') {
-      return {
-        spf: 'FAIL', dkim: 'FAIL', dmarc: 'FAIL',
-        replyTo: card.replyTo ?? card.from, returnPath: `<${card.from}>`,
-        color: { spf: '#ff3333', dkim: '#ff3333', dmarc: '#ff3333' },
-      };
-    }
-    return {
-      spf: 'NONE', dkim: 'NONE', dmarc: 'NONE',
-      replyTo: card.replyTo ?? card.from, returnPath: `<${card.from}>`,
-      color: { spf: '#ffaa00', dkim: '#ffaa00', dmarc: '#ffaa00' },
-    };
-  })();
 
   return (
     <div className="w-full max-w-sm lg:max-w-4xl px-4 pb-safe relative">
@@ -218,16 +195,7 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
             <span className="text-[var(--c-dark)] text-sm tracking-widest">
               {card.type === 'sms' ? 'INCOMING_SMS' : 'INCOMING_EMAIL'}
             </span>
-            {card.type === 'email' ? (
-              <button
-                onClick={() => setHeadersOpen((o) => !o)}
-                className="text-[var(--c-secondary)] text-sm font-mono hover:text-[var(--c-primary)] transition-colors"
-              >
-                [HEADERS]
-              </button>
-            ) : (
-              <span className="text-[var(--c-dark)] text-sm font-mono">■ □ □</span>
-            )}
+            <span className="text-[var(--c-dark)] text-sm font-mono">■ □ □</span>
           </div>
 
           {/* Header rows */}
@@ -286,43 +254,6 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
             );
           })()}
 
-          {/* Expandable headers panel */}
-          {headersOpen && card.type === 'email' && (
-            <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_20%,transparent)] px-3 py-2 bg-[color-mix(in_srgb,var(--c-primary)_2%,transparent)]">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[#ffaa00] text-sm font-mono tracking-widest">HEADERS</span>
-                <button
-                  onClick={() => setHeadersOpen(false)}
-                  className="text-[var(--c-dark)] text-sm font-mono hover:text-[var(--c-secondary)] transition-colors"
-                >
-                  [ × ]
-                </button>
-              </div>
-              <div className="space-y-1 text-sm font-mono">
-                <div className="flex gap-2">
-                  <span className="text-[var(--c-secondary)] w-14 shrink-0">SPF:</span>
-                  <span style={{ color: headers.color.spf }}>{headers.spf}</span>
-                </div>
-                <div className="flex gap-2">
-                  <span className="text-[var(--c-secondary)] w-14 shrink-0">DKIM:</span>
-                  <span style={{ color: headers.color.dkim }}>{headers.dkim}</span>
-                </div>
-                <div className="flex gap-2">
-                  <span className="text-[var(--c-secondary)] w-14 shrink-0">DMARC:</span>
-                  <span style={{ color: headers.color.dmarc }}>{headers.dmarc}</span>
-                </div>
-                <div className="flex gap-2">
-                  <span className="text-[var(--c-secondary)] w-14 shrink-0">Reply-To:</span>
-                  <span className="text-[var(--c-primary)] break-all">{headers.replyTo}</span>
-                </div>
-                <div className="flex gap-2">
-                  <span className="text-[var(--c-secondary)] w-14 shrink-0">Ret-Path:</span>
-                  <span className="text-[var(--c-primary)] break-all">{headers.returnPath}</span>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Body */}
           <pre className="px-3 py-3 text-xs text-[var(--c-muted)] font-mono leading-relaxed whitespace-pre-wrap break-words max-h-40 lg:max-h-52 momentum-scroll scroll-fade-bottom">
             {parseBodySegments(card.body).map((seg, i) =>
@@ -375,22 +306,22 @@ export function FeedbackCard({ result, streak, totalScore, onNext, questionNumbe
         {(() => {
           const signals: string[] = [];
 
-          // Auth status — email only (SPF/DKIM/DMARC don't apply to SMS)
+          // Auth status — educational only (not visible during play)
           if (card.type === 'email') {
             if (card.authStatus === 'fail') {
               signals.push(wasPhishing
-                ? 'SPF/DKIM/DMARC: FAIL — sender could not authenticate with the claimed domain. Strong indicator of spoofing.'
-                : 'SPF/DKIM/DMARC: FAIL — sender\'s authentication failed. Some legitimate senders have misconfigured email infrastructure. Failure alone is not proof of phishing, but it warrants closer inspection.'
+                ? 'Behind the scenes: SPF/DKIM/DMARC checks would have FAILED for this email — the sender could not authenticate with the claimed domain.'
+                : 'Behind the scenes: SPF/DKIM/DMARC checks would have FAILED — but this was legitimate. Some real senders have misconfigured email infrastructure.'
               );
             } else if (card.authStatus === 'unverified') {
               signals.push(wasPhishing
-                ? 'SPF/DKIM/DMARC: NONE — authentication headers absent, consistent with domain spoofing.'
-                : 'SPF/DKIM/DMARC: NONE — small senders often lack email authentication. Absence of auth headers alone is not a reliable phishing indicator.'
+                ? 'Behind the scenes: this email had no SPF/DKIM/DMARC authentication headers — consistent with domain spoofing.'
+                : 'Behind the scenes: this email had no authentication headers. Small senders often lack email authentication setup.'
               );
             } else if (card.authStatus === 'verified') {
               signals.push(wasPhishing
-                ? 'SPF/DKIM/DMARC: PASS — attacker registered a lookalike domain with valid authentication. Headers are clean; the domain name itself is the tell.'
-                : 'SPF/DKIM/DMARC: PASS — sender domain authenticated correctly.'
+                ? 'Behind the scenes: SPF/DKIM/DMARC all PASSED — the attacker registered a lookalike domain with valid authentication. Clean headers don\'t guarantee safety.'
+                : 'Behind the scenes: SPF/DKIM/DMARC all PASSED — sender domain authenticated correctly.'
               );
             }
 

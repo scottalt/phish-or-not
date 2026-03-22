@@ -250,6 +250,7 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
           correct: boolean; isPhishing: boolean; pointsEarned: number; streak: number;
           cardId: string; difficulty: string;
           clues: string[]; explanation: string; highlights: string[]; technique: string | null;
+          authStatus?: string;
           cardSource?: string; secondaryTechnique?: string | null;
           isGenaiSuspected?: boolean | null; genaiConfidence?: string | null;
           grammarQuality?: number | null; proseFluency?: number | null;
@@ -263,7 +264,7 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
             from: card.from,
             subject: 'subject' in card ? (card as DealCard).subject : undefined,
             body: card.body,
-            authStatus: (card.authStatus ?? 'unverified') as Card['authStatus'],
+            authStatus: (data.authStatus ?? 'unverified') as Card['authStatus'],
             replyTo: 'replyTo' in card ? (card as DealCard).replyTo : undefined,
             attachmentName: 'attachmentName' in card ? (card as DealCard).attachmentName : undefined,
             sentAt: 'sentAt' in card ? (card as DealCard).sentAt : undefined,

@@ -252,6 +252,7 @@ export async function POST(req: NextRequest) {
       has_reply_to: a.hasReplyTo,
       has_url: a.hasUrl,
       has_attachment: a.hasAttachment,
+      auth_visible: false,
       // has_sent_at: a.hasSentAt, — column not yet in schema
     });
 
