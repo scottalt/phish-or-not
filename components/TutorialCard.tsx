@@ -27,10 +27,8 @@ const CONFIDENCE_OPTIONS: { key: Confidence; mult: string; color: string; border
 ];
 
 export function TutorialCard({ onComplete }: Props) {
-  const [showHeaders, setShowHeaders] = useState(true);
   const [showFrom, setShowFrom] = useState(false);
   const [showUrl, setShowUrl] = useState(false);
-  const [headersInteracted, setHeadersInteracted] = useState(false);
   const [fromInteracted, setFromInteracted] = useState(false);
   const [urlInteracted, setUrlInteracted] = useState(false);
   const [confidence, setConfidence] = useState<Confidence | null>(null);
@@ -49,47 +47,11 @@ export function TutorialCard({ onComplete }: Props) {
 
       {/* Fake email card */}
       <div className="term-border bg-[var(--c-bg)]">
-        {/* Card header with pulsing HEADERS button */}
+        {/* Card header */}
         <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] px-3 py-1.5 flex items-center justify-between">
           <span className="text-[var(--c-dark)] text-sm font-mono tracking-widest">INCOMING_EMAIL</span>
-          <button
-            type="button"
-            onClick={() => {
-              setHeadersInteracted(true);
-              setShowHeaders((v) => !v);
-            }}
-            className={`text-sm font-mono px-2 py-0.5 border transition-colors ${
-              showHeaders
-                ? 'border-[color-mix(in_srgb,var(--c-primary)_60%,transparent)] text-[var(--c-primary)]'
-                : 'border-[color-mix(in_srgb,var(--c-primary)_25%,transparent)] text-[var(--c-dark)] hover:text-[var(--c-secondary)]'
-            } ${!headersInteracted ? 'anim-hint-pulse' : ''}`}
-          >
-            [HEADERS]
-          </button>
+          <span className="text-[var(--c-dark)] text-sm font-mono">■ □ □</span>
         </div>
-
-        {/* Auth headers panel */}
-        {showHeaders && (
-          <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_20%,transparent)] px-3 py-2 bg-[#03080a] space-y-1">
-            <div className="text-[var(--c-dark)] text-sm font-mono tracking-widest mb-1">AUTH_HEADERS</div>
-            {[
-              { label: 'SPF', status: 'FAIL' },
-              { label: 'DKIM', status: 'FAIL' },
-              { label: 'DMARC', status: 'FAIL' },
-            ].map(({ label, status }) => (
-              <div key={label} className="flex items-center gap-2 text-sm font-mono">
-                <span className="text-[var(--c-secondary)] w-12">{label}</span>
-                <span className="text-[#ff3333] font-bold">{status}</span>
-              </div>
-            ))}
-            <div className="pt-1 space-y-0.5">
-              <div className="flex gap-2 text-sm font-mono">
-                <span className="text-[var(--c-secondary)] w-16 shrink-0">REPLY-TO</span>
-                <span className="text-[#ffaa00]">{TUTORIAL_EMAIL.replyTo}</span>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Email metadata */}
         <div className="px-3 py-2 space-y-1 border-b border-[color-mix(in_srgb,var(--c-primary)_15%,transparent)]">
@@ -228,7 +190,6 @@ export function TutorialCard({ onComplete }: Props) {
           </div>
           <div className="text-[var(--c-secondary)] text-sm font-mono space-y-0.5">
             <div>• <span className="text-[var(--c-accent)]">FROM:</span> paypa1.com — typosquatted domain</div>
-            <div>• <span className="text-[var(--c-accent)]">HEADERS:</span> SPF / DKIM / DMARC all FAIL</div>
             <div>• <span className="text-[var(--c-accent)]">SENT:</span> 3:14 AM — unusual send time</div>
             <div>• <span className="text-[var(--c-accent)]">REPLY-TO:</span> free provider, domain mismatch</div>
             <div>• <span className="text-[var(--c-accent)]">URL:</span> paypa1-secure.com — typosquatted</div>

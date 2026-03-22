@@ -95,6 +95,7 @@ export async function POST(req: NextRequest) {
     explanation: card.explanation,
     highlights: card.highlights ?? [],
     technique: card.technique ?? null,
+    authStatus: card.authStatus ?? 'unverified',  // safe post-answer — for feedback forensic signals
     // Research card metadata — only present for research mode cards
     ...(researchFields.cardSource ? {
       cardSource: researchFields.cardSource,
