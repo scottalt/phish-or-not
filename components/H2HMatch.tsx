@@ -393,10 +393,10 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
     // Use card body length as a difficulty proxy — longer = harder = slower ghost
     const ghostTimes = cards.map((card) => {
       const len = card.body.length;
-      // Short emails (<300 chars): 2-4s, Medium (300-600): 3-6s, Long (600+): 5-9s
-      if (len < 300) return 2000 + Math.random() * 2000;
-      if (len < 600) return 3000 + Math.random() * 3000;
-      return 5000 + Math.random() * 4000;
+      // Short emails (<300 chars): 6-12s, Medium (300-600): 10-18s, Long (600+): 15-25s
+      if (len < 300) return 6000 + Math.random() * 6000;
+      if (len < 600) return 10000 + Math.random() * 8000;
+      return 15000 + Math.random() * 10000;
     });
 
     // Failure chance also scales with card complexity
