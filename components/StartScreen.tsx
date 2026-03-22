@@ -362,7 +362,7 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                   <div className="flex items-center gap-3">
                     <Link href="/profile" className="text-[var(--c-primary)] text-sm tracking-widest font-bold hover:text-[var(--c-primary)] border border-[color-mix(in_srgb,var(--c-primary)_30%,transparent)] px-2 py-0.5 hover:bg-[color-mix(in_srgb,var(--c-primary)_6%,transparent)] transition-colors">[ {profile.displayName} ]</Link>
                     {profile.researchGraduated && (
-                      <span className="text-[var(--c-accent)] text-sm font-mono hidden lg:inline">⬡ GRADUATED</span>
+                      <span className="text-[var(--c-accent)] text-sm font-mono hidden lg:inline">⬡ RANKED UNLOCKED</span>
                     )}
                   </div>
                   <div className="flex items-center gap-3">
@@ -380,7 +380,7 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                   {/* Mobile-only: show graduation + achievements below XP bar */}
                   <div className="flex items-center justify-between lg:hidden">
                     {profile.researchGraduated && (
-                      <div className="text-[var(--c-accent)] text-sm font-mono">⬡ RESEARCH GRADUATED</div>
+                      <div className="text-[var(--c-accent)] text-sm font-mono">⬡ RANKED UNLOCKED</div>
                     )}
                     {(profile.achievements?.length ?? 0) > 0 && (
                       <Link href="/profile#achievements" className="text-[var(--c-secondary)] text-sm font-mono hover:text-[var(--c-primary)]">
@@ -517,7 +517,7 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
           <div className="space-y-4">
           {(() => {
             const graduated = signedIn && (profile?.researchGraduated ?? false);
-            const researchCapped = signedIn && !graduated && (profile?.researchAnswersSubmitted ?? 0) >= 30;
+            const researchCapped = signedIn && !graduated && (profile?.researchAnswersSubmitted ?? 0) >= 30; // lifetime cap — can still play research after graduation
             const isResearch = signedIn && !graduated && !researchCapped;
             const needsCallsign = signedIn && !profile?.displayName;
             return (

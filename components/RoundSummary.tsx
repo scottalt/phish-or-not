@@ -167,8 +167,8 @@ export function RoundSummary({ score, total, totalScore, results, mode, sessionI
           )}
           {xpResult.graduated && (
             <div className="term-border border-[color-mix(in_srgb,var(--c-accent)_40%,transparent)] px-2 py-2 text-center">
-              <div className="text-[var(--c-accent)] text-sm font-mono font-bold">RESEARCH GRADUATED</div>
-              <div className="text-[var(--c-dark)] text-sm font-mono mt-0.5">Expert Mode unlocked. You&apos;ve submitted all 30 research answers.</div>
+              <div className="text-[var(--c-accent)] text-sm font-mono font-bold">RANKED UNLOCKED</div>
+              <div className="text-[var(--c-dark)] text-sm font-mono mt-0.5">Expert Mode and Head-to-Head unlocked. Keep playing research for bonus achievements.</div>
             </div>
           )}
           {profile && <LevelMeter xp={profile.xp} level={profile.level} />}

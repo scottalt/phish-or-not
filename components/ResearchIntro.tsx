@@ -65,7 +65,7 @@ export function ResearchIntro({ onBegin }: Props) {
                 email, IP, location, or any identifying information.
               </p>
               <p className="text-[var(--c-muted)] text-sm font-mono leading-relaxed">
-                30 research answers to contribute. After that, Expert Mode and Intel unlock.{' '}
+                10 research answers to qualify for ranked play. Keep contributing for bonus achievements.{' '}
                 <Link href="/intel/player" className="text-[var(--c-secondary)] hover:underline">Preview</Link>.
               </p>
             </div>
