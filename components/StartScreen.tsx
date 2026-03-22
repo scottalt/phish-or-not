@@ -522,23 +522,36 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
             const needsCallsign = signedIn && !profile?.displayName;
             return (
               <>
-                {!needsCallsign && (
+                {!needsCallsign && !signedIn && (
                   <button
-                    onClick={() => {
-                      if (!signedIn) { setShowInlineAuth(true); return; }
-                      if (researchCapped) { tryStart('freeplay'); return; }
-                      if (graduated) { tryStart('freeplay'); return; }
-                      handleStart('research');
-                    }}
-                    className={`w-full py-3 term-border font-mono font-bold tracking-widest text-sm active:scale-95 transition-all ${
-                      !signedIn
-                        ? 'border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] text-[var(--c-accent)] hover:bg-[color-mix(in_srgb,var(--c-accent)_6%,transparent)]'
-                        : isResearch
-                          ? 'border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] text-[var(--c-accent)] hover:bg-[color-mix(in_srgb,var(--c-accent)_6%,transparent)]'
-                          : 'text-[var(--c-secondary)] hover:bg-[color-mix(in_srgb,var(--c-primary)_5%,transparent)]'
-                    }`}
+                    onClick={() => setShowInlineAuth(true)}
+                    className="w-full py-3 term-border font-mono font-bold tracking-widest text-sm active:scale-95 transition-all border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] text-[var(--c-accent)] hover:bg-[color-mix(in_srgb,var(--c-accent)_6%,transparent)]"
                   >
-                    {!signedIn ? '[ LOG IN / SIGN UP TO PLAY ]' : isResearch ? '[ RESEARCH MODE ]' : '[ PLAY ]'}
+                    [ LOG IN / SIGN UP TO PLAY ]
+                  </button>
+                )}
+                {!needsCallsign && signedIn && isResearch && (
+                  <button
+                    onClick={() => handleStart('research')}
+                    className="w-full py-3 term-border font-mono font-bold tracking-widest text-sm active:scale-95 transition-all border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] text-[var(--c-accent)] hover:bg-[color-mix(in_srgb,var(--c-accent)_6%,transparent)]"
+                  >
+                    [ RESEARCH MODE ]
+                  </button>
+                )}
+                {!needsCallsign && signedIn && (graduated || researchCapped) && (
+                  <button
+                    onClick={() => tryStart('freeplay')}
+                    className="w-full py-3 term-border font-mono font-bold tracking-widest text-sm active:scale-95 transition-all text-[var(--c-secondary)] hover:bg-[color-mix(in_srgb,var(--c-primary)_5%,transparent)]"
+                  >
+                    [ FREEPLAY ]
+                  </button>
+                )}
+                {!needsCallsign && signedIn && graduated && !researchCapped && (
+                  <button
+                    onClick={() => handleStart('research')}
+                    className="w-full py-2 term-border font-mono tracking-widest text-sm active:scale-95 transition-all border-[color-mix(in_srgb,var(--c-accent)_30%,transparent)] text-[var(--c-accent-dim)] hover:text-[var(--c-accent)] hover:bg-[color-mix(in_srgb,var(--c-accent)_4%,transparent)]"
+                  >
+                    [ CONTRIBUTE TO RESEARCH — {profile?.researchAnswersSubmitted ?? 0}/30 ]
                   </button>
                 )}
                 {/* Inline onboarding: sign-in (State 1) or callsign setup (State 2) */}
