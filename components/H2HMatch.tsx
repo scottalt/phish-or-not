@@ -235,6 +235,7 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
   // ── Player state ──
   const [eliminated, setEliminated] = useState(false);
   const [eliminatedAt, setEliminatedAt] = useState<number>(0);
+  const [flash, setFlash] = useState<'correct' | 'wrong' | null>(null);
   const [finished, setFinished] = useState(false);
   const [playingItOut, setPlayingItOut] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -418,14 +419,22 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
         }
 
         if (data.correct) {
-          const nextIndex = cardIndex + 1;
-          setCardIndex(nextIndex);
+          // Brief green flash for correct answer feedback
+          setFlash('correct');
+          setTimeout(() => setFlash(null), 200);
 
-          if (nextIndex >= H2H_CARDS_PER_MATCH) {
-            setFinished(true);
-          }
+          const nextIndex = cardIndex + 1;
+          // Small delay so the flash is visible before card changes
+          setTimeout(() => {
+            setCardIndex(nextIndex);
+            if (nextIndex >= H2H_CARDS_PER_MATCH) {
+              setFinished(true);
+            }
+          }, 200);
         } else {
-          // Eliminated
+          // Red flash for elimination
+          setFlash('wrong');
+          setTimeout(() => setFlash(null), 400);
           setEliminated(true);
           setEliminatedAt(cardIndex + 1);
         }
@@ -661,7 +670,10 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
       </div>
 
       {/* Card */}
-      <div className="w-full anim-card-entry">
+      <div className={`w-full anim-card-entry transition-all duration-200 ${
+        flash === 'correct' ? 'ring-2 ring-[var(--c-primary)] ring-opacity-60' :
+        flash === 'wrong' ? 'ring-2 ring-[#ff3333] ring-opacity-60' : ''
+      }`}>
         <CardDisplay card={currentCard} />
       </div>
 

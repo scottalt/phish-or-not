@@ -30,6 +30,7 @@ interface MatchData {
 interface StatsData {
   rankPoints: number;
   rank: H2HRank;
+  winStreak: number;
 }
 
 function formatTime(ms: number): string {
@@ -105,6 +106,7 @@ export function H2HResult({
           setStats({
             rankPoints: s.rankPoints,
             rank: getRankFromPoints(s.rankPoints),
+            winStreak: s.winStreak ?? 0,
           });
         }
       } catch {
@@ -205,6 +207,13 @@ export function H2HResult({
           )}
         </div>
       ) : null}
+
+      {/* Win streak */}
+      {isWin && stats && stats.winStreak >= 2 && (
+        <div className="text-center">
+          <span className="text-[var(--c-primary)] text-sm font-mono font-bold">{stats.winStreak}-WIN STREAK</span>
+        </div>
+      )}
 
       {/* Buttons */}
       <div className="flex gap-3 mt-2">

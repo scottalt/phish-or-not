@@ -17,6 +17,8 @@ export function H2HQueue({ profile, onMatchFound, onCancel }: Props) {
   const [rankLabel, setRankLabel] = useState('BRONZE');
   const [rankPoints, setRankPoints] = useState(0);
   const [rankColor, setRankColor] = useState('#003a0e');
+  const [ratedMatchesLeft, setRatedMatchesLeft] = useState<number | null>(null);
+  const [winStreak, setWinStreak] = useState(0);
   const [joined, setJoined] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -87,6 +89,9 @@ export function H2HQueue({ profile, onMatchFound, onCancel }: Props) {
         setRankPoints(data.rankPoints ?? 0);
         setRankLabel(data.rankLabel ?? getRankFromPoints(data.rankPoints ?? 0).label.toUpperCase());
         setRankColor(data.rankColor ?? '#003a0e');
+        const today = data.ratedMatchesToday ?? 0;
+        setRatedMatchesLeft(Math.max(0, 20 - today));
+        setWinStreak(data.winStreak ?? 0);
       } catch {
         // non-critical
       }
@@ -258,6 +263,19 @@ export function H2HQueue({ profile, onMatchFound, onCancel }: Props) {
                 <span className="text-[var(--c-secondary)]">
                   {ghostCountdown}s
                 </span>
+              </p>
+            )}
+            {ratedMatchesLeft !== null && (
+              <p className="text-[var(--c-dark)] text-xs">
+                Rated matches today:{' '}
+                <span className={ratedMatchesLeft > 0 ? 'text-[var(--c-secondary)]' : 'text-[#ffaa00]'}>
+                  {ratedMatchesLeft} remaining
+                </span>
+              </p>
+            )}
+            {winStreak >= 2 && (
+              <p className="text-[var(--c-primary)] text-xs font-bold">
+                {winStreak}-WIN STREAK
               </p>
             )}
           </div>
