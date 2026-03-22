@@ -40,6 +40,7 @@ import { RoundSummary } from './RoundSummary';
 import { StartScreen } from './StartScreen';
 import { ResearchIntro } from './ResearchIntro';
 import { TutorialCard } from './TutorialCard';
+import { H2HLobby } from './H2HLobby';
 import { H2HQueue } from './H2HQueue';
 import { H2HMatch } from './H2HMatch';
 import { H2HResult } from './H2HResult';
@@ -68,7 +69,7 @@ const CONFIDENCE_PENALTY: Record<Confidence, number> = {
 type GamePhase = 'start' | 'playing' | 'checking' | 'feedback'
   | 'summary' | 'daily_complete' | 'loading'
   | 'research_intro' | 'research_unavailable' | 'tutorial'
-  | 'h2h_queue' | 'h2h_match' | 'h2h_result';
+  | 'h2h_lobby' | 'h2h_queue' | 'h2h_match' | 'h2h_result';
 
 export function Game({ previewMode = false }: { previewMode?: boolean }) {
   const [phase, setPhase] = useState<GamePhase>('start');
@@ -157,7 +158,7 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
 
     if (newMode === 'h2h') {
       setMode('h2h');
-      setPhase('h2h_queue');
+      setPhase('h2h_lobby');
       return;
     }
 
@@ -459,6 +460,18 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
     }
   }
 
+  if (phase === 'h2h_lobby' && profile) {
+    return (
+      <div className="min-h-screen bg-[var(--c-bg)] flex flex-col items-center justify-center p-4 pb-safe">
+        <H2HLobby
+          profile={profile}
+          onSearch={() => setPhase('h2h_queue')}
+          onBack={() => setPhase('start')}
+        />
+      </div>
+    );
+  }
+
   if (phase === 'h2h_queue' && profile) {
     return (
       <div className="min-h-screen bg-[var(--c-bg)] flex flex-col items-center justify-center p-4 pb-safe">
@@ -504,7 +517,7 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
           onRematch={() => {
             setH2HMatchId(null);
             setH2HResult(null);
-            setPhase('h2h_queue');
+            setPhase('h2h_lobby');
           }}
           onBack={() => {
             setH2HMatchId(null);
