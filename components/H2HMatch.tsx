@@ -371,7 +371,7 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
                       winnerId: playerId,
                       myPointsDelta: 0, // will be fetched from result screen
                       opponentPointsDelta: 0,
-                      reason: 'eliminated',
+                      reason: 'completed', // we won — reason is from our perspective
                     });
                   }
                 }

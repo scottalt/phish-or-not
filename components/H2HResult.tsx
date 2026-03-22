@@ -61,9 +61,10 @@ export function H2HResult({
   const [stats, setStats] = useState<StatsData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const isWin = winnerId === playerId && winnerId !== null;
-  const isLoss = reason === 'eliminated' || reason === 'forfeit' || (winnerId !== null && winnerId !== playerId);
-  const isDraw = !isWin && !isLoss; // should never happen with current rules
+  // winnerId is the source of truth — reason is just for display flavor
+  const isWin = winnerId === playerId;
+  const isLoss = winnerId !== null && winnerId !== playerId;
+  const noResult = winnerId === null; // ghost match wrong answer
 
   useEffect(() => {
     let cancelled = false;
@@ -127,8 +128,8 @@ export function H2HResult({
   const rankedUp = newRank.tier !== oldRank.tier && myPointsDelta > 0;
 
   // Header
-  const headerText = isWin ? 'VICTORY' : 'DEFEATED';
-  const headerColor = isWin ? 'text-[var(--c-primary)]' : 'text-[#ff3333]';
+  const headerText = isWin ? 'VICTORY' : noResult ? 'MATCH OVER' : 'DEFEATED';
+  const headerColor = isWin ? 'text-[var(--c-primary)]' : noResult ? 'text-[var(--c-muted)]' : 'text-[#ff3333]';
 
   // Subtitle
   let subtitle = '';
