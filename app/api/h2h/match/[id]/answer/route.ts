@@ -336,42 +336,20 @@ export async function POST(
     });
   }
 
-  // ── Wrong answer — player is eliminated ──
+  // ── Wrong answer — player is eliminated, they lose ──
+  // Simple rule: wrong answer = you lose. No draws.
+  // If opponent is also eliminated or still playing, opponent wins.
+  // For ghost matches (no opponent), match just ends.
 
-  // Check opponent state
-  // Count opponent's wrong answers to see if they are also eliminated
-  const { count: opponentWrongCount } = await admin
-    .from('h2h_match_answers')
-    .select('*', { count: 'exact', head: true })
-    .eq('match_id', matchId)
-    .eq('player_id', opponentId!)
-    .eq('correct', false);
-
-  const opponentEliminated = (opponentWrongCount ?? 0) > 0;
-  const opponentFinished = opponentCards >= H2H_CARDS_PER_MATCH;
-
-  if (opponentFinished) {
-    // Opponent already finished — opponent wins
-    await finalizeMatch(matchId, opponentId!, playerId);
-  } else if (opponentEliminated) {
-    // Both eliminated — winner is whoever got further (higher cards_completed)
-    if (currentCards > opponentCards) {
-      await finalizeMatch(matchId, playerId, opponentId!);
-    } else if (opponentCards > currentCards) {
-      await finalizeMatch(matchId, opponentId!, playerId);
-    } else {
-      // Same cards completed — compare total times (lower wins)
-      const opponentTimeField = isPlayer1
-        ? 'player2_time_ms'
-        : 'player1_time_ms';
-      const opponentTime = (match[opponentTimeField] ?? 0) as number;
-      const totalTime = currentTime + timeFromRenderMs;
-      const winnerId = totalTime <= opponentTime ? playerId : opponentId;
-      const loserId = winnerId === playerId ? opponentId : playerId;
-      await finalizeMatch(matchId, winnerId!, loserId!);
-    }
+  if (opponentId) {
+    await finalizeMatch(matchId, opponentId, playerId);
+  } else {
+    // Ghost match — just mark complete, no winner
+    await admin.from('h2h_matches').update({
+      status: 'complete',
+      ended_at: new Date().toISOString(),
+    }).eq('id', matchId);
   }
-  // Otherwise: match stays active (opponent still playing)
 
   return NextResponse.json({
     correct: false,
