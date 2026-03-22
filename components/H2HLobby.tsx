@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { ACHIEVEMENTS, RARITY_COLORS } from '@/lib/achievements';
-import { getRankFromPoints } from '@/lib/h2h';
-import { H2HRankGuide } from './H2HRankGuide';
+import { getRankFromPoints, H2H_RANKS } from '@/lib/h2h';
 import type { PlayerProfile } from '@/lib/types';
 
 interface Props {
@@ -116,8 +115,41 @@ export function H2HLobby({ profile, onSearch, onBack }: Props) {
         </div>
       </div>
 
-      {/* Rank tiers */}
-      <H2HRankGuide currentPoints={h2hStats?.rankPoints ?? 0} />
+      {/* Rank tiers — always visible, compact */}
+      <div className="w-full term-border bg-[var(--c-bg)]">
+        <div className="px-4 py-2 border-b border-[color-mix(in_srgb,var(--c-primary)_15%,transparent)]">
+          <span className="text-[var(--c-secondary)] text-sm tracking-widest">RANK_TIERS</span>
+        </div>
+        <div className="px-3 py-2 space-y-0.5">
+          {H2H_RANKS.map((rank) => {
+            const currentRank = getRankFromPoints(h2hStats?.rankPoints ?? 0);
+            const isCurrent = currentRank.tier === rank.tier;
+            const pointsToThis = isCurrent ? null : rank.minPoints - (h2hStats?.rankPoints ?? 0);
+            return (
+              <div
+                key={rank.tier}
+                className={`flex items-center justify-between text-sm font-mono px-2 py-1 ${
+                  isCurrent ? 'border border-[color-mix(in_srgb,var(--c-primary)_40%,transparent)] bg-[color-mix(in_srgb,var(--c-primary)_4%,transparent)]' : ''
+                }`}
+              >
+                <span style={{ color: rank.color }}>
+                  {rank.icon} <span className="font-bold">{rank.label}</span>
+                  {isCurrent && <span className="text-[var(--c-primary)] text-xs ml-1">{'◀ YOU'}</span>}
+                </span>
+                <span className="text-[var(--c-secondary)] text-xs">
+                  {rank.minPoints}+
+                  {pointsToThis !== null && pointsToThis > 0 && (
+                    <span className="text-[var(--c-muted)] ml-1">({pointsToThis} away)</span>
+                  )}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+        <div className="px-4 py-2 border-t border-[color-mix(in_srgb,var(--c-primary)_10%,transparent)] text-xs font-mono text-[var(--c-secondary)]">
+          Win: +8 to +40 · Loss: -8 to -35
+        </div>
+      </div>
     </div>
   );
 }
