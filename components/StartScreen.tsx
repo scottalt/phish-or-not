@@ -717,7 +717,7 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                       <span>[ HEAD 2 HEAD ]</span>
                       <span className="text-[10px] px-1 py-0.5 border border-[rgba(255,170,0,0.5)] text-[#ffaa00] font-normal">BETA</span>
                     </div>
-                    <div className="text-[var(--c-secondary)] text-xs mt-1 font-normal tracking-wide">FIND A MATCH</div>
+                    <div className="text-[var(--c-secondary)] text-xs mt-1 font-normal tracking-wide">1v1 RANKED MULTIPLAYER</div>
                   </>
                 )}
               </button>
