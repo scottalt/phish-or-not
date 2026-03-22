@@ -684,7 +684,7 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
               <div className="w-full term-border border-[rgba(255,170,0,0.3)] bg-[rgba(255,170,0,0.03)] px-3 py-2 text-center">
                 <div className="text-[#ffaa00] text-xs font-mono tracking-widest font-bold">BETA</div>
                 <div className="text-[var(--c-muted)] text-[10px] font-mono mt-0.5">
-                  Head-to-Head is in early access. Ranks, points, and rules may change between seasons.
+                  Head-to-Head is in early access. Ranks, points, and rules may change at any time.
                 </div>
               </div>
 
