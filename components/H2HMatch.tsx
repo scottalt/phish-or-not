@@ -361,9 +361,9 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
         );
 
         setLoading(false);
-      } catch {
+      } catch (err) {
         if (!cancelled) {
-          setError('Connection error');
+          setError(`Connection error: ${err instanceof Error ? err.message : String(err)}`);
           setLoading(false);
         }
       }
