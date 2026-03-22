@@ -278,46 +278,76 @@ export async function GET() {
           if (!deploymentId) {
             vercelLogsError = 'No production deployment found';
           } else {
-            // Step 2: Fetch runtime logs stream (NDJSON)
-            const logsRes = await fetch(
-              `https://api.vercel.com/v1/projects/${vercelProjectId}/deployments/${deploymentId}/runtime-logs?${teamParam}`,
-              { headers: { Authorization: `Bearer ${vercelToken}` } }
-            );
-            if (!logsRes.ok) {
-              const body = await logsRes.text().catch(() => '');
-              vercelLogsError = `Vercel logs API returned ${logsRes.status}: ${body.slice(0, 200)}`;
-            } else {
-              // Parse NDJSON stream — each line is a JSON object
-              const text = await logsRes.text();
-              const lines = text.split('\n').filter((l) => l.trim());
-              const oneDayAgoMs = now.getTime() - 24 * 60 * 60 * 1000;
+            // Step 2: Fetch runtime logs stream (NDJSON) with timeout
+            // The endpoint is a live stream that never closes, so we abort after 5s
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 5000);
+            try {
+              const logsRes = await fetch(
+                `https://api.vercel.com/v1/projects/${vercelProjectId}/deployments/${deploymentId}/runtime-logs?${teamParam}`,
+                { headers: { Authorization: `Bearer ${vercelToken}` }, signal: controller.signal }
+              );
+              if (!logsRes.ok) {
+                const body = await logsRes.text().catch(() => '');
+                vercelLogsError = `Vercel logs API returned ${logsRes.status}: ${body.slice(0, 200)}`;
+              } else if (logsRes.body) {
+                // Read the NDJSON stream line by line with a cap
+                const reader = logsRes.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                const oneDayAgoMs = now.getTime() - 24 * 60 * 60 * 1000;
+                const MAX_LINES = 200; // stop reading after this many lines
+                let linesRead = 0;
 
-              for (const line of lines) {
                 try {
-                  const entry = JSON.parse(line);
-                  // Only include errors and warnings from the answers endpoint
-                  if (
-                    (entry.level === 'error' || entry.level === 'warning') &&
-                    entry.requestPath?.includes('/api/answers') &&
-                    (entry.timestampInMs ?? 0) >= oneDayAgoMs
-                  ) {
-                    vercelLogs.push({
-                      time: new Date(entry.timestampInMs).toISOString(),
-                      method: entry.requestMethod ?? '',
-                      path: entry.requestPath ?? '',
-                      status: entry.responseStatusCode ?? 0,
-                      level: entry.level,
-                      message: typeof entry.message === 'string' ? entry.message.slice(0, 200) : '',
-                    });
-                  }
-                } catch {
-                  // skip unparseable lines
-                }
-              }
+                  while (linesRead < MAX_LINES) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop() ?? ''; // keep incomplete last line in buffer
 
-              // Sort by time descending
-              vercelLogs.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
-              vercelLogs = vercelLogs.slice(0, 50);
+                    for (const line of lines) {
+                      if (!line.trim()) continue;
+                      linesRead++;
+                      try {
+                        const entry = JSON.parse(line);
+                        if (
+                          (entry.level === 'error' || entry.level === 'warning') &&
+                          entry.requestPath?.includes('/api/answers') &&
+                          (entry.timestampInMs ?? 0) >= oneDayAgoMs
+                        ) {
+                          vercelLogs.push({
+                            time: new Date(entry.timestampInMs).toISOString(),
+                            method: entry.requestMethod ?? '',
+                            path: entry.requestPath ?? '',
+                            status: entry.responseStatusCode ?? 0,
+                            level: entry.level,
+                            message: typeof entry.message === 'string' ? entry.message.slice(0, 200) : '',
+                          });
+                        }
+                      } catch {
+                        // skip unparseable lines
+                      }
+                    }
+                  }
+                } catch (streamErr) {
+                  // AbortError is expected when timeout fires — not a real error
+                  if (streamErr instanceof DOMException && streamErr.name === 'AbortError') {
+                    // normal timeout, we have whatever logs we collected
+                  } else {
+                    throw streamErr;
+                  }
+                } finally {
+                  reader.cancel().catch(() => {});
+                }
+
+                // Sort by time descending
+                vercelLogs.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+                vercelLogs = vercelLogs.slice(0, 50);
+              }
+            } finally {
+              clearTimeout(timeout);
             }
           }
         }
