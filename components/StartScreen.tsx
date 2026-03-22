@@ -540,8 +540,10 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
           {/* Action buttons group */}
           <div className="space-y-4">
           {(() => {
-            const answers = profile?.researchAnswersSubmitted ?? 0;
+            const rawAnswers = profile?.researchAnswersSubmitted ?? 0;
             const graduated = signedIn && (profile?.researchGraduated ?? false); // 10+ = H2H unlocked
+            // If graduated but DB count is low (manually modified), treat as at least 10
+            const answers = graduated ? Math.max(rawAnswers, 10) : rawAnswers;
             const dailyUnlocked = signedIn && answers >= 20; // 20+ = daily + stats + intel
             const freeplayUnlocked = signedIn && answers >= 30; // 30 = freeplay (research complete)
             const researchCapped = answers >= 30;
