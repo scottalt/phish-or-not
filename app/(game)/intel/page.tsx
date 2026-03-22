@@ -5,6 +5,18 @@ import { requireAdmin } from '@/lib/adminAuth';
 
 export const dynamic = 'force-dynamic';
 
+interface PhaseData {
+  n: number;
+  players: number;
+  phishing: number;
+  legit: number;
+  accuracy: number;
+  bypassRate: number;
+  fpRate: number;
+  byDiff: { difficulty: string; total: number; bypassRate: number }[];
+  byTech: { technique: string; total: number; bypassRate: number }[];
+}
+
 interface IntelData {
   totalAnswers: number;
   uniqueParticipants: number;
@@ -43,6 +55,11 @@ interface IntelData {
     sample: number;
   };
   medianTimeByTechnique?: { technique: string; medianMs: number; sample: number }[];
+  phaseComparison?: {
+    phase1: PhaseData | null;
+    phase2: PhaseData | null;
+    combined: PhaseData | null;
+  };
   byBackground?: { background: string; total: number; accuracyRate: number }[];
   learningCurve?: { ordinal: number; accuracyRate: number; sample: number }[];
   readingDepth?: {
@@ -67,7 +84,7 @@ async function getIntel(): Promise<IntelData | null> {
     const answers = await fetchAllRows(({ from, to }) =>
       supabase
         .from('answers')
-        .select('correct, technique, is_phishing, is_genai_suspected, genai_confidence, prose_fluency, grammar_quality, confidence, time_from_render_ms, difficulty, type, card_source, headers_opened, url_inspected, auth_status, has_reply_to, has_url, player_id, answer_ordinal, scroll_depth_pct, session_id, players!player_id(background)')
+        .select('correct, technique, is_phishing, is_genai_suspected, genai_confidence, prose_fluency, grammar_quality, confidence, time_from_render_ms, difficulty, type, card_source, headers_opened, url_inspected, auth_status, auth_visible, has_reply_to, has_url, player_id, answer_ordinal, scroll_depth_pct, session_id, players!player_id(background)')
         .eq('game_mode', 'research')
         .range(from, to),
     );
@@ -215,6 +232,56 @@ async function getIntel(): Promise<IntelData | null> {
     const scrollDepths = mobileAnswers.map((a) => a.scroll_depth_pct).filter((v): v is number => v != null);
     const medianScrollDepth = scrollDepths.length ? median(scrollDepths) : null;
 
+    // Phase comparison: auth_visible=true (Phase 1) vs auth_visible=false (Phase 2)
+    const phase1Answers = answers.filter((a) => a.auth_visible !== false); // true or null = Phase 1
+    const phase2Answers = answers.filter((a) => a.auth_visible === false);
+
+    function phaseStats(subset: typeof answers) {
+      const n = subset.length;
+      if (n === 0) return null;
+      const players = new Set(subset.map((a) => a.player_id).filter(Boolean)).size;
+      const phishing = subset.filter((a) => a.is_phishing);
+      const legit = subset.filter((a) => !a.is_phishing);
+      const bypassRate = phishing.length ? Math.round((phishing.filter((a) => !a.correct).length / phishing.length) * 100) : 0;
+      const fpRate = legit.length ? Math.round((legit.filter((a) => !a.correct).length / legit.length) * 100) : 0;
+      const accuracy = Math.round((subset.filter((a) => a.correct).length / n) * 100);
+
+      // Bypass by difficulty
+      const DIFF_ORDER = ['easy', 'medium', 'hard', 'extreme'];
+      const diffMap: Record<string, { total: number; bypassed: number }> = {};
+      for (const a of phishing) {
+        if (!a.difficulty) continue;
+        if (!diffMap[a.difficulty]) diffMap[a.difficulty] = { total: 0, bypassed: 0 };
+        diffMap[a.difficulty].total++;
+        if (!a.correct) diffMap[a.difficulty].bypassed++;
+      }
+      const byDiff = DIFF_ORDER
+        .filter((d) => diffMap[d] && diffMap[d].total >= 3)
+        .map((d) => ({ difficulty: d, total: diffMap[d].total, bypassRate: Math.round((diffMap[d].bypassed / diffMap[d].total) * 100) }));
+
+      // Bypass by technique (top 5)
+      const techMap: Record<string, { total: number; bypassed: number }> = {};
+      for (const a of phishing) {
+        if (!a.technique) continue;
+        if (!techMap[a.technique]) techMap[a.technique] = { total: 0, bypassed: 0 };
+        techMap[a.technique].total++;
+        if (!a.correct) techMap[a.technique].bypassed++;
+      }
+      const byTech = Object.entries(techMap)
+        .filter(([, v]) => v.total >= 3)
+        .map(([t, v]) => ({ technique: t, total: v.total, bypassRate: Math.round((v.bypassed / v.total) * 100) }))
+        .sort((a, b) => b.bypassRate - a.bypassRate)
+        .slice(0, 5);
+
+      return { n, players, phishing: phishing.length, legit: legit.length, accuracy, bypassRate, fpRate, byDiff, byTech };
+    }
+
+    const phaseComparison = {
+      phase1: phaseStats(phase1Answers),
+      phase2: phaseStats(phase2Answers),
+      combined: phaseStats(answers),
+    };
+
     return {
       totalAnswers: total,
       uniqueParticipants,
@@ -240,6 +307,7 @@ async function getIntel(): Promise<IntelData | null> {
       },
       authTrap: { bypassRate: authTrapBypassRate, sample: authTrapAnswers.length },
       medianTimeByTechnique,
+      phaseComparison,
       learningCurve: learningCurve.length > 0 ? learningCurve : undefined,
       readingDepth: {
         deepReadAccuracy,
@@ -351,6 +419,107 @@ export default async function IntelPage() {
               <div className="grid grid-cols-2 gap-3">
                 <StatBlock label="PHISHING ANSWERS" value={(data.phishingAnswers).toLocaleString()} />
                 <StatBlock label="LEGIT ANSWERS" value={(data.legitAnswers ?? 0).toLocaleString()} />
+              </div>
+            )}
+
+            {/* Phase comparison */}
+            {data.phaseComparison && (data.phaseComparison.phase1 || data.phaseComparison.phase2) && (
+              <div className="term-border bg-[#060c06]">
+                <div className="border-b border-[rgba(0,255,65,0.35)] px-3 py-1.5 flex items-center justify-between">
+                  <span className="text-[#00aa28] text-sm tracking-widest">PHASE COMPARISON</span>
+                  <span className="text-[#003a0e] text-sm font-mono">auth headers visible → removed</span>
+                </div>
+                <div className="px-3 py-3">
+                  {/* Phase overview table */}
+                  <table className="w-full text-sm font-mono">
+                    <thead>
+                      <tr className="text-[#003a0e]">
+                        <th className="text-left pb-2"></th>
+                        {data.phaseComparison.phase1 && <th className="text-right pb-2">PHASE 1</th>}
+                        {data.phaseComparison.phase2 && <th className="text-right pb-2">PHASE 2</th>}
+                        <th className="text-right pb-2">COMBINED</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-[#00aa28]">
+                      <tr>
+                        <td className="py-1 text-[#003a0e]">ANSWERS</td>
+                        {data.phaseComparison.phase1 && <td className="text-right text-[#00ff41]">{data.phaseComparison.phase1.n.toLocaleString()}</td>}
+                        {data.phaseComparison.phase2 && <td className="text-right text-[#00ff41]">{data.phaseComparison.phase2.n.toLocaleString()}</td>}
+                        <td className="text-right text-[#00ff41]">{data.phaseComparison.combined?.n.toLocaleString()}</td>
+                      </tr>
+                      <tr>
+                        <td className="py-1 text-[#003a0e]">PARTICIPANTS</td>
+                        {data.phaseComparison.phase1 && <td className="text-right">{data.phaseComparison.phase1.players}</td>}
+                        {data.phaseComparison.phase2 && <td className="text-right">{data.phaseComparison.phase2.players}</td>}
+                        <td className="text-right">{data.phaseComparison.combined?.players}</td>
+                      </tr>
+                      <tr>
+                        <td className="py-1 text-[#003a0e]">ACCURACY</td>
+                        {data.phaseComparison.phase1 && <td className="text-right text-[#00ff41]">{data.phaseComparison.phase1.accuracy}%</td>}
+                        {data.phaseComparison.phase2 && <td className="text-right text-[#00ff41]">{data.phaseComparison.phase2.accuracy}%</td>}
+                        <td className="text-right text-[#00ff41]">{data.phaseComparison.combined?.accuracy}%</td>
+                      </tr>
+                      <tr>
+                        <td className="py-1 text-[#003a0e]">BYPASS RATE</td>
+                        {data.phaseComparison.phase1 && <td className="text-right text-[#ff3333]">{data.phaseComparison.phase1.bypassRate}%</td>}
+                        {data.phaseComparison.phase2 && <td className="text-right text-[#ff3333]">{data.phaseComparison.phase2.bypassRate}%</td>}
+                        <td className="text-right text-[#ff3333]">{data.phaseComparison.combined?.bypassRate}%</td>
+                      </tr>
+                      <tr>
+                        <td className="py-1 text-[#003a0e]">FALSE POSITIVE</td>
+                        {data.phaseComparison.phase1 && <td className="text-right text-[#ffaa00]">{data.phaseComparison.phase1.fpRate}%</td>}
+                        {data.phaseComparison.phase2 && <td className="text-right text-[#ffaa00]">{data.phaseComparison.phase2.fpRate}%</td>}
+                        <td className="text-right text-[#ffaa00]">{data.phaseComparison.combined?.fpRate}%</td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  {/* Bypass by difficulty per phase */}
+                  {(() => {
+                    const phases = [
+                      data.phaseComparison.phase1 ? { label: 'PHASE 1', data: data.phaseComparison.phase1 } : null,
+                      data.phaseComparison.phase2 ? { label: 'PHASE 2', data: data.phaseComparison.phase2 } : null,
+                      data.phaseComparison.combined ? { label: 'COMBINED', data: data.phaseComparison.combined } : null,
+                    ].filter(Boolean) as { label: string; data: PhaseData }[];
+
+                    // Get all difficulties across phases
+                    const allDiffs = [...new Set(phases.flatMap((p) => p.data.byDiff.map((d) => d.difficulty)))];
+                    const DIFF_ORDER = ['easy', 'medium', 'hard', 'extreme'];
+                    const diffs = DIFF_ORDER.filter((d) => allDiffs.includes(d));
+
+                    if (diffs.length === 0) return null;
+
+                    return (
+                      <div className="mt-4 pt-3 border-t border-[rgba(0,255,65,0.1)]">
+                        <div className="text-[#003a0e] text-sm font-mono mb-2">BYPASS RATE BY DIFFICULTY</div>
+                        <table className="w-full text-sm font-mono">
+                          <thead>
+                            <tr className="text-[#003a0e]">
+                              <th className="text-left pb-1"></th>
+                              {phases.map((p) => <th key={p.label} className="text-right pb-1">{p.label}</th>)}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {diffs.map((d) => (
+                              <tr key={d}>
+                                <td className="py-0.5 text-[#00aa28]">{d.toUpperCase()}</td>
+                                {phases.map((p) => {
+                                  const row = p.data.byDiff.find((x) => x.difficulty === d);
+                                  return (
+                                    <td key={p.label} className="text-right text-[#ff3333]">
+                                      {row ? `${row.bypassRate}%` : <span className="text-[#003a0e]">—</span>}
+                                      {row && <span className="text-[#003a0e] ml-1">n={row.total}</span>}
+                                    </td>
+                                  );
+                                })}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    );
+                  })()}
+                </div>
               </div>
             )}
 
