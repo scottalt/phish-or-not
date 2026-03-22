@@ -19,8 +19,8 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     date: '2026-03-22',
     category: 'milestone',
-    title: 'Phase 2 begins — instrument refined',
-    body: 'Three signals removed from the game view to isolate technique recognition as the core variable. Authentication headers (SPF/DKIM/DMARC) created a near-deterministic shortcut on easier cards. Reply-To only appeared on phishing emails, acting as a binary giveaway. Send Time was inconsistently populated across the deck. Phase 1 data is preserved for comparison analysis. Phase 2 focuses purely on whether players can detect phishing from email content, sender details, and URLs.',
+    title: 'Phase 2 begins — instrument refined for clarity',
+    body: 'Early participant feedback showed that authentication headers, Reply-To metadata, and Send Time were creating confusion rather than aiding detection. Players were anchoring on these technical signals instead of engaging with the phishing technique — the core variable under study. Three changes were made to sharpen the research instrument:\n\n• Authentication headers (SPF/DKIM/DMARC) removed — players treated PASS/FAIL as a definitive answer rather than one signal among many, short-circuiting technique recognition on easier cards.\n• Reply-To removed from feedback — only present on phishing emails in the dataset, making it a giveaway rather than a learning signal.\n• Send Time removed — inconsistently available across the deck, causing players to read into its absence rather than focus on email content.\n\nPhase 1 data with all signals visible is preserved for comparison analysis. Phase 2 narrows the task to what the research question actually asks: can you detect the phishing technique from the email content, sender details, and URLs alone?',
   },
 
   // Platform updates (chronological — page reverses for display)
