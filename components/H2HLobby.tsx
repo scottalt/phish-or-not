@@ -106,12 +106,12 @@ export function H2HLobby({ profile, onSearch, onBack }: Props) {
             [ SEARCH FOR OPPONENT ]
           </button>
 
-          {/* Back button */}
+          {/* Back to home */}
           <button
             onClick={onBack}
-            className="w-full py-2 text-[var(--c-muted)] font-mono text-sm tracking-widest hover:text-[var(--c-secondary)] active:scale-95 transition-all"
+            className="w-full py-3 term-border border-[color-mix(in_srgb,var(--c-primary)_30%,transparent)] text-[var(--c-secondary)] font-mono text-sm tracking-widest hover:text-[var(--c-primary)] hover:border-[var(--c-primary)] active:scale-95 transition-all"
           >
-            BACK
+            [ BACK TO TERMINAL ]
           </button>
         </div>
       </div>
