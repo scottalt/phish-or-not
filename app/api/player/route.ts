@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { getSupabaseAdminClient } from '@/lib/supabase';
 import { redis } from '@/lib/redis';
 import type { PlayerBackground, PlayerProfile } from '@/lib/types';
+import { RESEARCH_GRADUATION_ANSWERS } from '@/lib/xp';
 import filter from 'leo-profanity';
 
 const VALID_BACKGROUNDS: PlayerBackground[] = ['other', 'technical', 'infosec', 'prefer_not_to_say'];
@@ -81,6 +82,12 @@ export async function GET(req: NextRequest) {
   ]);
 
   const achievements = (achievementRows ?? []).map((r: { achievement_id: string }) => r.achievement_id);
+
+  // Retroactive graduation: if player has enough research answers but flag is false, update it
+  if (!(row.research_graduated as boolean) && (researchAnswersSubmitted ?? 0) >= RESEARCH_GRADUATION_ANSWERS) {
+    await admin.from('players').update({ research_graduated: true, updated_at: new Date().toISOString() }).eq('id', row.id as string);
+    row.research_graduated = true;
+  }
 
   // Compute cooldown info from current rate limit state
   const hUsed = hourlyCount ?? 0;
