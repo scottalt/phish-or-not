@@ -63,6 +63,7 @@ interface AuthenticatedPlayer {
   id: string;
   display_name: string;
   research_graduated: boolean;
+  featured_badge: string | null;
 }
 
 async function getAuthenticatedPlayer(): Promise<AuthenticatedPlayer | null> {
@@ -78,7 +79,7 @@ async function getAuthenticatedPlayer(): Promise<AuthenticatedPlayer | null> {
   const admin = getSupabaseAdminClient();
   const { data: player } = await admin
     .from('players')
-    .select('id, display_name, research_graduated')
+    .select('id, display_name, research_graduated, featured_badge')
     .eq('auth_id', user.id)
     .single();
 
@@ -91,6 +92,7 @@ interface QueueEntry {
   playerId: string;
   displayName: string;
   rankPoints: number;
+  featuredBadge: string | null;
   joinedAt: number;
 }
 
@@ -129,6 +131,7 @@ export async function POST() {
     playerId,
     displayName: player.display_name,
     rankPoints,
+    featuredBadge: player.featured_badge ?? null,
     joinedAt: now,
   };
 

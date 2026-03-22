@@ -3,13 +3,14 @@
 import { useState } from 'react';
 import { usePlayer } from '@/lib/usePlayer';
 import { THEMES, isThemeUnlocked } from '@/lib/themes';
+import { ACHIEVEMENTS, RARITY_COLORS } from '@/lib/achievements';
 import { useTheme } from '@/lib/ThemeContext';
 import Link from 'next/link';
 
 type Tab = 'themes' | 'badges';
 
 export default function InventoryPage() {
-  const { profile, loading, signedIn } = usePlayer();
+  const { profile, loading, signedIn, refreshProfile } = usePlayer();
   const { theme: activeTheme, setThemeId } = useTheme();
   const [tab, setTab] = useState<Tab>('themes');
 
@@ -138,9 +139,79 @@ export default function InventoryPage() {
         )}
 
         {tab === 'badges' && (
-          <div className="term-border bg-[var(--c-bg)] px-4 py-8 text-center">
-            <div className="text-[var(--c-secondary)] text-sm font-mono tracking-widest">COMING_SOON</div>
-            <div className="text-[var(--c-muted)] text-sm font-mono mt-2">Badge collection is under development.</div>
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+            {ACHIEVEMENTS.map((achievement) => {
+              const earned = profile.achievements?.includes(achievement.id) ?? false;
+              const featured = profile.featuredBadge === achievement.id;
+              const rarityColor = RARITY_COLORS[achievement.rarity];
+
+              return (
+                <button
+                  key={achievement.id}
+                  disabled={!earned}
+                  onClick={async () => {
+                    if (!earned) return;
+                    const newBadgeId = featured ? null : achievement.id;
+                    await fetch('/api/player/featured-badge', {
+                      method: 'PATCH',
+                      body: JSON.stringify({ badgeId: newBadgeId }),
+                    });
+                    refreshProfile();
+                  }}
+                  className={`text-left transition-all term-border bg-[var(--c-bg)] p-3 ${
+                    earned
+                      ? 'hover:scale-[1.02] cursor-pointer'
+                      : 'opacity-40 cursor-not-allowed'
+                  }`}
+                  style={{
+                    borderColor: featured ? rarityColor : undefined,
+                    boxShadow: featured
+                      ? `0 0 12px color-mix(in srgb, ${rarityColor} 25%, transparent)`
+                      : 'none',
+                  }}
+                >
+                  {/* Icon */}
+                  <div className="text-2xl text-center mb-1" style={{ color: earned ? rarityColor : '#555' }}>
+                    {earned ? achievement.icon : '🔒'}
+                  </div>
+
+                  {/* Name */}
+                  <div
+                    className="text-xs font-mono font-bold tracking-widest text-center mb-0.5"
+                    style={{ color: earned ? rarityColor : '#555' }}
+                  >
+                    {achievement.name}
+                  </div>
+
+                  {/* Description */}
+                  <div className="text-[10px] font-mono text-center mb-2" style={{ color: earned ? 'var(--c-secondary)' : '#444' }}>
+                    {achievement.description}
+                  </div>
+
+                  {/* Rarity label */}
+                  <div
+                    className="text-[10px] font-mono tracking-widest text-center"
+                    style={{ color: earned ? rarityColor : '#555' }}
+                  >
+                    {achievement.rarity.toUpperCase()}
+                  </div>
+
+                  {/* Featured badge */}
+                  {featured && (
+                    <div
+                      className="text-[10px] font-mono font-bold tracking-widest px-1.5 py-0.5 border mt-1.5 text-center"
+                      style={{
+                        color: rarityColor,
+                        borderColor: `color-mix(in srgb, ${rarityColor} 50%, transparent)`,
+                        backgroundColor: `color-mix(in srgb, ${rarityColor} 8%, transparent)`,
+                      }}
+                    >
+                      FEATURED
+                    </div>
+                  )}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>

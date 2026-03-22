@@ -5,8 +5,6 @@ import { usePlayer } from '@/lib/usePlayer';
 import { LevelMeter } from '@/components/LevelMeter';
 import { getRankFromLevel } from '@/lib/rank';
 import { ACHIEVEMENTS, RARITY_COLORS, CATEGORY_LABELS, type AchievementCategory } from '@/lib/achievements';
-import { THEMES, isThemeUnlocked, type ThemeDef } from '@/lib/themes';
-import { useTheme } from '@/lib/ThemeContext';
 import Link from 'next/link';
 import type { PlayerBackground } from '@/lib/types';
 
@@ -32,7 +30,6 @@ const BACKGROUND_OPTIONS: { value: PlayerBackground; label: string }[] = [
 
 export default function ProfilePage() {
   const { profile, loading, signedIn, applyProfile } = usePlayer();
-  const { theme: activeTheme, setThemeId } = useTheme();
   const [editingCallsign, setEditingCallsign] = useState(false);
   const [callsignValue, setCallsignValue] = useState('');
   const [callsignSaving, setCallsignSaving] = useState(false);
@@ -308,85 +305,10 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Terminal Themes — prominent placement */}
-        <div className="term-border bg-[var(--c-bg)]">
-          <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] px-3 py-1.5">
-            <span className="text-[var(--c-secondary)] text-sm lg:text-base tracking-widest">TERMINAL_THEMES</span>
-          </div>
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 p-3">
-            {THEMES.map((t) => {
-              const unlocked = isThemeUnlocked(t, profile.level, profile.researchGraduated);
-              const isActive = activeTheme.id === t.id;
-              return (
-                <button
-                  key={t.id}
-                  disabled={!unlocked}
-                  onClick={() => { if (unlocked) setThemeId(t.id); }}
-                  className={`text-left transition-all ${unlocked ? 'hover:scale-[1.02]' : 'opacity-50 cursor-not-allowed'}`}
-                >
-                  {/* Mini terminal preview */}
-                  <div
-                    className="rounded-sm overflow-hidden border"
-                    style={{
-                      borderColor: unlocked
-                        ? isActive
-                          ? t.colors.primary
-                          : `color-mix(in srgb, ${t.colors.primary} 40%, transparent)`
-                        : '#222',
-                      backgroundColor: t.colors.bg,
-                      boxShadow: isActive ? `0 0 12px color-mix(in srgb, ${t.colors.primary} 25%, transparent)` : 'none',
-                    }}
-                  >
-                    {/* Preview header bar */}
-                    <div
-                      className="px-2 py-1 flex items-center justify-between"
-                      style={{ borderBottom: `1px solid color-mix(in srgb, ${t.colors.primary} 30%, transparent)` }}
-                    >
-                      <span className="text-[10px] font-mono tracking-widest font-bold" style={{ color: t.colors.secondary }}>
-                        {t.name}
-                      </span>
-                      <span className="text-[10px] font-mono" style={{ color: t.colors.muted }}>
-                        {isActive ? '[ ON ]' : unlocked ? '' : ''}
-                      </span>
-                    </div>
-                    {/* Preview body */}
-                    <div className="px-2 py-2 space-y-1">
-                      <div className="text-[11px] font-mono" style={{ color: t.colors.primary }}>
-                        {'>'} SYSTEM READY
-                      </div>
-                      <div className="text-[11px] font-mono" style={{ color: t.colors.secondary }}>
-                        {'>'} SCANNING...
-                      </div>
-                      <div className="flex gap-1 mt-1">
-                        {[t.colors.primary, t.colors.secondary, t.colors.muted, t.colors.dark].map((c, i) => (
-                          <div key={i} className="w-3 h-3 rounded-sm" style={{ backgroundColor: c }} />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  {/* Label below preview */}
-                  <div className="mt-1.5 px-0.5">
-                    <div className="text-xs font-mono font-bold" style={{ color: unlocked ? t.colors.primary : '#555' }}>
-                      {t.name}
-                    </div>
-                    <div className="text-[10px] font-mono" style={{ color: unlocked ? t.colors.secondary : '#444' }}>
-                      {t.subtitle}
-                    </div>
-                    {!unlocked && (
-                      <div className="text-[10px] font-mono text-[#555] mt-0.5">
-                        &#128274; {!profile.researchGraduated ? 'GRADUATE RESEARCH' : t.unlockLabel}
-                      </div>
-                    )}
-                    {isActive && (
-                      <div className="text-[10px] font-mono mt-0.5" style={{ color: t.colors.primary }}>
-                        ACTIVE
-                      </div>
-                    )}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+        <div className="text-center">
+          <Link href="/inventory" className="text-[var(--c-secondary)] text-sm font-mono hover:text-[var(--c-primary)] transition-colors tracking-widest">
+            [ MANAGE THEMES + BADGES IN INVENTORY ]
+          </Link>
         </div>
 
         {/* Collapsible sections: rank ladder + achievements */}

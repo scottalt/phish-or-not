@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { getRankFromPoints, H2H_CARDS_PER_MATCH } from '@/lib/h2h';
 import type { H2HRank } from '@/lib/h2h';
+import { ACHIEVEMENTS } from '@/lib/achievements';
 
 interface Props {
   matchId: string;
@@ -18,6 +19,8 @@ interface Props {
 interface MatchData {
   myName: string;
   oppName: string;
+  myBadgeIcon: string | null;
+  oppBadgeIcon: string | null;
   myCards: number;
   oppCards: number;
   myTimeMs: number;
@@ -94,9 +97,16 @@ export function H2HResult({
           const oppId = isP1 ? m.player2Id : m.player1Id;
           const oppPointsDelta = isP1 ? m.player2PointsDelta : m.player1PointsDelta;
 
+          const myPlayer = data.players[playerId];
+          const oppPlayer = data.players[oppId];
+          const myBadgeId = myPlayer?.featuredBadge ?? null;
+          const oppBadgeId = oppPlayer?.featuredBadge ?? null;
+
           setMatchData({
-            myName: data.players[playerId] ?? 'YOU',
-            oppName: data.players[oppId] ?? 'OPPONENT',
+            myName: myPlayer?.displayName ?? 'YOU',
+            oppName: oppPlayer?.displayName ?? 'OPPONENT',
+            myBadgeIcon: myBadgeId ? (ACHIEVEMENTS.find(a => a.id === myBadgeId)?.icon ?? null) : null,
+            oppBadgeIcon: oppBadgeId ? (ACHIEVEMENTS.find(a => a.id === oppBadgeId)?.icon ?? null) : null,
             myCards,
             oppCards,
             myTimeMs,
@@ -186,9 +196,11 @@ export function H2HResult({
       {matchData && (
         <div className="w-full border border-[var(--c-border)] p-3 text-sm">
           <p className="text-[var(--c-fg)]">
+            {matchData.myBadgeIcon && <span className="mr-1">{matchData.myBadgeIcon}</span>}
             {playerSummary('YOU', matchData.myCards, matchData.myTimeMs, matchData.myEliminated)}
           </p>
           <p className="text-[var(--c-muted)] mt-1">
+            {matchData.oppBadgeIcon && <span className="mr-1">{matchData.oppBadgeIcon}</span>}
             {playerSummary('OPP', matchData.oppCards, matchData.oppTimeMs, matchData.oppEliminated)}
           </p>
         </div>

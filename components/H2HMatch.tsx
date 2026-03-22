@@ -12,6 +12,7 @@ import {
   unsubscribeFromMatch,
 } from '@/lib/h2h-realtime';
 import type { MatchProgressEvent, MatchResultEvent } from '@/lib/h2h-realtime';
+import { ACHIEVEMENTS } from '@/lib/achievements';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -232,6 +233,8 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
   const [opponentName, setOpponentName] = useState<string>('OPPONENT');
   const [opponentIndex, setOpponentIndex] = useState(0);
   const [opponentEliminated, setOpponentEliminated] = useState(false);
+  const [opponentBadgeIcon, setOpponentBadgeIcon] = useState<string | null>(null);
+  const [myBadgeIcon, setMyBadgeIcon] = useState<string | null>(null);
 
   // ── Ready-up lobby ──
   const [ready, setReady] = useState(false);
@@ -306,16 +309,26 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
 
         setCards(cardsData);
 
-        // Determine opponent name
+        // Determine opponent name and badges
         const isPlayer1 = playerId === matchData.match.player1Id;
         const opponentId = isPlayer1
           ? matchData.match.player2Id
           : matchData.match.player1Id;
 
         if (opponentId && matchData.players[opponentId]) {
-          setOpponentName(matchData.players[opponentId]);
+          const opp = matchData.players[opponentId];
+          setOpponentName(opp.displayName);
+          if (opp.featuredBadge) {
+            setOpponentBadgeIcon(ACHIEVEMENTS.find(a => a.id === opp.featuredBadge)?.icon ?? null);
+          }
         } else if (isGhost) {
           setOpponentName('GHOST');
+        }
+
+        // Set own badge
+        const me = matchData.players[playerId];
+        if (me?.featuredBadge) {
+          setMyBadgeIcon(ACHIEVEMENTS.find(a => a.id === me.featuredBadge)?.icon ?? null);
         }
 
         // Restore progress if reconnecting
@@ -690,7 +703,9 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
               OPPONENT FOUND
             </div>
             <div className="text-[var(--c-secondary)] text-sm font-mono">
-              vs {opponentName}
+              {myBadgeIcon && <span className="text-[var(--c-primary)] mr-1">{myBadgeIcon}</span>}
+              YOU vs {opponentName}
+              {opponentBadgeIcon && <span className="text-[var(--c-primary)] ml-1">{opponentBadgeIcon}</span>}
             </div>
 
             {/* Ready status */}
@@ -754,7 +769,7 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
         <div className="w-full term-border px-3 py-2">
           <div className="flex items-center justify-between text-sm font-mono">
             <span className="text-[var(--c-secondary)]">
-              OPP: <span className="text-[var(--c-primary)]">{opponentName}</span>
+              OPP: {opponentBadgeIcon && <span className="text-[var(--c-primary)]">{opponentBadgeIcon} </span>}<span className="text-[var(--c-primary)]">{opponentName}</span>
             </span>
             <div className="flex items-center gap-2">
               <ProgressSquares completed={opponentIndex} total={H2H_CARDS_PER_MATCH} />
@@ -835,7 +850,7 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
       <div className="w-full term-border px-3 py-2">
         <div className="flex items-center justify-between text-sm font-mono">
           <span className="text-[var(--c-secondary)]">
-            OPP: <span className="text-[var(--c-primary)]">{opponentName}</span>
+            OPP: {opponentBadgeIcon && <span className="text-[var(--c-primary)]">{opponentBadgeIcon} </span>}<span className="text-[var(--c-primary)]">{opponentName}</span>
           </span>
           <div className="flex items-center gap-2">
             <ProgressSquares completed={opponentIndex} total={H2H_CARDS_PER_MATCH} />

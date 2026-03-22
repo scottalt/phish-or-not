@@ -69,12 +69,12 @@ export async function GET(
   const playerIds = [match.player1_id, match.player2_id].filter(Boolean);
   const { data: players } = await admin
     .from('players')
-    .select('id, display_name')
+    .select('id, display_name, featured_badge')
     .in('id', playerIds);
 
-  const playerMap: Record<string, string> = {};
+  const playerMap: Record<string, { displayName: string; featuredBadge: string | null }> = {};
   for (const p of players ?? []) {
-    playerMap[p.id] = p.display_name;
+    playerMap[p.id] = { displayName: p.display_name, featuredBadge: p.featured_badge ?? null };
   }
 
   // For completed matches, include full card data for review (safe to reveal post-match)
