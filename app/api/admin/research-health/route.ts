@@ -252,6 +252,16 @@ export async function GET() {
     const vercelProjectId = process.env.VERCEL_PROJECT_ID;
     const vercelTeamId = process.env.VERCEL_TEAM_ID;
 
+    const vercelLogsMissing = [
+      !vercelToken && 'VERCEL_TOKEN',
+      !vercelProjectId && 'VERCEL_PROJECT_ID',
+      !vercelTeamId && 'VERCEL_TEAM_ID',
+    ].filter(Boolean);
+
+    if (vercelLogsMissing.length > 0) {
+      vercelLogsError = `Missing env vars: ${vercelLogsMissing.join(', ')}`;
+    }
+
     if (vercelToken && vercelProjectId && vercelTeamId) {
       try {
         const logsParams = new URLSearchParams({
@@ -336,7 +346,7 @@ export async function GET() {
       })),
       vercelLogs: vercelLogs.length > 0 ? vercelLogs : undefined,
       vercelLogsError: vercelLogsError ?? undefined,
-      vercelLogsConfigured: Boolean(vercelToken && vercelProjectId && vercelTeamId),
+      vercelLogsConfigured: Boolean(vercelToken),
     });
   } catch (err) {
     console.error('[research-health] error:', err);
