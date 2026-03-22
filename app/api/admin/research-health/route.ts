@@ -87,7 +87,7 @@ export async function GET() {
 
         // Sort by most recent activity (same order as uniquePlayerIds)
         const playerMap = new Map((players ?? []).map((p) => [p.id, p]));
-        return { data: topPlayerIds.map((id) => playerMap.get(id)).filter(Boolean) };
+        return { data: topPlayerIds.map((id) => playerMap.get(id)).filter((p): p is NonNullable<typeof p> => Boolean(p)) };
       })(),
 
       // 3. Recent research answers (last 24h) — the key metric
