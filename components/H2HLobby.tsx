@@ -15,6 +15,7 @@ export function H2HLobby({ profile, onSearch, onBack }: Props) {
   const [h2hStats, setH2HStats] = useState<{
     rankLabel: string; rankPoints: number; rankColor: string;
     wins: number; losses: number; winStreak: number; bestWinStreak: number;
+    peakRankPoints: number;
   } | null>(null);
 
   useEffect(() => {
@@ -114,6 +115,48 @@ export function H2HLobby({ profile, onSearch, onBack }: Props) {
           </button>
         </div>
       </div>
+
+      {/* H2H stats */}
+      {h2hStats && (h2hStats.wins > 0 || h2hStats.losses > 0) && (
+        <div className="w-full term-border bg-[var(--c-bg)]">
+          <div className="px-4 py-2 border-b border-[rgba(255,0,128,0.2)]">
+            <span className="text-[#ff0080] text-sm tracking-widest">MATCH_STATS</span>
+          </div>
+          <div className="px-4 py-3">
+            {/* Record row */}
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <div>
+                <div className="text-[var(--c-primary)] text-xl font-mono font-black">{h2hStats.wins}</div>
+                <div className="text-[var(--c-secondary)] text-xs font-mono">WINS</div>
+              </div>
+              <div>
+                <div className="text-[#ff3333] text-xl font-mono font-black">{h2hStats.losses}</div>
+                <div className="text-[var(--c-secondary)] text-xs font-mono">LOSSES</div>
+              </div>
+              <div>
+                <div className="text-[var(--c-primary)] text-xl font-mono font-black">
+                  {Math.round((h2hStats.wins / (h2hStats.wins + h2hStats.losses)) * 100)}%
+                </div>
+                <div className="text-[var(--c-secondary)] text-xs font-mono">WINRATE</div>
+              </div>
+            </div>
+            {/* Streaks */}
+            <div className="flex justify-between mt-3 pt-3 border-t border-[color-mix(in_srgb,var(--c-primary)_10%,transparent)] text-sm font-mono">
+              <span className="text-[var(--c-secondary)]">
+                Streak: <span className="text-[var(--c-primary)] font-bold">{h2hStats.winStreak}</span>
+              </span>
+              <span className="text-[var(--c-secondary)]">
+                Best: <span className="text-[var(--c-primary)] font-bold">{h2hStats.bestWinStreak}</span>
+              </span>
+              <span className="text-[var(--c-secondary)]">
+                Peak: <span style={{ color: getRankFromPoints(h2hStats.peakRankPoints ?? h2hStats.rankPoints).color }} className="font-bold">
+                  {h2hStats.peakRankPoints ?? h2hStats.rankPoints}
+                </span>
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Rank tiers — always visible, compact */}
       <div className="w-full term-border bg-[var(--c-bg)]">
