@@ -683,15 +683,9 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
             </div>
           )}
 
-          {/* Post-full-unlock features: Expert + Stats + Intel (20+ answers) */}
+          {/* Post-full-unlock features: Stats + Intel (20+ answers) */}
           {signedIn && (profile?.researchAnswersSubmitted ?? 0) >= 20 ? (
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-              <button
-                onClick={() => tryStart('expert')}
-                className="col-span-2 lg:col-span-1 py-3 term-border border-[color-mix(in_srgb,var(--c-accent)_40%,transparent)] text-center text-[var(--c-accent)] font-mono font-bold tracking-widest text-sm hover:bg-[color-mix(in_srgb,var(--c-accent)_5%,transparent)] transition-all"
-              >
-                [ EXPERT ]
-              </button>
+            <div className="grid grid-cols-2 gap-3">
               <Link
                 href="/stats"
                 className="block w-full py-3 term-border text-center text-[var(--c-secondary)] font-mono font-bold tracking-widest text-sm hover:bg-[color-mix(in_srgb,var(--c-primary)_5%,transparent)] transition-all"

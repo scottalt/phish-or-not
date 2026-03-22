@@ -200,26 +200,10 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
       return;
     }
 
+    // Expert mode merged into freeplay — redirect silently
     if (newMode === 'expert') {
-      setPhase('loading' as GamePhase);
-      fetch(`/api/cards/expert?sessionId=${encodeURIComponent(sessionId.current)}`)
-        .then((r) => r.json())
-        .then((cards: Card[]) => {
-          if (!cards.length) {
-            // No extreme cards yet — fall back to freeplay silently
-            setMode('freeplay');
-            return fetchFreeplayDeck();
-          }
-          const arr = [...cards];
-          for (let i = arr.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [arr[i], arr[j]] = [arr[j], arr[i]];
-          }
-          setDeck(arr.slice(0, ROUND_SIZE));
-          setPhase('playing');
-        })
-        .catch(() => setPhase('start'));
-      return;
+      newMode = 'freeplay';
+      setMode('freeplay');
     }
 
     // Freeplay and daily modes — fetch cards from server
@@ -541,7 +525,7 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
     return (
       <div className="flex items-center justify-center min-h-[200px]">
         <span className="text-[var(--c-secondary)] font-mono text-sm tracking-widest">
-          {mode === 'expert' ? 'LOADING EXPERT DECK...' : 'LOADING RESEARCH DATA...'}
+          LOADING...
         </span>
       </div>
     );

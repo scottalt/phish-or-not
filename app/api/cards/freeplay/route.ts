@@ -28,12 +28,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(existingCards.map(toSafeCard));
   }
 
-  // Fetch from DB — random selection of freeplay cards
+  // Fetch from DB — random selection from both freeplay and expert pools
   const supabase = getSupabaseAdminClient();
   const { data, error } = await supabase
     .from('cards_generated')
     .select('*')
-    .eq('pool', 'freeplay');
+    .in('pool', ['freeplay', 'expert']);
 
   if (error || !data || data.length === 0) {
     return NextResponse.json({ error: 'No cards available' }, { status: 500 });
