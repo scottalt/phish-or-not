@@ -327,6 +327,7 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
   const needsCallsign = signedIn && !profile?.displayName;
 
   const stage: 1 | 2 | 3 | 4 = researchCapped ? 4 : dailyUnlocked ? 3 : graduated ? 2 : 1;
+  const [questExpanded, setQuestExpanded] = useState(false);
 
   return (
     <div className={`w-full px-4 pb-safe flex flex-col gap-6 ${showButton ? 'max-w-xl' : 'max-w-md'}`}>
@@ -799,32 +800,44 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
             if (stage === 3) {
               return (
                 <div className="space-y-4">
-                  {/* Quest compact + research */}
+                  {/* Quest compact + research — expandable for detail */}
                   {currentQuest && (
                     <div className="term-border bg-[var(--c-bg)] border-[color-mix(in_srgb,var(--c-accent)_25%,transparent)]">
-                      <div className="px-4 py-3 space-y-2">
+                      <button
+                        onClick={() => setQuestExpanded(v => !v)}
+                        className="w-full px-4 py-3 text-left hover:bg-[color-mix(in_srgb,var(--c-accent)_3%,transparent)] transition-colors"
+                      >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <span className="text-xs text-[var(--c-accent)] tracking-widest">QUEST:</span>
                             <span>{currentQuest.icon}</span>
                             <span className="text-[var(--c-accent)] text-sm font-mono font-bold">{currentQuest.name}</span>
                           </div>
-                          <span className="text-[var(--c-accent)] text-sm font-mono font-bold">{currentQuestProgress}/{currentQuest.target}</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="flex-1 h-1.5 bg-[var(--c-dark)]">
-                            <div
-                              className="h-full bg-[var(--c-accent)] transition-all"
-                              style={{ width: `${(currentQuestProgress / currentQuest.target) * 100}%` }}
-                            />
+                          <div className="flex items-center gap-2">
+                            <span className="text-[var(--c-accent)] text-sm font-mono font-bold">{currentQuestProgress}/{currentQuest.target}</span>
+                            <span className="text-[var(--c-accent)] text-xs">{questExpanded ? '▲' : '▼'}</span>
                           </div>
-                          <button
-                            onClick={() => handleStart('research')}
-                            className="text-[var(--c-accent)] font-mono font-bold tracking-widest text-xs border border-[color-mix(in_srgb,var(--c-accent)_40%,transparent)] hover:bg-[color-mix(in_srgb,var(--c-accent)_8%,transparent)] px-3 py-1.5 active:scale-95 transition-all shrink-0"
-                          >
-                            RESEARCH
-                          </button>
                         </div>
+                        <div className="h-1.5 bg-[var(--c-dark)] mt-2">
+                          <div
+                            className="h-full bg-[var(--c-accent)] transition-all"
+                            style={{ width: `${(currentQuestProgress / currentQuest.target) * 100}%` }}
+                          />
+                        </div>
+                      </button>
+                      {questExpanded && (
+                        <div className="px-4 pb-3 space-y-3 border-t border-[color-mix(in_srgb,var(--c-accent)_15%,transparent)]">
+                          <div className="text-[var(--c-secondary)] text-sm font-mono leading-relaxed pt-3">{currentQuest.detail}</div>
+                          <div className="text-[var(--c-accent)] text-xs font-mono">Reward: +{currentQuest.xpReward} XP · Unlocks: {currentQuest.reward}</div>
+                        </div>
+                      )}
+                      <div className="px-4 pb-3">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleStart('research'); }}
+                          className="w-full py-3 term-border font-mono font-bold tracking-widest text-sm active:scale-95 transition-all border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] text-[var(--c-accent)] hover:bg-[color-mix(in_srgb,var(--c-accent)_8%,transparent)]"
+                        >
+                          [ RESEARCH MODE ]
+                        </button>
                       </div>
                     </div>
                   )}
