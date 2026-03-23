@@ -149,8 +149,8 @@ export function H2HLobby({ profile, onSearch, onBack }: Props) {
                 Best: <span className="text-[var(--c-primary)] font-bold">{h2hStats.bestWinStreak}</span>
               </span>
               <span className="text-[var(--c-secondary)]">
-                Peak: <span style={{ color: getRankFromPoints(h2hStats.peakRankPoints ?? h2hStats.rankPoints).color }} className="font-bold">
-                  {h2hStats.peakRankPoints ?? h2hStats.rankPoints}
+                Highest: <span style={{ color: getRankFromPoints(h2hStats.peakRankPoints ?? h2hStats.rankPoints).color }} className="font-bold">
+                  {h2hStats.peakRankPoints ?? h2hStats.rankPoints} pts
                 </span>
               </span>
             </div>

@@ -801,12 +801,12 @@ export default function ProfilePage() {
                     </div>
                     <div className="divide-y divide-[rgba(255,0,128,0.08)]">
                       <div className="px-3 py-2.5 flex items-center justify-between">
-                        <span className="text-[var(--c-secondary)] text-sm font-mono tracking-wider">PEAK RP</span>
-                        <span className="text-sm font-mono font-bold" style={{ color: getRankFromPoints(h2hStats.peakRankPoints).color }}>{h2hStats.peakRankPoints}</span>
+                        <span className="text-[var(--c-secondary)] text-sm font-mono tracking-wider">HIGHEST POINTS</span>
+                        <span className="text-sm font-mono font-bold" style={{ color: getRankFromPoints(h2hStats.peakRankPoints).color }}>{h2hStats.peakRankPoints} pts</span>
                       </div>
                       <div className="px-3 py-2.5 flex items-center justify-between">
-                        <span className="text-[var(--c-secondary)] text-sm font-mono tracking-wider">PEAK RANK</span>
-                        <span className="text-sm font-mono font-bold" style={{ color: getRankFromPoints(h2hStats.peakRankPoints).color }}>{getRankFromPoints(h2hStats.peakRankPoints).label}</span>
+                        <span className="text-[var(--c-secondary)] text-sm font-mono tracking-wider">HIGHEST RANK</span>
+                        <span className="text-sm font-mono font-bold" style={{ color: getRankFromPoints(h2hStats.peakRankPoints).color }}>{getRankFromPoints(h2hStats.peakRankPoints).icon} {getRankFromPoints(h2hStats.peakRankPoints).label}</span>
                       </div>
                     </div>
                   </div>
