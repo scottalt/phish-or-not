@@ -85,6 +85,12 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
     title: 'v1.9.0 — Simplified email view',
     body: 'Email authentication headers (SPF/DKIM/DMARC), Reply-To, and Send Time have been removed from the game view. These fields were inconsistently populated across the card deck, creating potential confounds. The game now focuses purely on identifying phishing techniques from email content, sender details, and URLs.',
   },
+  {
+    date: '2026-03-23',
+    category: 'update',
+    title: 'v1.9.1 — Privacy policy and terms of use',
+    body: 'Added privacy policy, terms of use, and educational disclaimer. Landing page footer now links to privacy, terms, and methodology.',
+  },
 ];
 
 /*
