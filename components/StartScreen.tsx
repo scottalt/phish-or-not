@@ -740,8 +740,8 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                           <span className="text-2xl">{currentQuest.icon}</span>
                           <div className="flex-1 min-w-0">
                             <div className="text-[var(--c-accent)] text-base font-mono font-bold tracking-widest">{currentQuest.name}</div>
-                            <div className="text-[var(--c-secondary)] text-sm font-mono mt-1">{currentQuest.description}</div>
-                            <div className="text-[var(--c-muted)] text-xs font-mono mt-1">Reward: +{currentQuest.xpReward} XP</div>
+                            <div className="text-[var(--c-secondary)] text-sm font-mono mt-2 leading-relaxed">{currentQuest.detail}</div>
+                            <div className="text-[var(--c-accent)] text-xs font-mono mt-2">Reward: +{currentQuest.xpReward} XP · Unlocks: {currentQuest.reward}</div>
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
@@ -759,10 +759,10 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                   {/* Big research button — separate from quest */}
                   <button
                     onClick={() => handleStart('research')}
-                    className="w-full py-4 term-border font-mono font-bold tracking-widest text-base active:scale-95 transition-all border-2 border-[color-mix(in_srgb,var(--c-accent)_60%,transparent)] text-[var(--c-accent)] hover:bg-[color-mix(in_srgb,var(--c-accent)_8%,transparent)]"
+                    className="w-full py-5 term-border font-mono font-bold tracking-widest text-lg active:scale-95 transition-all border-2 border-[color-mix(in_srgb,var(--c-accent)_60%,transparent)] text-[var(--c-accent)] hover:bg-[color-mix(in_srgb,var(--c-accent)_8%,transparent)]"
                   >
                     [ RESEARCH MODE ]
-                    <div className="text-[var(--c-secondary)] text-xs mt-1 font-normal tracking-wide">Analyze emails. Earn clearance.</div>
+                    <div className="text-[var(--c-secondary)] text-sm mt-1 font-normal tracking-wide">Analyze emails. Earn clearance.</div>
                   </button>
                   {versionLink}
                 </div>
@@ -795,7 +795,7 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                         </div>
                         <button
                           onClick={() => handleStart('research')}
-                          className="w-full py-3 term-border font-mono font-bold tracking-widest text-sm active:scale-95 transition-all border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] text-[var(--c-accent)] hover:bg-[color-mix(in_srgb,var(--c-accent)_8%,transparent)]"
+                          className="w-full py-4 term-border font-mono font-bold tracking-widest text-base active:scale-95 transition-all border-2 border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] text-[var(--c-accent)] hover:bg-[color-mix(in_srgb,var(--c-accent)_8%,transparent)]"
                         >
                           [ RESEARCH MODE ]
                         </button>
