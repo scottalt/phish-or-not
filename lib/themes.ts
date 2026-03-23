@@ -37,8 +37,8 @@ export const THEMES: ThemeDef[] = [
     },
   },
   {
-    id: 'amber-alert',
-    name: 'AMBER_ALERT',
+    id: 'amber-crt',
+    name: 'AMBER_CRT',
     subtitle: 'Vintage CRT warmth',
     unlockLevel: 7,
     unlockLabel: 'LINK_CHECKER (LVL 7)',
