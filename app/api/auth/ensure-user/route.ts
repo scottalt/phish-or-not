@@ -34,12 +34,14 @@ export async function POST(req: NextRequest) {
       email_confirm: true,
     });
 
-    if (error && !error.message.toLowerCase().includes('already been registered')) {
+    const alreadyRegistered = error?.message.toLowerCase().includes('already been registered');
+
+    if (error && !alreadyRegistered) {
       console.error('[ensure-user] createUser error:', error.message);
       return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });
     }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, existing: !!alreadyRegistered });
   } catch (err) {
     console.error('[ensure-user] unexpected error:', err);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });

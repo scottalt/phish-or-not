@@ -8,7 +8,7 @@ interface PlayerContextValue {
   profile: PlayerProfile | null;
   loading: boolean;
   signedIn: boolean;
-  signInWithEmail: (email: string) => Promise<{ error: string | null }>;
+  signInWithEmail: (email: string) => Promise<{ error: string | null; existing?: boolean }>;
   verifyOtp: (email: string, code: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -63,15 +63,16 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     try {
       // Pre-create the user via admin API so Supabase treats them as existing
       // and sends a 6-digit OTP code instead of a confirmation link.
-      await fetch('/api/auth/ensure-user', {
+      const ensureRes = await fetch('/api/auth/ensure-user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       });
+      const { existing } = ensureRes.ok ? await ensureRes.json() : { existing: false };
 
       const supabase = getSupabaseBrowserClient();
       const { error } = await supabase.auth.signInWithOtp({ email });
-      return { error: error?.message ?? null };
+      return { error: error?.message ?? null, existing: !!existing };
     } catch {
       return { error: 'Failed to send code' };
     }
