@@ -88,6 +88,7 @@ export default function ProfilePage() {
     outgoing: { requestId: string; to: { playerId: string; displayName: string } }[];
   } | null>(null);
   const [friendsLoading, setFriendsLoading] = useState(false);
+  const [friendsSubTab, setFriendsSubTab] = useState<'list' | 'incoming' | 'outgoing'>('list');
   const [addFriendCallsign, setAddFriendCallsign] = useState('');
   const [addFriendStatus, setAddFriendStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [addFriendMsg, setAddFriendMsg] = useState('');
@@ -1198,96 +1199,114 @@ export default function ProfilePage() {
 
             {friendsData && (
               <>
-                {/* Incoming requests */}
-                {friendsData.incoming.length > 0 && (
-                  <div className="term-border bg-[var(--c-bg)]">
-                    <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] px-3 py-1.5">
-                      <span className="text-[var(--c-secondary)] text-sm tracking-widest">INCOMING_REQUESTS ({friendsData.incoming.length})</span>
-                    </div>
-                    <div className="divide-y divide-[color-mix(in_srgb,var(--c-primary)_8%,transparent)]">
-                      {friendsData.incoming.map(req => (
-                        <div key={req.requestId} className="px-3 py-2 flex items-center justify-between">
-                          <span className="text-[var(--c-primary)] text-sm font-mono font-bold">{req.from.displayName}</span>
-                          <div className="flex gap-1.5">
-                            <button
-                              onClick={() => handleFriendAction(req.requestId, 'accept')}
-                              className="px-3 py-1 border border-[color-mix(in_srgb,var(--c-primary)_50%,transparent)] text-[var(--c-primary)] font-mono text-xs tracking-wider hover:bg-[color-mix(in_srgb,var(--c-primary)_6%,transparent)] active:scale-95 transition-all"
-                            >
-                              ACCEPT
-                            </button>
-                            <button
-                              onClick={() => handleFriendAction(req.requestId, 'reject')}
-                              className="px-3 py-1 border border-[color-mix(in_srgb,var(--c-primary)_25%,transparent)] text-[var(--c-muted)] font-mono text-xs tracking-wider hover:text-[#ff3333] hover:border-[#ff333350] active:scale-95 transition-all"
-                            >
-                              REJECT
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                {/* Sub-tabs */}
+                <div className="term-border bg-[var(--c-bg)] flex">
+                  {([
+                    { key: 'list' as const, label: 'FRIENDS', count: friendsData.friends.length },
+                    { key: 'incoming' as const, label: 'INCOMING', count: friendsData.incoming.length },
+                    { key: 'outgoing' as const, label: 'OUTGOING', count: friendsData.outgoing.length },
+                  ]).map((t) => (
+                    <button
+                      key={t.key}
+                      onClick={() => setFriendsSubTab(t.key)}
+                      className={`flex-1 py-2 text-xs font-mono tracking-widest transition-colors ${
+                        friendsSubTab === t.key
+                          ? 'text-[var(--c-primary)] bg-[color-mix(in_srgb,var(--c-primary)_6%,transparent)] border-b-2 border-[var(--c-primary)]'
+                          : 'text-[var(--c-secondary)] hover:text-[var(--c-primary)] border-b-2 border-transparent'
+                      }`}
+                    >
+                      {t.label}{t.count > 0 ? ` (${t.count})` : ''}
+                    </button>
+                  ))}
+                </div>
 
-                {/* Friends list */}
-                <div className="term-border bg-[var(--c-bg)]">
-                  <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] px-3 py-1.5">
-                    <span className="text-[var(--c-secondary)] text-sm tracking-widest">FRIENDS ({friendsData.friends.length})</span>
-                  </div>
-                  {friendsData.friends.length === 0 ? (
-                    <div className="px-3 py-6 text-center">
-                      <div className="text-[var(--c-muted)] text-sm font-mono">No friends yet. Add one by callsign above.</div>
-                    </div>
-                  ) : (
-                    <div className="divide-y divide-[color-mix(in_srgb,var(--c-primary)_8%,transparent)]">
-                      {friendsData.friends.map(f => {
-                        const rank = getRankFromPoints(f.rankPoints);
-                        return (
-                          <div key={f.playerId} className="px-3 py-2 flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span className="text-[var(--c-primary)] text-sm font-mono font-bold truncate">{f.displayName}</span>
-                              <span className="text-[var(--c-muted)] text-xs font-mono shrink-0">LVL {f.level}</span>
-                              <span className="text-xs font-mono font-bold shrink-0" style={{ color: rank.color }}>{rank.icon} {f.rankLabel}</span>
-                            </div>
-                            <div className="flex gap-1.5 shrink-0">
-                              <Link
-                                href={`/player/${encodeURIComponent(f.displayName)}`}
-                                className="px-2 py-1 border border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] text-[var(--c-secondary)] font-mono text-xs tracking-wider hover:text-[var(--c-primary)] hover:border-[color-mix(in_srgb,var(--c-primary)_50%,transparent)] active:scale-95 transition-all"
-                              >
-                                VIEW
-                              </Link>
+                {/* Friends list sub-tab */}
+                {friendsSubTab === 'list' && (
+                  <div className="term-border bg-[var(--c-bg)]">
+                    {friendsData.friends.length === 0 ? (
+                      <div className="px-3 py-6 text-center">
+                        <div className="text-[var(--c-muted)] text-sm font-mono">No friends yet. Add one by callsign above.</div>
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-[color-mix(in_srgb,var(--c-primary)_8%,transparent)]">
+                        {friendsData.friends.map(f => {
+                          const rank = getRankFromPoints(f.rankPoints);
+                          return (
+                            <div key={f.playerId} className="px-3 py-2 flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <Link href={`/player/${encodeURIComponent(f.displayName)}`} className="text-[var(--c-primary)] text-sm font-mono font-bold truncate hover:underline">{f.displayName}</Link>
+                                <span className="text-[var(--c-muted)] text-xs font-mono shrink-0">LVL {f.level}</span>
+                                <span className="text-xs font-mono font-bold shrink-0" style={{ color: rank.color }}>{rank.icon} {rank.label}</span>
+                              </div>
                               <button
                                 onClick={() => handleRemoveFriend(f.playerId)}
-                                className="px-2 py-1 border border-[color-mix(in_srgb,var(--c-primary)_25%,transparent)] text-[var(--c-muted)] font-mono text-xs tracking-wider hover:text-[#ff3333] hover:border-[#ff333350] active:scale-95 transition-all"
+                                className="px-2 py-1 border border-[color-mix(in_srgb,var(--c-primary)_25%,transparent)] text-[var(--c-muted)] font-mono text-xs tracking-wider hover:text-[#ff3333] hover:border-[#ff333350] active:scale-95 transition-all shrink-0"
                               >
                                 REMOVE
                               </button>
                             </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
 
-                {/* Outgoing requests */}
-                {friendsData.outgoing.length > 0 && (
+                {/* Incoming requests sub-tab */}
+                {friendsSubTab === 'incoming' && (
                   <div className="term-border bg-[var(--c-bg)]">
-                    <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] px-3 py-1.5">
-                      <span className="text-[var(--c-secondary)] text-sm tracking-widest">OUTGOING_REQUESTS ({friendsData.outgoing.length})</span>
-                    </div>
-                    <div className="divide-y divide-[color-mix(in_srgb,var(--c-primary)_8%,transparent)]">
-                      {friendsData.outgoing.map(req => (
-                        <div key={req.requestId} className="px-3 py-2 flex items-center justify-between">
-                          <span className="text-[var(--c-secondary)] text-sm font-mono">{req.to.displayName}</span>
-                          <button
-                            onClick={() => handleRemoveFriend(req.to.playerId)}
-                            className="px-3 py-1 border border-[color-mix(in_srgb,var(--c-primary)_25%,transparent)] text-[var(--c-muted)] font-mono text-xs tracking-wider hover:text-[#ff3333] hover:border-[#ff333350] active:scale-95 transition-all"
-                          >
-                            CANCEL
-                          </button>
-                        </div>
-                      ))}
-                    </div>
+                    {friendsData.incoming.length === 0 ? (
+                      <div className="px-3 py-6 text-center">
+                        <div className="text-[var(--c-muted)] text-sm font-mono">No incoming requests.</div>
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-[color-mix(in_srgb,var(--c-primary)_8%,transparent)]">
+                        {friendsData.incoming.map(req => (
+                          <div key={req.requestId} className="px-3 py-2 flex items-center justify-between">
+                            <Link href={`/player/${encodeURIComponent(req.from.displayName)}`} className="text-[var(--c-primary)] text-sm font-mono font-bold hover:underline">{req.from.displayName}</Link>
+                            <div className="flex gap-1.5">
+                              <button
+                                onClick={() => handleFriendAction(req.requestId, 'accept')}
+                                className="px-3 py-1 border border-[color-mix(in_srgb,var(--c-primary)_50%,transparent)] text-[var(--c-primary)] font-mono text-xs tracking-wider hover:bg-[color-mix(in_srgb,var(--c-primary)_6%,transparent)] active:scale-95 transition-all"
+                              >
+                                ACCEPT
+                              </button>
+                              <button
+                                onClick={() => handleFriendAction(req.requestId, 'reject')}
+                                className="px-3 py-1 border border-[color-mix(in_srgb,var(--c-primary)_25%,transparent)] text-[var(--c-muted)] font-mono text-xs tracking-wider hover:text-[#ff3333] hover:border-[#ff333350] active:scale-95 transition-all"
+                              >
+                                REJECT
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Outgoing requests sub-tab */}
+                {friendsSubTab === 'outgoing' && (
+                  <div className="term-border bg-[var(--c-bg)]">
+                    {friendsData.outgoing.length === 0 ? (
+                      <div className="px-3 py-6 text-center">
+                        <div className="text-[var(--c-muted)] text-sm font-mono">No outgoing requests.</div>
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-[color-mix(in_srgb,var(--c-primary)_8%,transparent)]">
+                        {friendsData.outgoing.map(req => (
+                          <div key={req.requestId} className="px-3 py-2 flex items-center justify-between">
+                            <Link href={`/player/${encodeURIComponent(req.to.displayName)}`} className="text-[var(--c-secondary)] text-sm font-mono hover:underline">{req.to.displayName}</Link>
+                            <button
+                              onClick={() => handleRemoveFriend(req.to.playerId)}
+                              className="px-3 py-1 border border-[color-mix(in_srgb,var(--c-primary)_25%,transparent)] text-[var(--c-muted)] font-mono text-xs tracking-wider hover:text-[#ff3333] hover:border-[#ff333350] active:scale-95 transition-all"
+                            >
+                              CANCEL
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
 
