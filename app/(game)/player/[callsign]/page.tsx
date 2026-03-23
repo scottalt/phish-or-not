@@ -16,11 +16,15 @@ export default async function PublicProfilePage({ params }: Props) {
   const admin = getSupabaseAdminClient();
 
   // Look up player by display_name (case-insensitive)
-  const { data: player } = await admin
+  // Use limit(1) instead of maybeSingle() to avoid error when dupes exist (legacy data)
+  const { data: players } = await admin
     .from('players')
     .select('id, display_name, bio, privacy_level, featured_badges, xp, level, total_sessions')
     .ilike('display_name', decodedCallsign)
-    .maybeSingle();
+    .order('xp', { ascending: false })
+    .limit(1);
+
+  const player = players?.[0] ?? null;
 
   if (!player) {
     return (
