@@ -75,6 +75,7 @@ export async function PATCH(req: NextRequest) {
     currentStreak: 0,
     longestStreak: 0,
     featuredBadge: (row.featured_badge as string | null) ?? null,
+    themeId: (row.theme_id as string | null) ?? 'phosphor',
   };
   return NextResponse.json(profile);
 }

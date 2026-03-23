@@ -6,11 +6,13 @@ import { getThemeById, type ThemeDef } from './themes';
 interface ThemeContextValue {
   theme: ThemeDef;
   setThemeId: (id: string) => void;
+  loadFromServer: (themeId: string) => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
   theme: getThemeById('phosphor'),
   setThemeId: () => {},
+  loadFromServer: () => {},
 });
 
 function applyThemeVars(theme: ThemeDef) {
@@ -28,7 +30,9 @@ function applyThemeVars(theme: ThemeDef) {
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<ThemeDef>(getThemeById('phosphor'));
+  const [serverLoaded, setServerLoaded] = useState(false);
 
+  // On mount: load from localStorage as initial fast paint
   useEffect(() => {
     try {
       const saved = localStorage.getItem('terminal_theme');
@@ -40,15 +44,32 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     } catch {}
   }, []);
 
+  // Called by PlayerContext when profile loads — server theme takes priority
+  const loadFromServer = useCallback((themeId: string) => {
+    if (serverLoaded) return; // only apply once per session
+    const t = getThemeById(themeId);
+    setTheme(t);
+    applyThemeVars(t);
+    try { localStorage.setItem('terminal_theme', themeId); } catch {}
+    setServerLoaded(true);
+  }, [serverLoaded]);
+
+  // Set theme locally + save to server
   const setThemeId = useCallback((id: string) => {
     const t = getThemeById(id);
     setTheme(t);
     applyThemeVars(t);
     try { localStorage.setItem('terminal_theme', id); } catch {}
+    // Fire-and-forget save to server
+    fetch('/api/player/theme', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ themeId: id }),
+    }).catch(() => {}); // non-critical — localStorage is the fallback
   }, []);
 
   return (
-    <ThemeContext.Provider value={{ theme, setThemeId }}>
+    <ThemeContext.Provider value={{ theme, setThemeId, loadFromServer }}>
       {children}
     </ThemeContext.Provider>
   );

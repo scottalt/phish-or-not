@@ -128,4 +128,5 @@ export interface PlayerProfile {
   currentStreak: number;
   longestStreak: number;
   featuredBadge: string | null;
+  themeId: string;
 }

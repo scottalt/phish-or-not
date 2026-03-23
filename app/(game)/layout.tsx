@@ -1,10 +1,28 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { TerminalSounds } from '@/components/TerminalSounds';
 import { PlayerProvider } from '@/lib/PlayerContext';
+import { usePlayer } from '@/lib/usePlayer';
 import { NavVisibilityProvider } from '@/lib/NavVisibilityContext';
-import { ThemeProvider } from '@/lib/ThemeContext';
+import { ThemeProvider, useTheme } from '@/lib/ThemeContext';
 import { NavBar } from '@/components/NavBar';
+
+/** Syncs server-stored theme to ThemeContext when profile loads */
+function ThemeSync() {
+  const { profile } = usePlayer();
+  const { loadFromServer } = useTheme();
+  const synced = useRef(false);
+
+  useEffect(() => {
+    if (profile?.themeId && !synced.current) {
+      loadFromServer(profile.themeId);
+      synced.current = true;
+    }
+  }, [profile?.themeId, loadFromServer]);
+
+  return null;
+}
 
 export default function GameLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -13,6 +31,7 @@ export default function GameLayout({ children }: { children: React.ReactNode }) 
       <div className="scanline-sweep" aria-hidden="true" />
       <PlayerProvider>
         <ThemeProvider>
+          <ThemeSync />
           <NavVisibilityProvider>
             <NavBar />
             {children}

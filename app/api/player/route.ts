@@ -42,6 +42,7 @@ function toProfile(row: Record<string, unknown>, researchAnswersSubmitted = 0, a
     currentStreak: streakData?.current_streak ?? 0,
     longestStreak: streakData?.longest_streak ?? 0,
     featuredBadge: (row.featured_badge as string | null) ?? null,
+    themeId: (row.theme_id as string | null) ?? 'phosphor',
   };
 }
 
