@@ -85,17 +85,34 @@ export async function GET(
   // For completed matches, include full card data for review (safe to reveal post-match)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let reviewCards: any[] | undefined;
-  if (match.status === 'complete' && match.card_ids?.length > 0) {
-    const { data: cards } = await admin
-      .from('cards_generated')
-      .select('card_id, type, from_address, subject, body, is_phishing, difficulty, technique, clues, explanation, highlights, attachment_name')
-      .in('card_id', match.card_ids);
+  if (match.status === 'complete') {
+    // Get card IDs — prefer match record, fall back to answers table
+    let cardIds: string[] = match.card_ids ?? [];
+    if (cardIds.length === 0) {
+      const { data: answerCards } = await admin
+        .from('h2h_match_answers')
+        .select('card_id, card_index')
+        .eq('match_id', id)
+        .order('card_index', { ascending: true });
+      if (answerCards) {
+        const seen = new Set<string>();
+        cardIds = answerCards
+          .filter((a) => { if (seen.has(a.card_id)) return false; seen.add(a.card_id); return true; })
+          .map((a) => a.card_id);
+      }
+    }
+
+    const { data: cards } = cardIds.length > 0
+      ? await admin
+          .from('cards_generated')
+          .select('card_id, type, from_address, subject, body, is_phishing, difficulty, technique, clues, explanation, highlights, attachment_name')
+          .in('card_id', cardIds)
+      : { data: null };
 
     if (cards) {
-      // Sort by match card order
       const cardMap = new Map(cards.map((c) => [c.card_id, c]));
-      reviewCards = match.card_ids.map((id: string, i: number) => {
-        const c = cardMap.get(id);
+      reviewCards = cardIds.map((cid: string, i: number) => {
+        const c = cardMap.get(cid);
         if (!c) return null;
         return {
           index: i,

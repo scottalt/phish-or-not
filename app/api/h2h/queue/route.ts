@@ -112,6 +112,23 @@ export async function POST() {
 
   const playerId = player.id;
 
+  // Clean up stale match key from previous matches
+  await redis.del(`h2h:matched:${playerId}`);
+
+  // Check if player is already in an active match
+  const admin0 = getSupabaseAdminClient();
+  const { data: activeMatch } = await admin0
+    .from('h2h_matches')
+    .select('id')
+    .eq('status', 'active')
+    .or(`player1_id.eq.${playerId},player2_id.eq.${playerId}`)
+    .limit(1)
+    .maybeSingle();
+
+  if (activeMatch) {
+    return NextResponse.json({ error: 'Already in an active match' }, { status: 409 });
+  }
+
   // Prevent double-queue
   const alreadyQueued = await redis.get(`h2h:queue:player:${playerId}`);
   if (alreadyQueued) {
