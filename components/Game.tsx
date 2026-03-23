@@ -82,7 +82,7 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
   const [mode, setMode] = useState<GameMode>('freeplay');
   const [dailyResult, setDailyResult] = useState<{ score: number; totalScore: number } | null>(null);
   const { soundEnabled, toggleSound } = useSoundEnabled();
-  const { profile } = usePlayer();
+  const { profile, refreshProfile } = usePlayer();
   const sessionId = useRef<string>('');
   const sessionStartedAt = useRef<string>('');
   const [correctCount, setCorrectCount] = useState(0);
@@ -93,6 +93,15 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
   const [flashClass, setFlashClass] = useState<string | null>(null);
   const sessionFinalized = useRef<Promise<void>>(Promise.resolve());
   const { setNavHidden } = useNavVisibility();
+
+  // Refresh profile when returning to start screen (updates clearance path, XP, etc.)
+  const prevPhase = useRef<GamePhase>('start');
+  useEffect(() => {
+    if (phase === 'start' && prevPhase.current !== 'start') {
+      refreshProfile();
+    }
+    prevPhase.current = phase;
+  }, [phase, refreshProfile]);
 
   useEffect(() => {
     setNavHidden(phase !== 'start');
