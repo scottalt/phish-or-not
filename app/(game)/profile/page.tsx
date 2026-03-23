@@ -657,25 +657,53 @@ export default function ProfilePage() {
                       const color = RARITY_COLORS[badge.rarity];
                       const isPvpBadge = idx === 0;
                       return (
-                        <button
-                          key={badge.id}
-                          type="button"
-                          disabled={shelfSaving}
-                          onClick={() => handleToggleShelfBadge(badge.id)}
-                          className="relative flex flex-col items-center gap-1 px-3 py-2 border min-w-[70px] hover:scale-[1.02] disabled:opacity-40 transition-all cursor-pointer"
-                          style={{ borderColor: isPvpBadge ? color : `${color}40` }}
-                          title={`Remove ${badge.name} from shelf`}
-                        >
+                        <div key={badge.id} className="relative flex flex-col items-center gap-1">
                           {isPvpBadge && (
-                            <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[9px] font-mono font-bold px-1 bg-[var(--c-bg)]" style={{ color }}>PvP</span>
+                            <span className="text-[9px] font-mono font-bold px-1" style={{ color }}>PvP BADGE</span>
                           )}
-                          <span className="text-xl font-mono" style={{ color }}>{badge.icon}</span>
-                          <span className="text-xs font-mono font-bold tracking-wider" style={{ color }}>{badge.name}</span>
-                        </button>
+                          <div
+                            className="flex flex-col items-center gap-1 px-3 py-2 border min-w-[70px]"
+                            style={{ borderColor: isPvpBadge ? color : `${color}40` }}
+                          >
+                            <span className="text-xl font-mono" style={{ color }}>{badge.icon}</span>
+                            <span className="text-xs font-mono font-bold tracking-wider" style={{ color }}>{badge.name}</span>
+                          </div>
+                          <div className="flex gap-1 mt-1">
+                            {!isPvpBadge && (
+                              <button
+                                type="button"
+                                disabled={shelfSaving}
+                                onClick={async () => {
+                                  setShelfSaving(true);
+                                  try {
+                                    await fetch('/api/player/featured-badge', {
+                                      method: 'PATCH',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({ badgeId: badge.id, action: 'promote' }),
+                                    });
+                                    await refreshProfile();
+                                  } finally { setShelfSaving(false); }
+                                }}
+                                className="text-[9px] font-mono px-1.5 py-0.5 border hover:bg-[color-mix(in_srgb,var(--c-primary)_8%,transparent)] active:scale-95 transition-all disabled:opacity-40"
+                                style={{ color, borderColor: `${color}40` }}
+                              >
+                                SET PvP
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              disabled={shelfSaving}
+                              onClick={() => handleToggleShelfBadge(badge.id)}
+                              className="text-[9px] font-mono text-[var(--c-muted)] px-1.5 py-0.5 border border-[var(--c-dark)] hover:text-[#ff3333] hover:border-[rgba(255,51,51,0.3)] active:scale-95 transition-all disabled:opacity-40"
+                            >
+                              REMOVE
+                            </button>
+                          </div>
+                        </div>
                       );
                     })}
                   </div>
-                  <div className="text-[var(--c-muted)] text-xs font-mono text-center mt-2">Tap to remove from shelf</div>
+                  <div className="text-[var(--c-muted)] text-xs font-mono text-center mt-2">First badge = your PvP display badge</div>
                 </div>
               ) : (
                 <div className="px-3 py-3 text-center">

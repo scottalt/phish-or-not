@@ -62,6 +62,27 @@ export async function PATCH(req: NextRequest) {
     }
   }
 
+  // Promote mode: move badge to position [0] (becomes PvP badge)
+  if (action === 'promote') {
+    if (badgeId === null) {
+      return NextResponse.json({ error: 'badgeId required for promote action' }, { status: 400 });
+    }
+    const currentShelf: string[] = (player.featured_badges as string[]) ?? [];
+    if (!currentShelf.includes(badgeId)) {
+      return NextResponse.json({ error: 'Badge not on shelf' }, { status: 400 });
+    }
+    // Move to front
+    const newShelf = [badgeId, ...currentShelf.filter(id => id !== badgeId)];
+    const { error: promoteError } = await admin
+      .from('players')
+      .update({ featured_badges: newShelf, updated_at: new Date().toISOString() })
+      .eq('id', playerId);
+    if (promoteError) {
+      return NextResponse.json({ error: 'Update failed' }, { status: 500 });
+    }
+    return NextResponse.json({ ok: true, featuredBadges: newShelf });
+  }
+
   // Shelf mode: toggle badge in featured_badges[] array
   if (action === 'shelf') {
     if (badgeId === null) {
