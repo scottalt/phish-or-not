@@ -57,7 +57,7 @@ const BACKGROUND_OPTIONS: { value: PlayerBackground; label: string }[] = [
 ];
 
 export default function ProfilePage() {
-  const { profile, loading, signedIn, applyProfile } = usePlayer();
+  const { profile, loading, signedIn, applyProfile, refreshProfile } = usePlayer();
   const [editingCallsign, setEditingCallsign] = useState(false);
   const [callsignValue, setCallsignValue] = useState('');
   const [callsignSaving, setCallsignSaving] = useState(false);
@@ -67,6 +67,11 @@ export default function ProfilePage() {
   const [showRanks, setShowRanks] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
   const [profileTab, setProfileTab] = useState<'info' | 'solo' | 'h2h'>('info');
+  const [editingBio, setEditingBio] = useState(false);
+  const [bioValue, setBioValue] = useState('');
+  const [bioSaving, setBioSaving] = useState(false);
+  const [privacySaving, setPrivacySaving] = useState(false);
+  const [shelfSaving, setShelfSaving] = useState(false);
   const [h2hStats, setH2HStats] = useState<{
     rankLabel: string; rankIcon: string; rankPoints: number; rankColor: string;
     wins: number; losses: number; winStreak: number; bestWinStreak: number;
@@ -220,6 +225,55 @@ export default function ProfilePage() {
       }
     } finally {
       setBackgroundSaving(false);
+    }
+  }
+
+  async function handleSaveBio() {
+    setBioSaving(true);
+    try {
+      const res = await fetch('/api/player/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bio: bioValue }),
+      });
+      if (res.ok) {
+        await refreshProfile();
+        setEditingBio(false);
+      }
+    } finally {
+      setBioSaving(false);
+    }
+  }
+
+  async function handleSetPrivacy(level: 'public' | 'friends' | 'private') {
+    setPrivacySaving(true);
+    try {
+      const res = await fetch('/api/player/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ privacyLevel: level }),
+      });
+      if (res.ok) {
+        await refreshProfile();
+      }
+    } finally {
+      setPrivacySaving(false);
+    }
+  }
+
+  async function handleToggleShelfBadge(badgeId: string) {
+    setShelfSaving(true);
+    try {
+      const res = await fetch('/api/player/featured-badge', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ badgeId, action: 'shelf' }),
+      });
+      if (res.ok) {
+        await refreshProfile();
+      }
+    } finally {
+      setShelfSaving(false);
     }
   }
 
@@ -413,6 +467,166 @@ export default function ProfilePage() {
               <Link href="/intel/player" className="text-[var(--c-secondary)] text-sm font-mono hover:text-[var(--c-primary)] transition-colors tracking-widest">
                 [ VIEW INTEL BRIEFING ]
               </Link>
+              {profile.displayName && (
+                <>
+                  <br />
+                  <Link href={`/player/${encodeURIComponent(profile.displayName)}`} className="text-[var(--c-secondary)] text-sm font-mono hover:text-[var(--c-primary)] transition-colors tracking-widest">
+                    [ VIEW PUBLIC PROFILE ]
+                  </Link>
+                </>
+              )}
+            </div>
+
+            {/* Bio editor */}
+            <div className="term-border bg-[var(--c-bg)]">
+              <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] px-3 py-1.5 flex items-center justify-between">
+                <span className="text-[var(--c-secondary)] text-sm tracking-widest">BIO</span>
+                {!editingBio ? (
+                  <button
+                    type="button"
+                    onClick={() => { setBioValue(profile.bio ?? ''); setEditingBio(true); }}
+                    className="text-[var(--c-secondary)] text-sm font-mono hover:text-[var(--c-primary)] transition-colors"
+                  >
+                    [EDIT]
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setEditingBio(false)}
+                    className="text-[var(--c-secondary)] text-sm font-mono hover:text-[var(--c-primary)] transition-colors"
+                  >
+                    [CANCEL]
+                  </button>
+                )}
+              </div>
+              <div className="px-3 py-2">
+                {editingBio ? (
+                  <div className="space-y-2">
+                    <textarea
+                      value={bioValue}
+                      onChange={(e) => setBioValue(e.target.value.slice(0, 200))}
+                      maxLength={200}
+                      rows={3}
+                      className="w-full bg-transparent border border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] px-2 py-1.5 text-[var(--c-primary)] font-mono text-sm focus:outline-none focus:border-[color-mix(in_srgb,var(--c-primary)_70%,transparent)] placeholder:text-[var(--c-dark)] resize-none"
+                      placeholder="Write something about yourself..."
+                    />
+                    <div className="flex items-center justify-between">
+                      <span className="text-[var(--c-muted)] text-xs font-mono">{bioValue.length}/200</span>
+                      <button
+                        type="button"
+                        onClick={handleSaveBio}
+                        disabled={bioSaving}
+                        className="px-4 py-1 border border-[color-mix(in_srgb,var(--c-primary)_50%,transparent)] text-[var(--c-primary)] font-mono text-sm tracking-widest hover:bg-[color-mix(in_srgb,var(--c-primary)_6%,transparent)] disabled:opacity-40 transition-colors"
+                      >
+                        {bioSaving ? '...' : '[ SAVE ]'}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-[var(--c-secondary)] text-sm font-mono">
+                    {profile.bio || <span className="text-[var(--c-muted)]">No bio set.</span>}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Privacy toggle */}
+            <div className="term-border bg-[var(--c-bg)]">
+              <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] px-3 py-1.5">
+                <span className="text-[var(--c-secondary)] text-sm tracking-widest">PROFILE_PRIVACY</span>
+              </div>
+              <div className="px-3 py-2 flex gap-2">
+                {(['public', 'friends', 'private'] as const).map(level => (
+                  <button
+                    key={level}
+                    type="button"
+                    disabled={privacySaving}
+                    onClick={() => handleSetPrivacy(level)}
+                    className={`flex-1 py-1.5 font-mono text-sm tracking-wider transition-all border disabled:opacity-40 ${
+                      profile.privacyLevel === level
+                        ? 'text-[var(--c-primary)] border-[color-mix(in_srgb,var(--c-primary)_80%,transparent)] bg-[color-mix(in_srgb,var(--c-primary)_8%,transparent)]'
+                        : 'text-[var(--c-secondary)] border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] hover:text-[var(--c-primary)] hover:border-[color-mix(in_srgb,var(--c-primary)_50%,transparent)]'
+                    }`}
+                  >
+                    {level === 'friends' ? 'FRIENDS' : level.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+              <div className="px-3 pb-2">
+                <span className="text-[var(--c-muted)] text-xs font-mono">
+                  {profile.privacyLevel === 'public' && 'Anyone can see your profile.'}
+                  {profile.privacyLevel === 'friends' && 'Only friends can see your profile. (coming soon)'}
+                  {profile.privacyLevel === 'private' && 'Your profile is hidden from others.'}
+                </span>
+              </div>
+            </div>
+
+            {/* Featured badge shelf */}
+            <div className="term-border bg-[var(--c-bg)]">
+              <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] px-3 py-1.5 flex items-center justify-between">
+                <span className="text-[var(--c-secondary)] text-sm tracking-widest">BADGE_SHELF</span>
+                <span className="text-[var(--c-muted)] text-xs font-mono">{profile.featuredBadges?.length ?? 0}/5</span>
+              </div>
+              {(profile.featuredBadges?.length ?? 0) > 0 ? (
+                <div className="px-3 py-3">
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {profile.featuredBadges.map(id => {
+                      const badge = ACHIEVEMENTS.find(a => a.id === id);
+                      if (!badge) return null;
+                      const color = RARITY_COLORS[badge.rarity];
+                      return (
+                        <button
+                          key={badge.id}
+                          type="button"
+                          disabled={shelfSaving}
+                          onClick={() => handleToggleShelfBadge(badge.id)}
+                          className="flex flex-col items-center gap-1 px-3 py-2 border border-[color-mix(in_srgb,var(--c-primary)_15%,transparent)] min-w-[70px] hover:scale-[1.02] disabled:opacity-40 transition-all cursor-pointer"
+                          style={{ borderColor: `${color}40` }}
+                          title={`Remove ${badge.name} from shelf`}
+                        >
+                          <span className="text-xl font-mono" style={{ color }}>{badge.icon}</span>
+                          <span className="text-xs font-mono font-bold tracking-wider" style={{ color }}>{badge.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="text-[var(--c-muted)] text-xs font-mono text-center mt-2">Tap to remove from shelf</div>
+                </div>
+              ) : (
+                <div className="px-3 py-3 text-center">
+                  <span className="text-[var(--c-muted)] text-sm font-mono">No badges on shelf. Tap earned badges below to add.</span>
+                </div>
+              )}
+              {/* Add to shelf — show earned badges not on shelf */}
+              {(() => {
+                const shelfSet = new Set(profile.featuredBadges ?? []);
+                const addable = ACHIEVEMENTS.filter(a => (profile.achievements?.includes(a.id) ?? false) && !shelfSet.has(a.id));
+                if (addable.length === 0 || (profile.featuredBadges?.length ?? 0) >= 5) return null;
+                return (
+                  <div className="border-t border-[color-mix(in_srgb,var(--c-primary)_15%,transparent)] px-3 py-2">
+                    <div className="text-[var(--c-muted)] text-xs font-mono mb-2">TAP TO ADD:</div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {addable.map(a => {
+                        const color = RARITY_COLORS[a.rarity];
+                        return (
+                          <button
+                            key={a.id}
+                            type="button"
+                            disabled={shelfSaving}
+                            onClick={() => handleToggleShelfBadge(a.id)}
+                            className="flex items-center gap-1.5 px-2 py-1 border border-[color-mix(in_srgb,var(--c-primary)_20%,transparent)] hover:border-current disabled:opacity-40 transition-all text-sm font-mono"
+                            style={{ color }}
+                            title={`Add ${a.name} to shelf`}
+                          >
+                            <span>{a.icon}</span>
+                            <span className="text-xs tracking-wider">{a.name}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Collapsible sections: rank ladder + achievements */}

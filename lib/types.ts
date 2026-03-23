@@ -128,5 +128,8 @@ export interface PlayerProfile {
   currentStreak: number;
   longestStreak: number;
   featuredBadge: string | null;
+  bio: string;
+  privacyLevel: 'public' | 'friends' | 'private';
+  featuredBadges: string[];
   themeId: string;
 }

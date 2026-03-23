@@ -228,30 +228,32 @@ export default function InventoryPage() {
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
             {ACHIEVEMENTS.filter((a) => rarityFilter === 'all' || a.rarity === rarityFilter).map((achievement) => {
               const earned = profile.achievements?.includes(achievement.id) ?? false;
+              const onShelf = profile.featuredBadges?.includes(achievement.id) ?? false;
               const featured = profile.featuredBadge === achievement.id;
+              const highlighted = onShelf || featured;
               const rarityColor = RARITY_COLORS[achievement.rarity];
+              const shelfFull = (profile.featuredBadges?.length ?? 0) >= 5;
 
               return (
                 <button
                   key={achievement.id}
-                  disabled={!earned}
+                  disabled={!earned || (shelfFull && !onShelf)}
                   onClick={async () => {
                     if (!earned) return;
-                    const newBadgeId = featured ? null : achievement.id;
                     await fetch('/api/player/featured-badge', {
                       method: 'PATCH',
-                      body: JSON.stringify({ badgeId: newBadgeId }),
+                      body: JSON.stringify({ badgeId: achievement.id, action: 'shelf' }),
                     });
                     refreshProfile();
                   }}
                   className={`text-left transition-all term-border bg-[var(--c-bg)] p-3 ${
                     earned
-                      ? 'hover:scale-[1.02] cursor-pointer'
+                      ? (shelfFull && !onShelf) ? 'opacity-60 cursor-not-allowed' : 'hover:scale-[1.02] cursor-pointer'
                       : 'opacity-40 cursor-not-allowed'
                   }`}
                   style={{
-                    borderColor: featured ? rarityColor : undefined,
-                    boxShadow: featured
+                    borderColor: highlighted ? rarityColor : undefined,
+                    boxShadow: highlighted
                       ? `0 0 12px color-mix(in srgb, ${rarityColor} 25%, transparent)`
                       : 'none',
                   }}
@@ -296,8 +298,8 @@ export default function InventoryPage() {
                       : ''}
                   </div>
 
-                  {/* Featured badge */}
-                  {featured && (
+                  {/* Shelf / Featured badge indicator */}
+                  {onShelf && (
                     <div
                       className="text-[10px] font-mono font-bold tracking-widest px-1.5 py-0.5 border mt-1.5 text-center"
                       style={{
@@ -306,7 +308,7 @@ export default function InventoryPage() {
                         backgroundColor: `color-mix(in srgb, ${rarityColor} 8%, transparent)`,
                       }}
                     >
-                      FEATURED
+                      ON SHELF
                     </div>
                   )}
                 </button>

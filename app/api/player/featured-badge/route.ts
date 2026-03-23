@@ -27,7 +27,7 @@ export async function PATCH(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { badgeId } = body as { badgeId: string | null };
+  const { badgeId, action } = body as { badgeId: string | null; action?: string };
 
   if (badgeId !== null && (typeof badgeId !== 'string' || badgeId.trim() === '')) {
     return NextResponse.json({ error: 'Invalid badgeId' }, { status: 400 });
@@ -38,7 +38,7 @@ export async function PATCH(req: NextRequest) {
   // Look up the player
   const { data: player, error: playerError } = await admin
     .from('players')
-    .select('id')
+    .select('id, featured_badges')
     .eq('auth_id', authId)
     .single();
 
@@ -62,7 +62,34 @@ export async function PATCH(req: NextRequest) {
     }
   }
 
-  // Update featured_badge
+  // Shelf mode: toggle badge in featured_badges[] array
+  if (action === 'shelf') {
+    if (badgeId === null) {
+      return NextResponse.json({ error: 'badgeId required for shelf action' }, { status: 400 });
+    }
+    const currentShelf: string[] = (player.featured_badges as string[]) ?? [];
+    let newShelf: string[];
+    if (currentShelf.includes(badgeId)) {
+      // Remove from shelf
+      newShelf = currentShelf.filter(id => id !== badgeId);
+    } else {
+      // Add to shelf (max 5)
+      if (currentShelf.length >= 5) {
+        return NextResponse.json({ error: 'Shelf is full (max 5)' }, { status: 400 });
+      }
+      newShelf = [...currentShelf, badgeId];
+    }
+    const { error: shelfError } = await admin
+      .from('players')
+      .update({ featured_badges: newShelf, updated_at: new Date().toISOString() })
+      .eq('id', playerId);
+    if (shelfError) {
+      return NextResponse.json({ error: 'Update failed' }, { status: 500 });
+    }
+    return NextResponse.json({ ok: true, featuredBadges: newShelf });
+  }
+
+  // Default: update single featured_badge (for PvP display)
   const { error: updateError } = await admin
     .from('players')
     .update({ featured_badge: badgeId, updated_at: new Date().toISOString() })
