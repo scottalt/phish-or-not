@@ -329,7 +329,7 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
   const stage: 1 | 2 | 3 | 4 = researchCapped ? 4 : dailyUnlocked ? 3 : graduated ? 2 : 1;
 
   return (
-    <div className={`w-full px-4 pb-safe flex flex-col gap-6 ${showButton ? 'max-w-lg' : 'max-w-md'}`}>
+    <div className={`w-full px-4 pb-safe flex flex-col gap-6 ${showButton ? 'max-w-xl' : 'max-w-md'}`}>
       {/* Terminal boot animation — fades out after loading */}
       {!bootHidden && (
         <div
@@ -385,53 +385,34 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
           {!playerLoading && signedIn && profile?.displayName && (
             <div className="anim-fade-in-up">
               <div className="term-border bg-[var(--c-bg)]">
-                <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] px-3 py-1.5 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Link href="/profile" className="text-[var(--c-primary)] text-sm tracking-widest font-bold hover:text-[var(--c-primary)] border border-[color-mix(in_srgb,var(--c-primary)_30%,transparent)] px-2 py-0.5 hover:bg-[color-mix(in_srgb,var(--c-primary)_6%,transparent)] transition-colors">[ {profile.displayName} ]</Link>
-                    {profile.featuredBadge && (() => {
-                      const badge = ACHIEVEMENTS.find(a => a.id === profile.featuredBadge);
-                      if (!badge) return null;
-                      return <span className="lg:hidden" style={{ color: RARITY_COLORS[badge.rarity] }}>{badge.icon}</span>;
-                    })()}
+                {/* Player header — two rows for clean layout */}
+              <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] px-4 py-2">
+                <div className="flex items-center justify-between mb-1">
+                  <Link href="/profile" className="text-[var(--c-primary)] text-base font-mono font-bold tracking-widest hover:bg-[color-mix(in_srgb,var(--c-primary)_6%,transparent)] transition-colors truncate max-w-[60%]">
+                    {profile.displayName}
+                  </Link>
+                  <div className="flex items-center gap-2 shrink-0">
                     {profile.featuredBadge && (() => {
                       const badge = ACHIEVEMENTS.find(a => a.id === profile.featuredBadge);
                       if (!badge) return null;
                       const color = RARITY_COLORS[badge.rarity];
-                      return (
-                        <span className="text-xs px-1.5 py-0.5 border hidden lg:inline-flex items-center gap-1" style={{ color, borderColor: color }}>
-                          <span>{badge.icon}</span>
-                          <span>{badge.name}</span>
-                        </span>
-                      );
+                      return <span style={{ color }}>{badge.icon}</span>;
                     })()}
-                    {profile.researchGraduated && (
-                      <span className="text-[var(--c-accent)] text-sm font-mono hidden lg:inline">⬡ RANKED UNLOCKED</span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3">
-                    {(profile.achievements?.length ?? 0) > 0 && (
-                      <Link href="/profile#achievements" className="text-[var(--c-secondary)] text-sm font-mono hover:text-[var(--c-primary)] hidden lg:inline">
-                        ★ BADGES {profile.achievements?.length ?? 0}/{ACHIEVEMENTS.length}
-                      </Link>
-                    )}
-                    <button onClick={toggleSound} aria-label={soundEnabled ? 'Mute sound effects' : 'Enable sound effects'} className={`lg:hidden text-sm font-mono transition-colors ${soundEnabled ? 'text-[var(--c-primary)]' : 'text-[var(--c-muted)]'}`}>{soundEnabled ? '[SFX]' : '[SFX OFF]'}</button>
                     <button onClick={async () => { await signOut(); }} className="text-[var(--c-muted)] text-sm font-mono hover:text-[var(--c-secondary)]">SIGN OUT</button>
                   </div>
                 </div>
-                <div className="px-3 py-2 space-y-2">
-                  <LevelMeter xp={profile.xp} level={profile.level} />
-                  {/* Mobile-only: show graduation + achievements below XP bar */}
-                  <div className="flex items-center justify-between lg:hidden">
-                    {profile.researchGraduated && (
-                      <div className="text-[var(--c-accent)] text-sm font-mono">⬡ RANKED UNLOCKED</div>
-                    )}
-                    {(profile.achievements?.length ?? 0) > 0 && (
-                      <Link href="/profile#achievements" className="text-[var(--c-secondary)] text-sm font-mono hover:text-[var(--c-primary)]">
-                        ★ BADGES {profile.achievements?.length ?? 0}/{ACHIEVEMENTS.length}
-                      </Link>
-                    )}
-                  </div>
+                <div className="flex items-center justify-between text-xs font-mono">
+                  <span className="text-[var(--c-secondary)]">
+                    ★ {profile.achievements?.length ?? 0}/{ACHIEVEMENTS.length} BADGES
+                  </span>
+                  {profile.researchGraduated && (
+                    <span className="text-[var(--c-accent)]">RANKED UNLOCKED</span>
+                  )}
                 </div>
+              </div>
+              <div className="px-4 py-2">
+                <LevelMeter xp={profile.xp} level={profile.level} />
+              </div>
               </div>
             </div>
           )}
@@ -560,23 +541,19 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                 onClick={() => handleStart('h2h')}
                 className="flex-1 py-4 term-border font-mono font-bold tracking-widest text-sm active:scale-95 transition-all border-2 border-[rgba(255,0,128,0.5)] text-[#ff0080] hover:bg-[rgba(255,0,128,0.04)]"
               >
-                {h2hStats ? (
-                  <>
-                    <div className="flex items-center justify-center gap-2">
-                      <span>[ PvP ]</span>
-                      <span className="text-xs px-1.5 py-0.5 border border-[rgba(255,0,128,0.4)] inline-flex items-center gap-1" style={{ color: h2hStats.rankColor }}>
-                        {h2hStats.rankIcon} {h2hStats.rankLabel}
-                      </span>
-                    </div>
-                    <div className="text-[var(--c-muted)] text-xs mt-0.5 font-normal tracking-wide">
-                      {h2hStats.rankPoints} pts
-                      {' · '}{h2hStats.wins}W {h2hStats.losses}L
-                      {h2hStats.winStreak >= 2 && <span className="text-[var(--c-primary)]"> · {h2hStats.winStreak} streak</span>}
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex items-center justify-center gap-2">
-                    <span>[ PvP ]</span>
+                <div className="flex items-center justify-center gap-2">
+                  <span>[ PvP MODE ]</span>
+                  {h2hStats && (
+                    <span className="text-xs px-1.5 py-0.5 border border-[rgba(255,0,128,0.4)] inline-flex items-center gap-1" style={{ color: h2hStats.rankColor }}>
+                      {h2hStats.rankIcon} {h2hStats.rankLabel}
+                    </span>
+                  )}
+                </div>
+                <div className="text-[var(--c-secondary)] text-xs mt-1 font-normal tracking-wide">RANKED COMPETITIVE</div>
+                {h2hStats && (h2hStats.wins > 0 || h2hStats.losses > 0) && (
+                  <div className="text-[var(--c-muted)] text-xs mt-0.5 font-normal">
+                    {h2hStats.rankPoints} pts · {h2hStats.wins}W {h2hStats.losses}L
+                    {h2hStats.winStreak >= 2 && <span className="text-[var(--c-primary)]"> · {h2hStats.winStreak} streak</span>}
                   </div>
                 )}
               </button>
@@ -752,19 +729,23 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
             if (stage === 1) {
               return (
                 <div className="space-y-4">
-                  {/* Big quest card with research button inside */}
+                  {/* Quest card */}
                   {currentQuest && (
                     <div className="term-border bg-[var(--c-bg)] border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)]">
-                      <div className="px-4 py-4 space-y-3">
+                      <div className="border-b border-[color-mix(in_srgb,var(--c-accent)_25%,transparent)] px-4 py-2">
+                        <span className="text-[var(--c-accent)] text-xs font-mono tracking-widest">ACTIVE_QUEST</span>
+                      </div>
+                      <div className="px-4 py-4 space-y-4">
                         <div className="flex items-start gap-3">
                           <span className="text-2xl">{currentQuest.icon}</span>
                           <div className="flex-1 min-w-0">
-                            <div className="text-[var(--c-accent)] text-sm font-mono font-bold tracking-widest">{currentQuest.name}</div>
+                            <div className="text-[var(--c-accent)] text-base font-mono font-bold tracking-widest">{currentQuest.name}</div>
                             <div className="text-[var(--c-secondary)] text-sm font-mono mt-1">{currentQuest.description}</div>
+                            <div className="text-[var(--c-muted)] text-xs font-mono mt-1">Reward: +{currentQuest.xpReward} XP</div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 h-2 bg-[var(--c-dark)]">
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 h-2.5 bg-[var(--c-dark)]">
                             <div
                               className="h-full bg-[var(--c-accent)] transition-all"
                               style={{ width: `${(currentQuestProgress / currentQuest.target) * 100}%` }}
@@ -772,15 +753,17 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                           </div>
                           <span className="text-[var(--c-accent)] text-sm font-mono font-bold">{currentQuestProgress}/{currentQuest.target}</span>
                         </div>
-                        <button
-                          onClick={() => handleStart('research')}
-                          className="w-full py-3 term-border font-mono font-bold tracking-widest text-sm active:scale-95 transition-all border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] text-[var(--c-accent)] hover:bg-[color-mix(in_srgb,var(--c-accent)_8%,transparent)]"
-                        >
-                          [ RESEARCH MODE ]
-                        </button>
                       </div>
                     </div>
                   )}
+                  {/* Big research button — separate from quest */}
+                  <button
+                    onClick={() => handleStart('research')}
+                    className="w-full py-4 term-border font-mono font-bold tracking-widest text-base active:scale-95 transition-all border-2 border-[color-mix(in_srgb,var(--c-accent)_60%,transparent)] text-[var(--c-accent)] hover:bg-[color-mix(in_srgb,var(--c-accent)_8%,transparent)]"
+                  >
+                    [ RESEARCH MODE ]
+                    <div className="text-[var(--c-secondary)] text-xs mt-1 font-normal tracking-wide">Analyze emails. Earn clearance.</div>
+                  </button>
                   {versionLink}
                 </div>
               );
@@ -790,18 +773,21 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
             if (stage === 2) {
               return (
                 <div className="space-y-4">
-                  {/* Compact quest card with inline research button */}
+                  {/* Quest + research button */}
                   {currentQuest && (
-                    <div className="term-border bg-[var(--c-bg)]">
-                      <div className="px-3 py-3 space-y-2">
+                    <div className="term-border bg-[var(--c-bg)] border-[color-mix(in_srgb,var(--c-accent)_30%,transparent)]">
+                      <div className="border-b border-[color-mix(in_srgb,var(--c-accent)_20%,transparent)] px-4 py-2">
+                        <span className="text-[var(--c-accent)] text-xs font-mono tracking-widest">ACTIVE_QUEST</span>
+                      </div>
+                      <div className="px-4 py-3 space-y-3">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm">{currentQuest.icon}</span>
+                            <span>{currentQuest.icon}</span>
                             <span className="text-[var(--c-accent)] text-sm font-mono font-bold tracking-wide">{currentQuest.name}</span>
                           </div>
-                          <span className="text-[var(--c-accent)] text-xs font-mono font-bold">{currentQuestProgress}/{currentQuest.target}</span>
+                          <span className="text-[var(--c-accent)] text-sm font-mono font-bold">{currentQuestProgress}/{currentQuest.target}</span>
                         </div>
-                        <div className="h-1.5 bg-[var(--c-dark)]">
+                        <div className="h-2 bg-[var(--c-dark)]">
                           <div
                             className="h-full bg-[var(--c-accent)] transition-all"
                             style={{ width: `${(currentQuestProgress / currentQuest.target) * 100}%` }}
@@ -809,9 +795,9 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                         </div>
                         <button
                           onClick={() => handleStart('research')}
-                          className="w-full py-2 text-[var(--c-accent)] font-mono font-bold tracking-widest text-sm hover:bg-[color-mix(in_srgb,var(--c-accent)_6%,transparent)] transition-all"
+                          className="w-full py-3 term-border font-mono font-bold tracking-widest text-sm active:scale-95 transition-all border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] text-[var(--c-accent)] hover:bg-[color-mix(in_srgb,var(--c-accent)_8%,transparent)]"
                         >
-                          [ RESEARCH ]
+                          [ RESEARCH MODE ]
                         </button>
                       </div>
                     </div>
@@ -826,30 +812,31 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
             if (stage === 3) {
               return (
                 <div className="space-y-4">
-                  {/* Compact quest one-liner */}
+                  {/* Quest compact + research */}
                   {currentQuest && (
-                    <div className="term-border bg-[var(--c-bg)]">
-                      <div className="px-3 py-2.5 space-y-2">
+                    <div className="term-border bg-[var(--c-bg)] border-[color-mix(in_srgb,var(--c-accent)_25%,transparent)]">
+                      <div className="px-4 py-3 space-y-2">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm">{currentQuest.icon}</span>
-                            <span className="text-[var(--c-accent)] text-sm font-mono font-bold tracking-wide">{currentQuest.name}</span>
+                            <span className="text-xs text-[var(--c-accent)] tracking-widest">QUEST:</span>
+                            <span>{currentQuest.icon}</span>
+                            <span className="text-[var(--c-accent)] text-sm font-mono font-bold">{currentQuest.name}</span>
                           </div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-[var(--c-accent)] text-xs font-mono font-bold">{currentQuestProgress}/{currentQuest.target}</span>
-                            <button
-                              onClick={() => handleStart('research')}
-                              className="text-[var(--c-accent)] font-mono font-bold tracking-widest text-xs hover:bg-[color-mix(in_srgb,var(--c-accent)_6%,transparent)] px-2 py-1 transition-all"
-                            >
-                              [ RESEARCH ]
-                            </button>
-                          </div>
+                          <span className="text-[var(--c-accent)] text-sm font-mono font-bold">{currentQuestProgress}/{currentQuest.target}</span>
                         </div>
-                        <div className="h-1 bg-[var(--c-dark)]">
-                          <div
-                            className="h-full bg-[var(--c-accent)] transition-all"
-                            style={{ width: `${(currentQuestProgress / currentQuest.target) * 100}%` }}
-                          />
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 h-1.5 bg-[var(--c-dark)]">
+                            <div
+                              className="h-full bg-[var(--c-accent)] transition-all"
+                              style={{ width: `${(currentQuestProgress / currentQuest.target) * 100}%` }}
+                            />
+                          </div>
+                          <button
+                            onClick={() => handleStart('research')}
+                            className="text-[var(--c-accent)] font-mono font-bold tracking-widest text-xs border border-[color-mix(in_srgb,var(--c-accent)_40%,transparent)] hover:bg-[color-mix(in_srgb,var(--c-accent)_8%,transparent)] px-3 py-1.5 active:scale-95 transition-all shrink-0"
+                          >
+                            RESEARCH
+                          </button>
                         </div>
                       </div>
                     </div>
