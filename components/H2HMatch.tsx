@@ -701,19 +701,27 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
             <span className="text-[#ff0080] text-sm tracking-widest">MATCH_LOBBY</span>
           </div>
           <div className="px-4 py-6 space-y-6 text-center">
-            <div className="text-[var(--c-primary)] text-sm font-mono font-bold tracking-widest">
+            <div className="text-[var(--c-muted)] text-xs font-mono tracking-widest">
               OPPONENT FOUND
             </div>
-            <div className="text-[var(--c-secondary)] text-sm font-mono">
-              {myBadgeIcon && <span className="text-[var(--c-primary)] mr-1">{myBadgeIcon}</span>}
-              YOU vs <span style={{ color: opponentThemeColor }}>{opponentName}</span>
-              {opponentBadgeIcon && <span style={{ color: opponentThemeColor }} className="ml-1">{opponentBadgeIcon}</span>}
+
+            {/* VS display — big names */}
+            <div className="flex items-center justify-center gap-4 font-mono">
+              <div className="text-center">
+                {myBadgeIcon && <div className="text-[var(--c-primary)] text-lg">{myBadgeIcon}</div>}
+                <div className="text-[var(--c-primary)] text-lg font-black tracking-wide">YOU</div>
+              </div>
+              <div className="text-[var(--c-muted)] text-xl font-black">VS</div>
+              <div className="text-center">
+                {opponentBadgeIcon && <div style={{ color: opponentThemeColor }} className="text-lg">{opponentBadgeIcon}</div>}
+                <div className="text-lg font-black tracking-wide" style={{ color: opponentThemeColor }}>{opponentName}</div>
+              </div>
             </div>
 
             {/* Ready status */}
             <div className="flex justify-around text-sm font-mono">
               <div className="space-y-1">
-                <div className="text-[var(--c-dark)]">YOU</div>
+                <div className="text-[var(--c-muted)]">YOU</div>
                 <div className={ready ? 'text-[var(--c-primary)]' : 'text-[var(--c-muted)]'}>
                   {ready ? 'READY' : 'NOT READY'}
                 </div>
@@ -841,22 +849,23 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[var(--c-secondary)]">
-            YOU: <span className="text-[var(--c-primary)]">{myProgress}/{H2H_CARDS_PER_MATCH}</span>
-          </span>
+          {myBadgeIcon && <span className="text-[var(--c-primary)]">{myBadgeIcon}</span>}
+          <span className="text-[var(--c-primary)] font-bold text-base">YOU</span>
           <ProgressSquares completed={myProgress} total={H2H_CARDS_PER_MATCH} />
+          <span className="text-[var(--c-primary)] text-sm">{myProgress}/{H2H_CARDS_PER_MATCH}</span>
         </div>
       </div>
 
       {/* Opponent progress bar */}
-      <div className="w-full term-border px-3 py-2">
-        <div className="flex items-center justify-between text-sm font-mono">
-          <span className="text-[var(--c-secondary)]">
-            <span style={{ color: opponentThemeColor }}>OPP:</span> {opponentBadgeIcon && <span style={{ color: opponentThemeColor }}>{opponentBadgeIcon} </span>}<span style={{ color: opponentThemeColor }}>{opponentName}</span>
-          </span>
+      <div className="w-full term-border px-3 py-2" style={{ borderColor: `color-mix(in srgb, ${opponentThemeColor} 30%, transparent)` }}>
+        <div className="flex items-center justify-between font-mono">
+          <div className="flex items-center gap-2">
+            {opponentBadgeIcon && <span style={{ color: opponentThemeColor }}>{opponentBadgeIcon}</span>}
+            <span className="font-bold text-base" style={{ color: opponentThemeColor }}>{opponentName}</span>
+          </div>
           <div className="flex items-center gap-2">
             <ProgressSquares completed={opponentIndex} total={H2H_CARDS_PER_MATCH} />
-            <span className="text-[var(--c-dark)]">{opponentIndex}/{H2H_CARDS_PER_MATCH}</span>
+            <span className="text-sm" style={{ color: opponentThemeColor }}>{opponentIndex}/{H2H_CARDS_PER_MATCH}</span>
           </div>
         </div>
         {opponentEliminated && (
