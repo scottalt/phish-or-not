@@ -20,6 +20,7 @@ export default function InventoryPage() {
   const [showPreview, setShowPreview] = useState(false);
   const [rarityFilter, setRarityFilter] = useState<AchievementRarity | 'all'>('all');
   const [h2hRank, setH2HRank] = useState<{ rankLabel: string; rankPoints: number; rankColor: string } | null>(null);
+  const [achievementStats, setAchievementStats] = useState<Record<string, number>>({});
   const researchComplete = (profile?.researchAnswersSubmitted ?? 0) >= 30;
 
   useEffect(() => {
@@ -28,6 +29,13 @@ export default function InventoryPage() {
       if (res.ok) setH2HRank(await res.json());
     }).catch(() => {});
   }, [profile?.researchGraduated]);
+
+  useEffect(() => {
+    fetch('/api/achievements/stats')
+      .then((r) => r.json())
+      .then((d) => setAchievementStats(d.stats ?? {}))
+      .catch(() => {});
+  }, []);
 
   if (loading) {
     return (
@@ -279,6 +287,13 @@ export default function InventoryPage() {
                         S0
                       </span>
                     )}
+                  </div>
+
+                  {/* Completion percentage */}
+                  <div className="text-[10px] font-mono text-[var(--c-muted)] text-center">
+                    {achievementStats[achievement.id] !== undefined
+                      ? `${achievementStats[achievement.id]}% of players`
+                      : ''}
                   </div>
 
                   {/* Featured badge */}

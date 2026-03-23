@@ -13,6 +13,7 @@ import { H2HRankGuide } from './H2HRankGuide';
 import { H2H_RANKS, getRankFromPoints } from '@/lib/h2h';
 import { ACHIEVEMENTS, RARITY_COLORS } from '@/lib/achievements';
 import { version } from '@/package.json';
+import { QUESTS } from '@/lib/quests';
 
 interface LeaderboardEntry {
   name: string;
@@ -580,87 +581,66 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                         [ LOG IN / SIGN UP TO PLAY ]
                       </button>
                     )}
-                    {/* Clearance path + research button (visible until 30/30) */}
+                    {/* Quest cards + research button (visible until 30/30) */}
                     {!needsCallsign && signedIn && !researchCapped && (
-                      <div className="term-border bg-[var(--c-bg)] border-[color-mix(in_srgb,var(--c-accent)_40%,transparent)]">
-                        <div className="border-b border-[color-mix(in_srgb,var(--c-accent)_25%,transparent)] px-4 py-2">
-                          <span className="text-[var(--c-accent)] text-sm font-mono tracking-widest font-bold">CLEARANCE_PATH</span>
-                        </div>
-                        <div className="px-4 py-3 space-y-3">
-                          {/* Step 1: H2H at 10 */}
-                          <div className="flex items-center gap-3 text-sm font-mono">
-                            {answers >= 10
-                              ? <span className="text-[var(--c-primary)] shrink-0">{'\u2713'}</span>
-                              : <span className="text-[var(--c-accent)] shrink-0">{'\u25B6'}</span>
-                            }
-                            <span className={answers >= 10 ? 'text-[var(--c-muted)] line-through' : 'text-[var(--c-accent)] font-bold'}>
-                              10 answers — PvP
-                            </span>
-                          </div>
-                          {/* Progress bar for step 1 if current */}
-                          {answers < 10 && (
-                            <div className="ml-6 flex items-center gap-2">
-                              <div className="flex-1 h-1 bg-[var(--c-dark)]">
-                                <div className="h-full bg-[var(--c-accent)] transition-all" style={{ width: `${(answers / 10) * 100}%` }} />
-                              </div>
-                              <span className="text-[var(--c-accent)] text-xs font-mono">{answers}/10</span>
-                            </div>
-                          )}
+                      <div className="space-y-3">
+                        {QUESTS.map((quest) => {
+                          const completed = answers >= quest.target;
+                          const prevQuest = QUESTS[QUESTS.indexOf(quest) - 1];
+                          const isCurrent = !completed && (quest.target === 10 ? true : answers >= (prevQuest?.target ?? 0));
+                          const progress = Math.min(answers, quest.target);
 
-                          {/* Step 2: Daily at 20 */}
-                          <div className="flex items-center gap-3 text-sm font-mono">
-                            {answers >= 20
-                              ? <span className="text-[var(--c-primary)] shrink-0">{'\u2713'}</span>
-                              : answers >= 10
-                                ? <span className="text-[var(--c-accent)] shrink-0">{'\u25B6'}</span>
-                                : <span className="text-[var(--c-muted)] shrink-0">{'\u25CB'}</span>
-                            }
-                            <span className={answers >= 20 ? 'text-[var(--c-muted)] line-through' : answers >= 10 ? 'text-[var(--c-accent)] font-bold' : 'text-[var(--c-muted)]'}>
-                              20 answers — Daily Challenge
-                            </span>
-                          </div>
-                          {/* Progress bar for step 2 if current */}
-                          {answers >= 10 && answers < 20 && (
-                            <div className="ml-6 flex items-center gap-2">
-                              <div className="flex-1 h-1 bg-[var(--c-dark)]">
-                                <div className="h-full bg-[var(--c-accent)] transition-all" style={{ width: `${((answers - 10) / 10) * 100}%` }} />
+                          return (
+                            <div
+                              key={quest.id}
+                              className={`term-border bg-[var(--c-bg)] transition-all ${
+                                completed
+                                  ? 'border-[color-mix(in_srgb,var(--c-primary)_40%,transparent)] opacity-70'
+                                  : isCurrent
+                                    ? 'border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)]'
+                                    : 'border-[var(--c-dark)] opacity-40'
+                              }`}
+                            >
+                              <div className="px-4 py-3 flex items-start gap-3">
+                                <span className="text-lg shrink-0">{completed ? '\u2713' : quest.icon}</span>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center justify-between">
+                                    <span className={`text-sm font-mono font-bold tracking-wide ${
+                                      completed ? 'text-[var(--c-primary)] line-through' : isCurrent ? 'text-[var(--c-accent)]' : 'text-[var(--c-muted)]'
+                                    }`}>
+                                      {quest.name}
+                                    </span>
+                                    <span className={`text-xs font-mono ${completed ? 'text-[var(--c-primary)]' : 'text-[var(--c-muted)]'}`}>
+                                      +{quest.xpReward} XP
+                                    </span>
+                                  </div>
+                                  <div className={`text-xs font-mono mt-1 ${completed ? 'text-[var(--c-muted)]' : 'text-[var(--c-secondary)]'}`}>
+                                    {completed ? quest.reward : quest.description}
+                                  </div>
+                                  {isCurrent && (
+                                    <div className="flex items-center gap-2 mt-2">
+                                      <div className="flex-1 h-1.5 bg-[var(--c-dark)]">
+                                        <div
+                                          className="h-full bg-[var(--c-accent)] transition-all"
+                                          style={{ width: `${(progress / quest.target) * 100}%` }}
+                                        />
+                                      </div>
+                                      <span className="text-[var(--c-accent)] text-xs font-mono font-bold">{progress}/{quest.target}</span>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                              <span className="text-[var(--c-accent)] text-xs font-mono">{answers}/20</span>
                             </div>
-                          )}
+                          );
+                        })}
 
-                          {/* Step 3: Freeplay at 30 */}
-                          <div className="flex items-center gap-3 text-sm font-mono">
-                            {answers >= 30
-                              ? <span className="text-[var(--c-primary)] shrink-0">{'\u2713'}</span>
-                              : answers >= 20
-                                ? <span className="text-[var(--c-accent)] shrink-0">{'\u25B6'}</span>
-                                : <span className="text-[var(--c-muted)] shrink-0">{'\u25CB'}</span>
-                            }
-                            <span className={answers >= 30 ? 'text-[var(--c-muted)] line-through' : answers >= 20 ? 'text-[var(--c-accent)] font-bold' : 'text-[var(--c-muted)]'}>
-                              30 answers — Freeplay
-                            </span>
-                          </div>
-                          {/* Progress bar for step 3 if current */}
-                          {answers >= 20 && answers < 30 && (
-                            <div className="ml-6 flex items-center gap-2">
-                              <div className="flex-1 h-1 bg-[var(--c-dark)]">
-                                <div className="h-full bg-[var(--c-accent)] transition-all" style={{ width: `${((answers - 20) / 10) * 100}%` }} />
-                              </div>
-                              <span className="text-[var(--c-accent)] text-xs font-mono">{answers}/30</span>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Research button inside the clearance path */}
-                        <div className="border-t border-[color-mix(in_srgb,var(--c-accent)_25%,transparent)] px-4 py-3">
-                          <button
-                            onClick={() => handleStart('research')}
-                            className="w-full py-3 term-border font-mono font-bold tracking-widest text-sm active:scale-95 transition-all border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] text-[var(--c-accent)] hover:bg-[color-mix(in_srgb,var(--c-accent)_8%,transparent)]"
-                          >
-                            [ RESEARCH MODE ]
-                          </button>
-                        </div>
+                        {/* Research button */}
+                        <button
+                          onClick={() => handleStart('research')}
+                          className="w-full py-3 term-border font-mono font-bold tracking-widest text-sm active:scale-95 transition-all border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] text-[var(--c-accent)] hover:bg-[color-mix(in_srgb,var(--c-accent)_8%,transparent)]"
+                        >
+                          [ RESEARCH MODE ]
+                        </button>
                       </div>
                     )}
                     {/* Freeplay — visible only after 30/30 */}
