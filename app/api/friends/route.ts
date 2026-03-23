@@ -135,11 +135,14 @@ export async function POST(req: NextRequest) {
   }
 
   // Look up target player by display_name (case-insensitive)
-  const { data: target } = await admin
+  const { data: targets } = await admin
     .from('players')
     .select('id, display_name')
     .ilike('display_name', targetCallsign)
-    .single();
+    .order('xp', { ascending: false })
+    .limit(1);
+
+  const target = targets?.[0] ?? null;
 
   if (!target) {
     return NextResponse.json({ error: 'Player not found' }, { status: 404 });
