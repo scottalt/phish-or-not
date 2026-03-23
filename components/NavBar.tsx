@@ -10,10 +10,9 @@ import { version } from '@/package.json';
 
 const NAV_LINKS = [
   { label: 'HOME', path: '/play', match: (p: string) => p === '/play' },
-  { label: 'STATS', path: '/stats', match: (p: string) => p.startsWith('/stats') },
-  { label: 'INTEL', path: '/intel/player', match: (p: string) => p.startsWith('/intel') },
   { label: 'PROFILE', path: '/profile', match: (p: string) => p.startsWith('/profile') },
   { label: 'INVENTORY', path: '/inventory', match: (p: string) => p.startsWith('/inventory') },
+  { label: 'SHOP', path: '/shop', match: (p: string) => p.startsWith('/shop') },
 ];
 
 const HIDDEN_PATHS = ['/admin', '/auth', '/intel'];

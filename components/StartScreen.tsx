@@ -814,27 +814,19 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
               </button>
             ) : null;
 
-            const statsIntelLinks = signedIn && (profile?.researchAnswersSubmitted ?? 0) >= 20 ? (
-              <div className="grid grid-cols-2 gap-3">
-                <Link
-                  href="/stats"
-                  className="block w-full py-3 term-border text-center text-[var(--c-secondary)] font-mono font-bold tracking-widest text-sm hover:bg-[color-mix(in_srgb,var(--c-primary)_5%,transparent)] transition-all"
-                >
-                  [ STATS ]
-                </Link>
-                <Link
-                  href="/intel/player"
-                  className="block w-full py-3 term-border text-center text-[var(--c-secondary)] font-mono font-bold tracking-widest text-sm hover:bg-[color-mix(in_srgb,var(--c-primary)_5%,transparent)] transition-all"
-                >
-                  [ INTEL ]
-                </Link>
-              </div>
+            const intelLink = signedIn && (profile?.researchAnswersSubmitted ?? 0) >= 20 ? (
+              <Link
+                href="/intel/player"
+                className="block w-full py-3 term-border text-center text-[var(--c-secondary)] font-mono font-bold tracking-widest text-sm hover:bg-[color-mix(in_srgb,var(--c-primary)_5%,transparent)] transition-all"
+              >
+                [ INTEL BRIEFING ]
+              </Link>
             ) : (
               <Link
                 href="/intel/player"
                 className="block w-full py-3 term-border border-[color-mix(in_srgb,var(--c-primary)_15%,transparent)] text-center font-mono text-sm tracking-widest text-[var(--c-muted)] select-none hover:bg-[color-mix(in_srgb,var(--c-primary)_2%,transparent)] transition-all"
               >
-                [ STATS + INTEL — LOCKED ]
+                [ INTEL — LOCKED ]
                 <span className="block text-xs mt-1 tracking-wide">Submit 20 research answers to unlock</span>
               </Link>
             );
@@ -1009,7 +1001,7 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                       {actionButtons}
                       {h2hSection}
                       {dailyButton}
-                      {statsIntelLinks}
+                      {intelLink}
                       {/* Desktop: HOW_TO_PLAY / SIGNAL_GUIDE as collapsible panels */}
                       <div className="hidden lg:block space-y-3 mt-auto pt-4">
                         {howToPlayPanel}
@@ -1043,7 +1035,7 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                   {h2hSection}
                   {rankTiersMobile}
                   {dailyButton}
-                  {statsIntelLinks}
+                  {intelLink}
                   {versionLink}
                   {leaderboard}
                 </div>
