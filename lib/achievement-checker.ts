@@ -185,7 +185,13 @@ export async function backfillPlayerAchievements(
   const dailySessionCount = (sessions ?? []).filter((s: { game_mode: string }) => s.game_mode === 'daily').length;
 
   // Check profile-based achievements first (no per-session data needed)
-  const profileChecks = ['first_blood', 'veteran', 'graduate', 'apex', 'xp_1000', 'xp_5000', 'xp_20000', 'pb_2500', 'daily_3'];
+  const profileChecks = [
+    'first_blood', 'veteran', 'graduate', 'apex',
+    'xp_1000', 'xp_5000', 'xp_20000', 'pb_2500', 'daily_3',
+    'research_20', 'research_30',
+    'founder', 's0_silver', 's0_gold', 's0_platinum', 's0_diamond', 's0_master', 's0_elite',
+    'h2h_first_win', 'h2h_10_wins', 'h2h_50_wins', 'h2h_streak_5',
+  ];
   const newlyEarned: string[] = [];
 
   for (const id of profileChecks) {
