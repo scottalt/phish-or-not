@@ -177,6 +177,9 @@ export async function GET() {
 
   const playerId = player.id;
 
+  // Refresh queue marker TTL on each poll (proves player is still online)
+  await redis.expire(`h2h:queue:player:${playerId}`, 15);
+
   // Check if already matched
   const existingMatchId = await redis.get<string>(`h2h:matched:${playerId}`);
   if (existingMatchId) {
@@ -187,9 +190,28 @@ export async function GET() {
 
   // Get all queue entries (sorted by score/timestamp ascending)
   const rawEntries = await redis.zrange('h2h:queue', 0, -1);
-  const entries: QueueEntry[] = rawEntries.map((raw) =>
+  const allEntries: QueueEntry[] = rawEntries.map((raw) =>
     typeof raw === 'string' ? JSON.parse(raw) : raw as QueueEntry,
   );
+
+  const now = Date.now();
+  const STALE_THRESHOLD_MS = 45_000; // entries older than 45s are stale (ghost timeout is 30s)
+
+  // Clean up stale entries — players who left without cancelling
+  const staleEntries = allEntries.filter((e) => now - e.joinedAt > STALE_THRESHOLD_MS && e.playerId !== playerId);
+  if (staleEntries.length > 0) {
+    for (const stale of staleEntries) {
+      await redis.zrem('h2h:queue', JSON.stringify(stale));
+      await redis.del(`h2h:queue:player:${stale.playerId}`);
+    }
+  }
+
+  // Re-read after cleanup
+  const freshRaw = staleEntries.length > 0 ? await redis.zrange('h2h:queue', 0, -1) : rawEntries;
+  const entries: QueueEntry[] = (staleEntries.length > 0
+    ? freshRaw.map((raw) => typeof raw === 'string' ? JSON.parse(raw) : raw as QueueEntry)
+    : allEntries
+  ).filter((e) => now - e.joinedAt <= STALE_THRESHOLD_MS || e.playerId === playerId);
 
   // Find self in queue
   const selfIdx = entries.findIndex((e) => e.playerId === playerId);
@@ -199,7 +221,6 @@ export async function GET() {
   }
 
   const selfEntry = entries[selfIdx];
-  const now = Date.now();
 
   if (entries.length < 2) {
     // Not enough players — check for timeout → ghost match
@@ -247,8 +268,20 @@ export async function GET() {
   const maxTierDiff = waitSeconds < 5 ? 0 : waitSeconds < 15 ? 1 : Infinity;
 
   // Find best opponent within tier range (closest rank first)
-  const candidates = entries
-    .filter((e) => e.playerId !== playerId)
+  // Only consider opponents whose queue marker key still exists (they're still polling)
+  const candidateEntries = entries.filter((e) => e.playerId !== playerId);
+  const activeCandidates: typeof candidateEntries = [];
+  for (const c of candidateEntries) {
+    const stillQueued = await redis.get(`h2h:queue:player:${c.playerId}`);
+    if (stillQueued) {
+      activeCandidates.push(c);
+    } else {
+      // Stale entry — clean up
+      await redis.zrem('h2h:queue', JSON.stringify(c));
+    }
+  }
+
+  const candidates = activeCandidates
     .map((e) => {
       const oppRank = getRankFromPoints(e.rankPoints);
       const oppRankIdx = getRankIndex(oppRank.tier);
