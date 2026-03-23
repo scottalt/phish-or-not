@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 interface AuthFlowProps {
@@ -17,11 +17,17 @@ export function AuthFlow({ onSignIn, onVerifyCode, onCancel, headless = false }:
   const [state, setState] = useState<'idle' | 'loading' | 'sent' | 'verifying' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
 
+  // If they've agreed before, pre-check the box
+  useEffect(() => {
+    try { if (localStorage.getItem('terms_agreed') === '1') setAgreed(true); } catch {}
+  }, []);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!email.includes('@')) { setErrorMsg('Enter a valid email'); setState('error'); return; }
     if (!agreed) { setErrorMsg('You must agree to the Privacy Policy and Terms of Use'); setState('error'); return; }
     setState('loading');
+    try { localStorage.setItem('terms_agreed', '1'); } catch {}
     const { error } = await onSignIn(email);
     if (error) { setErrorMsg(error); setState('error'); }
     else setState('sent');
