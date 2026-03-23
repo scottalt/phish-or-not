@@ -80,7 +80,7 @@ export default function InventoryPage() {
               : null;
             return (
               <div className="border-t border-[color-mix(in_srgb,var(--c-primary)_15%,transparent)] px-4 py-4">
-                <div className="text-[var(--c-muted)] text-xs font-mono mb-3 text-center">This is how you appear to opponents in H2H</div>
+                <div className="text-[var(--c-muted)] text-xs font-mono mb-3 text-center">This is how you appear to opponents in PvP</div>
                 <div className="border border-[color-mix(in_srgb,var(--c-primary)_20%,transparent)] p-4 max-w-xs mx-auto">
                   <div className="text-center space-y-2">
                     <div className="text-[var(--c-primary)] text-sm font-mono font-bold">
@@ -306,7 +306,7 @@ export default function InventoryPage() {
             <div className="text-4xl">🏪</div>
             <div className="text-[#ff0080] text-lg font-mono font-bold tracking-widest">COMING SOON</div>
             <div className="text-[var(--c-secondary)] text-sm font-mono leading-relaxed max-w-sm mx-auto">
-              Earn coins through gameplay. Spend them on exclusive themes, badges, and cosmetics your opponents will see in Head-to-Head.
+              Earn coins through gameplay. Spend them on exclusive themes, badges, and cosmetics your opponents will see in PvP.
             </div>
             <div className="text-[var(--c-muted)] text-xs font-mono">Season 1</div>
           </div>

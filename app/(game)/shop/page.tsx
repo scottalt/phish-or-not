@@ -26,7 +26,7 @@ export default function ShopPage() {
             <div className="text-[var(--c-secondary)] text-sm font-mono">SEASON 1</div>
           </div>
           <div className="text-[var(--c-secondary)] text-sm font-mono leading-relaxed max-w-md mx-auto">
-            Earn coins through gameplay. Spend them on exclusive themes, badges, titles, and cosmetics your opponents will see in Head-to-Head matches.
+            Earn coins through gameplay. Spend them on exclusive themes, badges, titles, and cosmetics your opponents will see in PvP matches.
           </div>
           <div className="grid grid-cols-3 gap-3 max-w-sm mx-auto pt-4">
             <div className="term-border px-3 py-3 text-center opacity-50">

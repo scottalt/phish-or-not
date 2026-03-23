@@ -91,6 +91,6 @@ export const CATEGORY_LABELS: Record<AchievementCategory, string> = {
   investigation: 'INVESTIGATION',
   xp:            'XP / RANK',
   daily:         'DAILY',
-  h2h:           'HEAD 2 HEAD',
+  h2h:           'PvP',
   season:        'SEASON EXCLUSIVE',
 };

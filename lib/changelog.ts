@@ -89,8 +89,8 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     date: '2026-03-22',
     category: 'update',
-    title: 'v2.0.0 — Head-to-Head mode + unlock ladder',
-    body: 'New competitive mode: 1v1 ranked matches in real time. 5 cards, same deck, pure speed. Wrong answer eliminates. Seasonal ranks from Bronze to Elite with skill-based point scaling. Expert mode merged into Freeplay. New unlock progression: 10 research answers unlocks H2H, 20 unlocks Daily Challenge, 30 unlocks Freeplay.',
+    title: 'v2.0.0 — PvP mode + unlock ladder',
+    body: 'New competitive mode: 1v1 ranked matches in real time. 5 cards, same deck, pure speed. Wrong answer eliminates. Seasonal ranks from Bronze to Elite with skill-based point scaling. Expert mode merged into Freeplay. New unlock progression: 10 research answers unlocks PvP, 20 unlocks Daily Challenge, 30 unlocks Freeplay.',
     highlight: true,
   },
 ];

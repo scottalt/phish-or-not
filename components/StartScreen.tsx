@@ -594,7 +594,7 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                               : <span className="text-[var(--c-accent)] shrink-0">{'\u25B6'}</span>
                             }
                             <span className={answers >= 10 ? 'text-[var(--c-muted)] line-through' : 'text-[var(--c-accent)] font-bold'}>
-                              10 answers — Head-to-Head
+                              10 answers — PvP
                             </span>
                           </div>
                           {/* Progress bar for step 1 if current */}
@@ -774,7 +774,7 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                   {h2hStats ? (
                     <>
                       <div className="flex items-center justify-center gap-2">
-                        <span>[ HEAD 2 HEAD ]</span>
+                        <span>[ PvP MODE ]</span>
                         <span className="text-xs px-1 py-0.5 border border-[rgba(255,170,0,0.5)] text-[#ffaa00] font-normal">BETA</span>
                         <span className="text-xs px-1.5 py-0.5 border border-[rgba(255,0,128,0.4)] inline-flex items-center gap-1" style={{ color: h2hStats.rankColor }}>
                           {h2hStats.rankIcon} {h2hStats.rankLabel}
@@ -792,7 +792,7 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                   ) : (
                     <>
                       <div className="flex items-center justify-center gap-2">
-                        <span>[ HEAD 2 HEAD ]</span>
+                        <span>[ PvP MODE ]</span>
                         <span className="text-xs px-1 py-0.5 border border-[rgba(255,170,0,0.5)] text-[#ffaa00] font-normal">BETA</span>
                       </div>
                       <div className="text-[var(--c-secondary)] text-xs mt-1 font-normal tracking-wide">1v1 RANKED MULTIPLAYER</div>
@@ -867,7 +867,7 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                           onClick={() => setActiveTab('h2h')}
                           className={`text-sm font-mono tracking-widest ${activeTab === 'h2h' ? 'text-[#ff0080]' : 'text-[var(--c-muted)] hover:text-[var(--c-secondary)]'}`}
                         >
-                          H2H
+                          PvP
                         </button>
                       </>
                     )}

@@ -33,7 +33,7 @@ export function H2HLobby({ profile, onSearch, onBack }: Props) {
       {/* Player card */}
       <div className="term-border bg-[var(--c-bg)]">
         <div className="border-b border-[rgba(255,0,128,0.3)] px-4 py-3 flex items-center justify-between">
-          <h2 className="text-[#ff0080] text-sm font-mono tracking-widest font-bold">HEAD_2_HEAD</h2>
+          <h2 className="text-[#ff0080] text-sm font-mono tracking-widest font-bold">PvP_MODE</h2>
           <span className="text-[var(--c-muted)] text-xs font-mono tracking-widest">SEASON 0</span>
         </div>
 

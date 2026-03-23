@@ -398,7 +398,7 @@ export default function ProfilePage() {
                 : 'text-[var(--c-secondary)] hover:text-[#ff0080] border-b-2 border-transparent'
             }`}
           >
-            H2H STATS
+            PvP STATS
           </button>
         </div>
 
@@ -455,7 +455,7 @@ export default function ProfilePage() {
               {profile.researchGraduated && h2hStats && (
                 <div className="term-border bg-[var(--c-bg)]">
                   <div className="border-b border-[rgba(255,0,128,0.25)] px-3 py-1.5">
-                    <span className="text-[#ff0080] text-sm lg:text-base tracking-widest">H2H_RANK</span>
+                    <span className="text-[#ff0080] text-sm lg:text-base tracking-widest">PvP_RANK</span>
                   </div>
                   <div className="px-3 py-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -733,8 +733,8 @@ export default function ProfilePage() {
           <>
             {!h2hStats || (h2hStats.wins === 0 && h2hStats.losses === 0) ? (
               <div className="term-border bg-[var(--c-bg)] px-4 py-6 text-center space-y-2">
-                <div className="text-[var(--c-secondary)] text-sm font-mono tracking-widest">NO_H2H_DATA</div>
-                <div className="text-[var(--c-muted)] text-sm font-mono">No H2H matches played yet.</div>
+                <div className="text-[var(--c-secondary)] text-sm font-mono tracking-widest">NO_PvP_DATA</div>
+                <div className="text-[var(--c-muted)] text-sm font-mono">No PvP matches played yet.</div>
               </div>
             ) : (
               <>
