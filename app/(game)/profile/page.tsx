@@ -536,23 +536,6 @@ export default function ProfilePage() {
         {/* ═══════════════ INFO TAB ═══════════════ */}
         {profileTab === 'info' && (
           <>
-            <div className="text-center space-y-2">
-              <Link href="/inventory" className="text-[var(--c-secondary)] text-sm font-mono hover:text-[var(--c-primary)] transition-colors tracking-widest">
-                [ MANAGE THEMES + BADGES IN INVENTORY ]
-              </Link>
-              <br />
-              <Link href="/intel/player" className="text-[var(--c-secondary)] text-sm font-mono hover:text-[var(--c-primary)] transition-colors tracking-widest">
-                [ VIEW INTEL BRIEFING ]
-              </Link>
-              {profile.displayName && (
-                <>
-                  <br />
-                  <Link href={`/player/${encodeURIComponent(profile.displayName)}`} className="text-[var(--c-secondary)] text-sm font-mono hover:text-[var(--c-primary)] transition-colors tracking-widest">
-                    [ VIEW PUBLIC PROFILE ]
-                  </Link>
-                </>
-              )}
-            </div>
 
             {/* Bio editor */}
             <div className="term-border bg-[var(--c-bg)]">

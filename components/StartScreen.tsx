@@ -812,6 +812,7 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                             <span className="text-xs text-[var(--c-accent)] tracking-widest">QUEST:</span>
                             <span>{currentQuest.icon}</span>
                             <span className="text-[var(--c-accent)] text-sm font-mono font-bold">{currentQuest.name}</span>
+                            <span className="text-[var(--c-muted)] text-xs font-mono">+{currentQuest.xpReward} XP</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="text-[var(--c-accent)] text-sm font-mono font-bold">{currentQuestProgress}/{currentQuest.target}</span>
