@@ -6,6 +6,7 @@ import { LevelMeter } from '@/components/LevelMeter';
 import { getRankFromLevel } from '@/lib/rank';
 import { ACHIEVEMENTS, RARITY_COLORS, CATEGORY_LABELS, type AchievementCategory } from '@/lib/achievements';
 import { getRankFromPoints, H2H_DAILY_RATED_CAP } from '@/lib/h2h';
+import { QUESTS } from '@/lib/quests';
 import Link from 'next/link';
 import type { PlayerBackground } from '@/lib/types';
 
@@ -66,7 +67,7 @@ export default function ProfilePage() {
   const [backgroundSaving, setBackgroundSaving] = useState(false);
   const [showRanks, setShowRanks] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
-  const [profileTab, setProfileTab] = useState<'info' | 'solo' | 'h2h' | 'friends'>('info');
+  const [profileTab, setProfileTab] = useState<'info' | 'solo' | 'h2h' | 'quests' | 'friends'>('info');
   const [editingBio, setEditingBio] = useState(false);
   const [bioValue, setBioValue] = useState('');
   const [bioSaving, setBioSaving] = useState(false);
@@ -520,6 +521,16 @@ export default function ProfilePage() {
             }`}
           >
             PvP STATS
+          </button>
+          <button
+            onClick={() => setProfileTab('quests')}
+            className={`flex-1 py-2 text-sm font-mono tracking-widest transition-colors ${
+              profileTab === 'quests'
+                ? 'text-[var(--c-accent)] bg-[color-mix(in_srgb,var(--c-accent)_6%,transparent)] border-b-2 border-[var(--c-accent)]'
+                : 'text-[var(--c-secondary)] hover:text-[var(--c-accent)] border-b-2 border-transparent'
+            }`}
+          >
+            QUESTS
           </button>
           <button
             onClick={() => setProfileTab('friends')}
@@ -1132,6 +1143,75 @@ export default function ProfilePage() {
                 </div>
               </>
             )}
+          </>
+        )}
+
+        {/* ═══════════════ QUESTS TAB ═══════════════ */}
+        {profileTab === 'quests' && (
+          <>
+            {QUESTS.map((quest, i) => {
+              const answers = profile.researchAnswersSubmitted ?? 0;
+              const completed = answers >= quest.target;
+              const prevTarget = i > 0 ? QUESTS[i - 1].target : 0;
+              const active = !completed && answers >= prevTarget;
+              const progress = completed ? 100 : Math.min(100, Math.round(((answers - prevTarget) / (quest.target - prevTarget)) * 100));
+
+              return (
+                <div
+                  key={quest.id}
+                  className={`term-border bg-[var(--c-bg)] ${completed ? 'border-[color-mix(in_srgb,var(--c-primary)_40%,transparent)]' : active ? 'border-[color-mix(in_srgb,var(--c-accent)_40%,transparent)]' : ''}`}
+                >
+                  <div className={`border-b px-3 py-2 flex items-center justify-between ${completed ? 'border-[color-mix(in_srgb,var(--c-primary)_40%,transparent)]' : 'border-[color-mix(in_srgb,var(--c-primary)_20%,transparent)]'}`}>
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">{quest.icon}</span>
+                      <span className={`text-sm font-mono tracking-widest font-bold ${completed ? 'text-[var(--c-primary)]' : active ? 'text-[var(--c-accent)]' : 'text-[var(--c-muted)]'}`}>
+                        {quest.name}
+                      </span>
+                    </div>
+                    {completed && (
+                      <span className="text-[var(--c-primary)] text-xs font-mono tracking-widest">COMPLETE</span>
+                    )}
+                    {active && !completed && (
+                      <span className="text-[var(--c-accent)] text-xs font-mono tracking-widest">{answers}/{quest.target}</span>
+                    )}
+                  </div>
+                  <div className="px-3 py-3 space-y-2">
+                    <p className="text-[var(--c-secondary)] text-sm font-mono leading-relaxed">
+                      {quest.description}
+                    </p>
+                    <p className="text-[var(--c-muted)] text-xs font-mono leading-relaxed">
+                      {quest.detail}
+                    </p>
+
+                    {/* Progress bar */}
+                    {(active || completed) && (
+                      <div className="space-y-1">
+                        <div className="w-full h-1.5 bg-[#0a140a]">
+                          <div
+                            className="h-full transition-all duration-500"
+                            style={{
+                              width: `${progress}%`,
+                              backgroundColor: completed ? 'var(--c-primary)' : 'var(--c-accent)',
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Reward */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-[var(--c-muted)] text-xs font-mono">REWARD</span>
+                      <div className="flex items-center gap-3">
+                        <span className={`text-xs font-mono font-bold ${completed ? 'text-[var(--c-primary)]' : 'text-[var(--c-secondary)]'}`}>
+                          {quest.reward}
+                        </span>
+                        <span className="text-[var(--c-accent)] text-xs font-mono">+{quest.xpReward} XP</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </>
         )}
 
