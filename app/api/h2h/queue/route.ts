@@ -241,7 +241,7 @@ export async function GET() {
           player2_id: null,
           card_ids: [],
           status: 'active',
-          is_bot_match: true,
+          is_ghost_match: true,
           is_rated: false,
           started_at: new Date().toISOString(),
         })
@@ -323,7 +323,7 @@ export async function GET() {
       player2_id: sortedIds[1],
       card_ids: [],
       status: 'active',
-      is_bot_match: false,
+      is_ghost_match: false,
       is_rated: true,
       started_at: new Date().toISOString(),
     })
