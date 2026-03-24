@@ -9,6 +9,20 @@ export const H2H_DAILY_RATED_CAP = 20;
 export const H2H_DAILY_HALF_RATE_AFTER = 10;
 export const CURRENT_SEASON = 'season-0';
 
+// ── Bot names for solo matches ──
+
+const BOT_NAMES = [
+  'AGENT_SMITH', 'PROXY_NULL', 'ZERO_COOL', 'CRASH_OVERRIDE', 'ACID_BURN',
+  'THE_PLAGUE', 'DARK_TANGENT', 'ROOT_KIT', 'PACKET_STORM', 'BYTE_FORCE',
+  'CIPHER_NET', 'STACK_TRACE', 'KERN_PANIC', 'DEAD_DROP', 'WIRE_SHARK',
+  'NET_SCOUT', 'HASH_CRACK', 'PORT_SCAN', 'SHELL_CODE', 'BRUTE_FORCE',
+  'LOGIC_BOMB', 'TRAP_DOOR', 'FIRE_WALL', 'SAND_BOX', 'HONEY_POT',
+];
+
+export function getRandomBotName(): string {
+  return BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)];
+}
+
 // ── Rank system ──
 
 export interface H2HRank {

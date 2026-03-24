@@ -10,7 +10,7 @@ interface Props {
   playerId: string;
   winnerId: string | null;
   myPointsDelta: number;
-  isGhost: boolean;
+  isBot: boolean;
   reason: string; // 'completed' | 'eliminated' | 'forfeit'
   onRematch: () => void;
   onBack: () => void;
@@ -56,7 +56,7 @@ export function H2HResult({
   playerId,
   winnerId,
   myPointsDelta,
-  isGhost,
+  isBot,
   reason,
   onRematch,
   onBack,
@@ -73,7 +73,7 @@ export function H2HResult({
   // winnerId is the source of truth — reason is just for display flavor
   const isWin = winnerId === playerId;
   const isLoss = winnerId !== null && winnerId !== playerId;
-  const noResult = winnerId === null; // ghost match wrong answer
+  const noResult = winnerId === null; // bot match wrong answer
 
   useEffect(() => {
     let cancelled = false;
@@ -209,10 +209,10 @@ export function H2HResult({
       )}
 
       {/* Rank + Points */}
-      {isGhost ? (
+      {isBot ? (
         <div className="text-center">
           <p className="text-sm text-[var(--c-muted)]">UNRATED</p>
-          <p className="text-xs text-[var(--c-muted)] mt-1">Ghost match — no points change</p>
+          <p className="text-xs text-[var(--c-muted)] mt-1">Bot match — no points change</p>
         </div>
       ) : stats ? (
         <div className="text-center text-sm">

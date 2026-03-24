@@ -6,12 +6,12 @@ import { H2HRankGuide } from './H2HRankGuide';
 
 interface Props {
   profile: { id: string; displayName: string | null };
-  onMatchFound: (matchId: string, isGhost: boolean) => void;
+  onMatchFound: (matchId: string, isBot: boolean) => void;
   onCancel: () => void;
 }
 
 const POLL_INTERVAL_MS = 2000;
-const GHOST_TIMEOUT_S = 30;
+const BOT_TIMEOUT_S = 30;
 
 export function H2HQueue({ profile, onMatchFound, onCancel }: Props) {
   const [elapsed, setElapsed] = useState(0);
@@ -69,7 +69,7 @@ export function H2HQueue({ profile, onMatchFound, onCancel }: Props) {
       if (data.matched && data.matchId) {
         matchedRef.current = true;
         cleanup();
-        onMatchFound(data.matchId, data.isGhost ?? false);
+        onMatchFound(data.matchId, data.isBot ?? false);
       }
     } catch {
       // network hiccup — keep polling
@@ -171,7 +171,7 @@ export function H2HQueue({ profile, onMatchFound, onCancel }: Props) {
 
   // ── Scanning animation dots ──
   const dots = '.'.repeat((elapsed % 3) + 1);
-  const ghostCountdown = Math.max(0, GHOST_TIMEOUT_S - elapsed);
+  const botCountdown = Math.max(0, BOT_TIMEOUT_S - elapsed);
 
   const displayName = profile.displayName ?? 'AGENT';
 
@@ -249,11 +249,12 @@ export function H2HQueue({ profile, onMatchFound, onCancel }: Props) {
             <span className="text-[var(--c-muted)]">
               Queue: <span className="text-[var(--c-primary)]">{elapsed}s</span>
             </span>
-            {ghostCountdown > 0 && (
-              <span className="text-[var(--c-muted)]">
-                Ghost in <span className="text-[var(--c-secondary)]">{ghostCountdown}s</span>
-              </span>
-            )}
+            <span className="text-[var(--c-muted)]">
+              {botCountdown > 0
+                ? <>Bot in <span className="text-[var(--c-secondary)]">{botCountdown}s</span></>
+                : <span className="text-[var(--c-primary)] animate-pulse">Launching bot...</span>
+              }
+            </span>
             {ratedMatchesLeft !== null && (
               <span className="text-[var(--c-muted)]">
                 Rated: <span className={ratedMatchesLeft > 0 ? 'text-[var(--c-secondary)]' : 'text-[#ffaa00]'}>{ratedMatchesLeft} left</span>

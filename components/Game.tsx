@@ -87,7 +87,7 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
   const sessionStartedAt = useRef<string>('');
   const [correctCount, setCorrectCount] = useState(0);
   const [h2hMatchId, setH2HMatchId] = useState<string | null>(null);
-  const [h2hIsGhost, setH2HIsGhost] = useState(false);
+  const [h2hIsBot, setH2HIsBot] = useState(false);
   const [h2hResult, setH2HResult] = useState<{ winnerId: string | null; myPointsDelta: number; opponentPointsDelta: number; reason: string } | null>(null);
   const hasAutoStarted = useRef(false);
   const [flashClass, setFlashClass] = useState<string | null>(null);
@@ -486,9 +486,9 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
       <div className="min-h-screen bg-[var(--c-bg)] flex flex-col items-center justify-center p-4 pb-safe">
         <H2HQueue
           profile={{ id: profile.id, displayName: profile.displayName }}
-          onMatchFound={(matchId, isGhost) => {
+          onMatchFound={(matchId, isBot) => {
             setH2HMatchId(matchId);
-            setH2HIsGhost(isGhost);
+            setH2HIsBot(isBot);
             setPhase('h2h_match');
           }}
           onCancel={() => setPhase('start')}
@@ -503,7 +503,7 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
         <H2HMatch
           matchId={h2hMatchId}
           playerId={profile.id}
-          isGhost={h2hIsGhost}
+          isBot={h2hIsBot}
           onMatchEnd={(result) => {
             setH2HResult(result);
             setPhase('h2h_result');
@@ -521,7 +521,7 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
           playerId={profile.id}
           winnerId={h2hResult?.winnerId ?? null}
           myPointsDelta={h2hResult?.myPointsDelta ?? 0}
-          isGhost={h2hIsGhost}
+          isBot={h2hIsBot}
           reason={h2hResult?.reason ?? 'completed'}
           onRematch={() => {
             setH2HMatchId(null);
@@ -531,7 +531,7 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
           onBack={() => {
             setH2HMatchId(null);
             setH2HResult(null);
-            setH2HIsGhost(false);
+            setH2HIsBot(false);
             setPhase('start');
           }}
         />

@@ -218,7 +218,7 @@ async function finalizeMatch(
       awardH2HXp(admin, loserId, loserCorrect ?? 0, false),
     ]);
   } else {
-    // Unrated / ghost match — atomically mark complete only if still active
+    // Unrated / bot match — atomically mark complete only if still active
     const { data: updated } = await admin
       .from('h2h_matches')
       .update({
@@ -232,7 +232,7 @@ async function finalizeMatch(
 
     if (!updated || updated.length === 0) return; // already finalized by another thread
 
-    // Award XP even for ghost matches (still practiced)
+    // Award XP even for bot matches (still practiced)
     if (match.player1_id) {
       const { count: p1Correct } = await admin.from('h2h_match_answers')
         .select('id', { count: 'exact', head: true })

@@ -21,7 +21,7 @@ import { ACHIEVEMENTS } from '@/lib/achievements';
 interface Props {
   matchId: string;
   playerId: string;
-  isGhost: boolean;
+  isBot: boolean;
   onMatchEnd: (result: {
     winnerId: string | null;
     myPointsDelta: number;
@@ -222,7 +222,7 @@ function CardDisplay({ card }: { card: SafeDealCard }) {
 // Main component
 // ---------------------------------------------------------------------------
 
-export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
+export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
   // ── Card / match state ──
   const [cards, setCards] = useState<SafeDealCard[]>([]);
   const [cardIndex, setCardIndex] = useState(0);
@@ -323,8 +323,9 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
           if (opp.featuredBadge) {
             setOpponentBadgeIcon(ACHIEVEMENTS.find(a => a.id === opp.featuredBadge)?.icon ?? null);
           }
-        } else if (isGhost) {
-          setOpponentName('GHOST');
+        } else if (isBot) {
+          const { getRandomBotName } = await import('@/lib/h2h');
+          setOpponentName(getRandomBotName());
         }
 
         // Set own badge
@@ -369,8 +370,8 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
           return;
         }
 
-        // Subscribe to realtime (skip for ghost matches — no opponent to listen to)
-        if (!isGhost) {
+        // Subscribe to realtime (skip for bot matches — no opponent to listen to)
+        if (!isBot) {
           try {
             subscribeToMatch(
               matchId,
@@ -415,11 +416,11 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
       cancelled = true;
       unsubscribeFromMatch();
     };
-  }, [matchId, playerId, isGhost, onMatchEnd, handleMatchResult]);
+  }, [matchId, playerId, isBot, onMatchEnd, handleMatchResult]);
 
   // ── Poll match state as Realtime fallback (every 3s for real matches) ──
   useEffect(() => {
-    if (isGhost || loading || matchEndedRef.current) return;
+    if (isBot || loading || matchEndedRef.current) return;
 
     const interval = setInterval(async () => {
       if (matchEndedRef.current) { clearInterval(interval); return; }
@@ -453,15 +454,15 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [matchId, playerId, isGhost, loading, onMatchEnd]);
+  }, [matchId, playerId, isBot, loading, onMatchEnd]);
 
-  // ── Ghost opponent simulation ──
-  // Ghost speed and failure chance scale with card complexity (body length as proxy)
+  // ── Bot opponent simulation ──
+  // Bot speed and failure chance scale with card complexity (body length as proxy)
   useEffect(() => {
-    if (!isGhost || loading || eliminated || finished || cards.length === 0) return;
+    if (!isBot || loading || eliminated || finished || cards.length === 0) return;
 
-    // Use card body length as a difficulty proxy — longer = harder = slower ghost
-    const ghostTimes = cards.map((card) => {
+    // Use card body length as a difficulty proxy — longer = harder = slower bot
+    const botTimes = cards.map((card) => {
       const len = card.body.length;
       // Short emails (<300 chars): 6-12s, Medium (300-600): 10-18s, Long (600+): 15-25s
       if (len < 300) return 6000 + Math.random() * 6000;
@@ -471,26 +472,26 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
 
     // Failure chance also scales with card complexity
     // Short: 2%, Medium: 6%, Long: 12%
-    let ghostEliminationCard = -1;
+    let botEliminationCard = -1;
     for (let i = 0; i < cards.length; i++) {
       const len = cards[i].body.length;
       const failChance = len < 300 ? 0.02 : len < 600 ? 0.06 : 0.12;
       if (Math.random() < failChance) {
-        ghostEliminationCard = i;
+        botEliminationCard = i;
         break;
       }
     }
 
-    let ghostCard = 0;
+    let botCard = 0;
     let totalElapsed = 0;
 
     const timers: ReturnType<typeof setTimeout>[] = [];
 
     for (let i = 0; i < H2H_CARDS_PER_MATCH; i++) {
-      totalElapsed += ghostTimes[i];
+      totalElapsed += botTimes[i];
 
-      if (i === ghostEliminationCard) {
-        // Ghost gets eliminated on this card
+      if (i === botEliminationCard) {
+        // Bot gets eliminated on this card
         const t = setTimeout(() => {
           setOpponentIndex(i + 1);
           setOpponentEliminated(true);
@@ -502,8 +503,8 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
       const capturedIndex = i;
       const capturedElapsed = totalElapsed;
       const t = setTimeout(() => {
-        ghostCard = capturedIndex + 1;
-        setOpponentIndex(ghostCard);
+        botCard = capturedIndex + 1;
+        setOpponentIndex(botCard);
       }, capturedElapsed);
       timers.push(t);
     }
@@ -511,7 +512,7 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
     return () => {
       timers.forEach(clearTimeout);
     };
-  }, [isGhost, loading, eliminated, finished]);
+  }, [isBot, loading, eliminated, finished]);
 
   // ── Submit answer ──
   async function submitAnswer(userAnswer: 'phishing' | 'legit') {
@@ -539,8 +540,8 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
           return;
         }
 
-        // Broadcast progress (skip for ghost — no opponent listening)
-        if (!isGhost) {
+        // Broadcast progress (skip for bot — no opponent listening)
+        if (!isBot) {
           try { broadcastProgress(matchId, playerId, cardIndex, data.correct); } catch { /* non-fatal */ }
         }
 
@@ -554,12 +555,12 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
           setTimeout(() => {
             setCardIndex(nextIndex);
             if (nextIndex >= H2H_CARDS_PER_MATCH) {
-              if (isGhost) {
-                // Ghost match — end immediately, player wins (unrated)
+              if (isBot) {
+                // Bot match — end immediately, player wins (unrated)
                 if (!matchEndedRef.current) {
                   matchEndedRef.current = true;
                   onMatchEnd({
-                    winnerId: playerId, // ghost matches always show as win for the player
+                    winnerId: playerId, // bot matches always show as win for the player
                     myPointsDelta: 0,
                     opponentPointsDelta: 0,
                     reason: 'completed',
@@ -616,14 +617,14 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
   const [readyTimer, setReadyTimer] = useState(30);
   const [countdown, setCountdown] = useState<number | null>(null);
 
-  // Ghost matches skip the lobby and start immediately
+  // Bot matches skip the lobby and start immediately
   useEffect(() => {
-    if (isGhost && !loading && cards.length > 0) {
+    if (isBot && !loading && cards.length > 0) {
       setReady(true);
       setOpponentReady(true);
       setMatchStarted(true);
     }
-  }, [isGhost, loading, cards.length]);
+  }, [isBot, loading, cards.length]);
 
   // Both ready → start 5-second countdown, then begin match
   useEffect(() => {
@@ -643,7 +644,7 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
 
   // Ready timeout — 30s for both players to accept, otherwise forfeit (no winner/loser)
   useEffect(() => {
-    if (loading || matchStarted || isGhost || countdown !== null) return;
+    if (loading || matchStarted || isBot || countdown !== null) return;
     const interval = setInterval(() => {
       setReadyTimer((prev) => {
         if (prev <= 1) {
@@ -664,7 +665,7 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [loading, matchStarted, isGhost, countdown, onMatchEnd]);
+  }, [loading, matchStarted, isBot, countdown, onMatchEnd]);
 
   function handleReady() {
     setReady(true);
@@ -693,7 +694,7 @@ export function H2HMatch({ matchId, playerId, isGhost, onMatchEnd }: Props) {
   }
 
   // ── Ready-up lobby (rendered as early return — safe because all hooks are above) ──
-  if (!matchStarted && !isGhost) {
+  if (!matchStarted && !isBot) {
     return (
       <div className="flex flex-col items-center gap-4 w-full max-w-sm lg:max-w-lg px-4 pb-safe">
         <div className="w-full term-border bg-[var(--c-bg)]">

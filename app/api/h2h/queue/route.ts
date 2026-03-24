@@ -202,7 +202,7 @@ export async function GET() {
   );
 
   const now = Date.now();
-  const STALE_THRESHOLD_MS = 45_000; // entries older than 45s are stale (ghost timeout is 30s)
+  const STALE_THRESHOLD_MS = 45_000; // entries older than 45s are stale (bot timeout is 30s)
 
   // Clean up stale entries — players who left without cancelling
   const staleEntries = allEntries.filter((e) => now - e.joinedAt > STALE_THRESHOLD_MS && e.playerId !== playerId);
@@ -230,7 +230,7 @@ export async function GET() {
   const selfEntry = entries[selfIdx];
 
   if (entries.length < 2) {
-    // Not enough players — check for timeout → ghost match
+    // Not enough players — check for timeout → bot match
     if (now - selfEntry.joinedAt >= H2H_QUEUE_TIMEOUT_MS) {
       const admin = getSupabaseAdminClient();
       const { data: match, error } = await admin
@@ -241,7 +241,7 @@ export async function GET() {
           player2_id: null,
           card_ids: [],
           status: 'active',
-          is_ghost_match: true,
+          is_bot_match: true,
           is_rated: false,
           started_at: new Date().toISOString(),
         })
@@ -252,14 +252,14 @@ export async function GET() {
         return NextResponse.json({ error: 'Failed to create match' }, { status: 500 });
       }
 
-      // Deal cards for the ghost match
+      // Deal cards for the bot match
       await dealMatchCards(match.id, [playerId]);
 
       // Clean up queue
       await redis.zrem('h2h:queue', JSON.stringify(selfEntry));
       await redis.del(`h2h:queue:player:${playerId}`);
 
-      return NextResponse.json({ matched: true, matchId: match.id, isGhost: true });
+      return NextResponse.json({ matched: true, matchId: match.id, isBot: true });
     }
 
     return NextResponse.json({ matched: false });
@@ -323,7 +323,7 @@ export async function GET() {
       player2_id: sortedIds[1],
       card_ids: [],
       status: 'active',
-      is_ghost_match: false,
+      is_bot_match: false,
       is_rated: true,
       started_at: new Date().toISOString(),
     })

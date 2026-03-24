@@ -142,7 +142,7 @@ export async function GET(
       cardIds: match.card_ids,
       status: match.status,
       winnerId: match.winner_id,
-      isGhostMatch: match.is_ghost_match,
+      isBotMatch: match.is_ghost_match,
       isRated: match.is_rated,
       startedAt: match.started_at,
       endedAt: match.ended_at,
