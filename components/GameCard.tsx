@@ -273,6 +273,7 @@ function SMSDisplay({ card, onScroll, onUrlInspected }: {
 export function GameCard({ card, onAnswer, questionNumber, total, streak, totalScore, soundEnabled, onToggleSound, onQuit, mode }: Props) {
   const [confidence, setConfidence] = useState<Confidence | null>(null);
   const [flying, setFlying] = useState(false);
+  const [processing, setProcessing] = useState(false);
 
   const renderTime          = useRef<number>(Date.now());
   const confidenceTime      = useRef<number | null>(null);
@@ -285,6 +286,7 @@ export function GameCard({ card, onAnswer, questionNumber, total, streak, totalS
     if (!confidence || answered.current) return;
     if (soundEnabled) playCommit();
     answered.current = true;
+    setProcessing(true);
     setFlying(true);
     const now = Date.now();
     const timeFromRender = now - renderTime.current;
@@ -351,7 +353,7 @@ export function GameCard({ card, onAnswer, questionNumber, total, streak, totalS
 
       {/* Card */}
       <div
-        className="w-full anim-card-entry"
+        className={`w-full anim-card-entry ${processing ? 'card-processing' : ''}`}
         style={{
           opacity: flying ? 0 : 1,
           transition: flying ? 'opacity 0.23s ease-in' : '',

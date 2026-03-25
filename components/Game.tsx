@@ -42,6 +42,7 @@ import { ResearchIntro } from './ResearchIntro';
 import { TutorialCard } from './TutorialCard';
 import { H2HLobby } from './H2HLobby';
 import { H2HQueue } from './H2HQueue';
+import { H2HCountdown } from './H2HCountdown';
 import { H2HMatch } from './H2HMatch';
 import { H2HResult } from './H2HResult';
 import type { Card, DealCard, Answer, Confidence, RoundResult, GameMode, AnswerEvent, SessionPayload } from '@/lib/types';
@@ -69,7 +70,7 @@ const CONFIDENCE_PENALTY: Record<Confidence, number> = {
 type GamePhase = 'start' | 'playing' | 'checking' | 'feedback'
   | 'summary' | 'daily_complete' | 'loading'
   | 'research_intro' | 'research_unavailable' | 'tutorial'
-  | 'h2h_lobby' | 'h2h_queue' | 'h2h_match' | 'h2h_result';
+  | 'h2h_lobby' | 'h2h_queue' | 'h2h_countdown' | 'h2h_match' | 'h2h_result';
 
 export function Game({ previewMode = false }: { previewMode?: boolean }) {
   const [phase, setPhase] = useState<GamePhase>('start');
@@ -88,6 +89,7 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
   const [correctCount, setCorrectCount] = useState(0);
   const [h2hMatchId, setH2HMatchId] = useState<string | null>(null);
   const [h2hIsBot, setH2HIsBot] = useState(false);
+  const [h2hOpponentName, setH2HOpponentName] = useState('OPPONENT');
   const [h2hResult, setH2HResult] = useState<{ winnerId: string | null; myPointsDelta: number; opponentPointsDelta: number; reason: string } | null>(null);
   const hasAutoStarted = useRef(false);
   const [flashClass, setFlashClass] = useState<string | null>(null);
@@ -489,9 +491,29 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
           onMatchFound={(matchId, isBot) => {
             setH2HMatchId(matchId);
             setH2HIsBot(isBot);
-            setPhase('h2h_match');
+            if (isBot) {
+              // Bot gets a random name for the countdown
+              import('@/lib/h2h').then(({ getRandomBotName }) => {
+                setH2HOpponentName(getRandomBotName());
+                setPhase('h2h_countdown');
+              });
+            } else {
+              setH2HOpponentName('OPPONENT'); // real opponent name resolved in countdown or match
+              setPhase('h2h_countdown');
+            }
           }}
           onCancel={() => setPhase('start')}
+        />
+      </div>
+    );
+  }
+
+  if (phase === 'h2h_countdown' && h2hMatchId && profile) {
+    return (
+      <div className="min-h-screen bg-[var(--c-bg)] flex flex-col items-center justify-center p-4 pb-safe">
+        <H2HCountdown
+          opponentName={h2hOpponentName}
+          onComplete={() => setPhase('h2h_match')}
         />
       </div>
     );
