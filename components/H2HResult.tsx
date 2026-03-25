@@ -214,9 +214,9 @@ export function H2HResult({
 
       {/* Rank + Points */}
       {isBot ? (
-        <div className="text-center">
-          <p className="text-sm text-[var(--c-muted)]">UNRATED</p>
-          <p className="text-xs text-[var(--c-muted)] mt-1">Bot match — no points change</p>
+        <div className="term-border bg-[var(--c-bg)] border-[color-mix(in_srgb,var(--c-muted)_30%,transparent)] px-4 py-3 text-center space-y-1">
+          <p className="text-sm text-[var(--c-muted)] tracking-widest font-mono">PRACTICE MATCH</p>
+          <p className="text-xs text-[var(--c-muted)] font-mono">No XP, rank points, or stats awarded. Play against a real opponent for ranked rewards.</p>
         </div>
       ) : stats ? (
         <div className="text-center text-sm">
