@@ -31,10 +31,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     const { id } = await params;
     const body = await req.json();
+    const { name, subtitle, unlock_level, unlock_label, requires_graduation, sort_order, colors } = body;
     const supabase = getSupabaseAdminClient();
     const { data, error } = await supabase
       .from('registry_themes')
-      .update(body)
+      .update({ name, subtitle, unlock_level, unlock_label, requires_graduation, sort_order, colors })
       .eq('id', id)
       .select()
       .single();

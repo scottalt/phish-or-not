@@ -42,10 +42,22 @@ export async function PUT(req: NextRequest) {
     if (!Array.isArray(body) || body.length === 0) {
       return NextResponse.json({ error: 'Body must be a non-empty array' }, { status: 400 });
     }
+    if (body.length > 100) {
+      return NextResponse.json({ error: 'Max 100 elements per request' }, { status: 400 });
+    }
+
+    // Validate and strip each element to allowed fields only
+    const sanitized = [];
+    for (const el of body) {
+      if (typeof el.season_id !== 'string' || typeof el.is_winner !== 'boolean' || typeof el.tier_diff !== 'number' || typeof el.delta !== 'number') {
+        return NextResponse.json({ error: 'Invalid element shape: requires season_id (string), is_winner (boolean), tier_diff (number), delta (number)' }, { status: 400 });
+      }
+      sanitized.push({ season_id: el.season_id, is_winner: el.is_winner, tier_diff: el.tier_diff, delta: el.delta });
+    }
 
     const { data, error } = await supabase
       .from('registry_h2h_point_deltas')
-      .upsert(body, { onConflict: 'season_id,is_winner,tier_diff' })
+      .upsert(sanitized, { onConflict: 'season_id,is_winner,tier_diff' })
       .select();
 
     if (error) {

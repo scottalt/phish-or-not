@@ -8,11 +8,13 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     if (denied) return denied;
 
     const { id } = await params;
+    const numId = Number(id);
+    if (isNaN(numId)) return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
     const supabase = getSupabaseAdminClient();
     const { data, error } = await supabase
       .from('registry_changelog')
       .select('*')
-      .eq('id', Number(id))
+      .eq('id', numId)
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 404 });
@@ -29,11 +31,14 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     const { id } = await params;
     const body = await req.json();
+    const numId = Number(id);
+    if (isNaN(numId)) return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
+    const { date, category, title, body: bodyText, highlight, sort_order } = body;
     const supabase = getSupabaseAdminClient();
     const { data, error } = await supabase
       .from('registry_changelog')
-      .update(body)
-      .eq('id', Number(id))
+      .update({ date, category, title, body: bodyText, highlight, sort_order })
+      .eq('id', numId)
       .select()
       .single();
 
@@ -50,11 +55,13 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     if (denied) return denied;
 
     const { id } = await params;
+    const numId = Number(id);
+    if (isNaN(numId)) return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
     const supabase = getSupabaseAdminClient();
     const { error } = await supabase
       .from('registry_changelog')
       .delete()
-      .eq('id', Number(id));
+      .eq('id', numId);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ ok: true });

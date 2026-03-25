@@ -29,10 +29,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     const { id } = await params;
     const body = await req.json();
+    const { name, description, category, rarity, icon, season_id, sort_order } = body;
     const supabase = getSupabaseAdminClient();
     const { data, error } = await supabase
       .from('registry_achievements')
-      .update(body)
+      .update({ name, description, category, rarity, icon, season_id, sort_order })
       .eq('id', id)
       .select()
       .single();

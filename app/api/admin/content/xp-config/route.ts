@@ -35,10 +35,22 @@ export async function PUT(req: NextRequest) {
     if (!Array.isArray(body) || body.length === 0) {
       return NextResponse.json({ error: 'Body must be a non-empty array' }, { status: 400 });
     }
+    if (body.length > 100) {
+      return NextResponse.json({ error: 'Max 100 elements per request' }, { status: 400 });
+    }
+
+    // Validate and strip each element to allowed fields only
+    const sanitized = [];
+    for (const el of body) {
+      if (typeof el.key !== 'string') {
+        return NextResponse.json({ error: 'Invalid element: key (string) is required' }, { status: 400 });
+      }
+      sanitized.push({ key: el.key, value_int: el.value_int, value_json: el.value_json, description: el.description });
+    }
 
     const { data, error } = await supabase
       .from('registry_xp_config')
-      .upsert(body, { onConflict: 'key' })
+      .upsert(sanitized, { onConflict: 'key' })
       .select();
 
     if (error) {

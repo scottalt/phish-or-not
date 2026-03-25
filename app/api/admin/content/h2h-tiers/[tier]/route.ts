@@ -50,10 +50,11 @@ export async function PUT(
 
     const supabase = getSupabaseAdminClient();
     const body = await req.json();
+    const { label, icon, min_points, color, sort_order } = body;
 
     const { data, error } = await supabase
       .from('registry_h2h_tiers')
-      .update(body)
+      .update({ label, icon, min_points, color, sort_order })
       .eq('tier', tier)
       .eq('season_id', seasonId)
       .select()
