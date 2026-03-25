@@ -553,7 +553,8 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                 onClick={() => tryStart('daily')}
                 className="flex-1 py-4 term-border-bright text-[var(--c-primary)] font-mono font-bold tracking-widest text-sm hover:bg-[color-mix(in_srgb,var(--c-primary)_8%,transparent)] active:bg-[color-mix(in_srgb,var(--c-primary)_15%,transparent)] transition-all"
               >
-                [ DAILY — {dateLabel} ]
+                [ DAILY ]
+                <div className="text-[var(--c-secondary)] text-xs mt-1 font-normal tracking-wide">{dateLabel}</div>
               </button>
             );
 
