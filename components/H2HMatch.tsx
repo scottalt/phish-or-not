@@ -78,7 +78,7 @@ function ProgressSquares({
           key={i}
           className={
             i < completed
-              ? 'text-[var(--c-primary)]'
+              ? 'text-[var(--c-primary)] anim-square-fill'
               : 'text-[var(--c-dark)]'
           }
         >
@@ -941,14 +941,14 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
         <button
           onClick={() => submitAnswer('phishing')}
           disabled={submitting}
-          className="flex-1 py-4 border border-[rgba(255,51,51,0.5)] text-[#ff3333] font-mono font-bold tracking-widest text-sm hover:bg-[rgba(255,51,51,0.1)] active:scale-95 transition-all disabled:opacity-40 disabled:pointer-events-none"
+          className="flex-1 py-4 border border-[rgba(255,51,51,0.5)] text-[#ff3333] font-mono font-bold tracking-widest text-sm hover:bg-[rgba(255,51,51,0.1)] active:scale-95 transition-all disabled:opacity-40 disabled:pointer-events-none btn-glow"
         >
           PHISHING
         </button>
         <button
           onClick={() => submitAnswer('legit')}
           disabled={submitting}
-          className="flex-1 py-4 border border-[color-mix(in_srgb,var(--c-primary)_50%,transparent)] text-[var(--c-primary)] font-mono font-bold tracking-widest text-sm hover:bg-[color-mix(in_srgb,var(--c-primary)_10%,transparent)] active:scale-95 transition-all disabled:opacity-40 disabled:pointer-events-none"
+          className="flex-1 py-4 border border-[color-mix(in_srgb,var(--c-primary)_50%,transparent)] text-[var(--c-primary)] font-mono font-bold tracking-widest text-sm hover:bg-[color-mix(in_srgb,var(--c-primary)_10%,transparent)] active:scale-95 transition-all disabled:opacity-40 disabled:pointer-events-none btn-glow"
         >
           LEGIT
         </button>

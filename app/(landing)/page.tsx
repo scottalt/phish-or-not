@@ -33,6 +33,9 @@ export default async function LandingPage() {
 
   return (
     <div className="overflow-x-hidden">
+      {/* Scanline overlay */}
+      <div className="fixed inset-0 pointer-events-none z-50" style={{ background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 10, 0, 0.06) 2px, rgba(0, 10, 0, 0.06) 4px)' }} />
+
       {/* Nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 py-4 px-6 flex items-center justify-between bg-[rgba(9,9,11,0.8)] backdrop-blur-xl border-b border-white/[0.06]">
         <div className="flex items-center gap-2.5 font-bold text-[15px] tracking-tight">
@@ -73,7 +76,7 @@ export default async function LandingPage() {
 
           {/* Heading */}
           <h1 className="text-4xl sm:text-5xl lg:text-[56px] font-extrabold tracking-[-1.5px] leading-[1.1] mb-5">
-            Can you spot <span className="text-[#00ff41]">AI&#8209;generated</span> phishing?
+            Can you spot <span className="text-[#00ff41]" style={{ textShadow: '0 0 20px rgba(0,255,65,0.3)' }}>AI&#8209;generated</span> phishing?
           </h1>
 
           {/* Subtitle */}
@@ -88,12 +91,13 @@ export default async function LandingPage() {
             <Link
               href="/play"
               className="px-8 py-3.5 bg-[#00ff41] text-black text-[15px] font-bold rounded-[10px] shadow-[0_0_20px_rgba(0,255,65,0.2)] hover:shadow-[0_0_30px_rgba(0,255,65,0.35)] hover:-translate-y-px transition-all"
+              style={{ textShadow: '0 0 6px rgba(0,0,0,0.3)' }}
             >
               Take the Challenge
             </Link>
             <a
               href="#research"
-              className="px-8 py-3.5 text-[#a1a1aa] text-[15px] font-semibold rounded-[10px] border border-white/10 hover:text-white hover:border-white/20 transition-all"
+              className="px-8 py-3.5 text-[#a1a1aa] text-[15px] font-semibold rounded-[10px] border border-white/10 hover:text-white hover:border-white/20 hover:shadow-[0_0_15px_rgba(255,255,255,0.06)] transition-all"
             >
               Learn More
             </a>
@@ -109,7 +113,7 @@ export default async function LandingPage() {
           </div>
 
           {/* Terminal Preview */}
-          <div className="mt-[60px] max-w-[420px] mx-auto bg-[#060c06] border border-[rgba(0,255,65,0.15)] rounded-xl overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.5),0_0_40px_rgba(0,255,65,0.05)]">
+          <div className="mt-[60px] max-w-[420px] mx-auto bg-[#060c06] border border-[rgba(0,255,65,0.15)] rounded-xl overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.5),0_0_40px_rgba(0,255,65,0.05),0_0_20px_rgba(0,255,65,0.08)]">
             {/* Title bar */}
             <div className="px-3.5 py-2.5 bg-[rgba(0,255,65,0.04)] border-b border-[rgba(0,255,65,0.1)] flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-[rgba(255,51,51,0.6)]" />
@@ -167,7 +171,7 @@ export default async function LandingPage() {
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-6 text-center">
-              <div className="text-4xl font-extrabold tracking-tight bg-gradient-to-br from-[#00ff41] to-[#00cc66] bg-clip-text text-transparent">
+              <div className="text-4xl font-extrabold tracking-tight font-[family-name:var(--font-geist-mono)] bg-gradient-to-br from-[#00ff41] to-[#00cc66] bg-clip-text text-transparent" style={{ textShadow: '0 0 20px rgba(0,255,65,0.4)' }}>
                 {stats.participants.toLocaleString()}
               </div>
               <div className="text-[13px] text-[#71717a] mt-1 font-medium">
@@ -175,7 +179,7 @@ export default async function LandingPage() {
               </div>
             </div>
             <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-6 text-center">
-              <div className="text-4xl font-extrabold tracking-tight bg-gradient-to-br from-[#00ff41] to-[#00cc66] bg-clip-text text-transparent">
+              <div className="text-4xl font-extrabold tracking-tight font-[family-name:var(--font-geist-mono)] bg-gradient-to-br from-[#00ff41] to-[#00cc66] bg-clip-text text-transparent" style={{ textShadow: '0 0 20px rgba(0,255,65,0.4)' }}>
                 {stats.overallAccuracy}%
               </div>
               <div className="text-[13px] text-[#71717a] mt-1 font-medium">
@@ -183,7 +187,7 @@ export default async function LandingPage() {
               </div>
             </div>
             <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-6 text-center">
-              <div className="text-4xl font-extrabold tracking-tight bg-gradient-to-br from-[#00ff41] to-[#00cc66] bg-clip-text text-transparent">
+              <div className="text-4xl font-extrabold tracking-tight font-[family-name:var(--font-geist-mono)] bg-gradient-to-br from-[#00ff41] to-[#00cc66] bg-clip-text text-transparent" style={{ textShadow: '0 0 20px rgba(0,255,65,0.4)' }}>
                 {stats.totalAnswers.toLocaleString()}
               </div>
               <div className="text-[13px] text-[#71717a] mt-1 font-medium">
@@ -290,6 +294,7 @@ export default async function LandingPage() {
         <Link
           href="/play"
           className="inline-block px-8 py-3.5 bg-[#00ff41] text-black text-[15px] font-bold rounded-[10px] shadow-[0_0_20px_rgba(0,255,65,0.2)] hover:shadow-[0_0_30px_rgba(0,255,65,0.35)] hover:-translate-y-px transition-all"
+          style={{ textShadow: '0 0 6px rgba(0,0,0,0.3)' }}
         >
           Take the Challenge &rarr;
         </Link>

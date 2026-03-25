@@ -33,9 +33,10 @@ export function AchievementToast({ achievementIds }: Props) {
             </div>
             <div className="px-3 py-3 flex items-center gap-3">
               <span
-                className="text-2xl font-mono anim-rank-pulse"
+                className="relative text-2xl font-mono anim-rank-pulse anim-achievement-burst"
                 style={{ color }}
               >
+                <span className="absolute inset-0 rounded-full anim-glow-ring" style={{ backgroundColor: 'currentColor' }} />
                 {def.icon}
               </span>
               <div className="flex-1 min-w-0">

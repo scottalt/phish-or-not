@@ -30,7 +30,7 @@ export function LevelMeter({ xp, level, compact }: LevelMeterProps) {
         <span className="text-[var(--c-dark)]">{isMax ? 'MAX' : `${current} / ${needed} XP`}</span>
       </div>
       <div className="h-1 bg-[var(--c-dark)] w-full">
-        <div className="h-full bg-[var(--c-primary)] transition-all duration-700" style={{ width: `${pct}%` }} />
+        <div className="h-full bg-[var(--c-primary)] transition-all duration-700" style={{ width: `${pct}%`, boxShadow: '0 0 6px var(--c-primary), 0 0 12px color-mix(in srgb, var(--c-primary) 40%, transparent)' }} />
       </div>
       <div className="text-right text-sm font-mono text-[var(--c-dark)]">{xp.toLocaleString()} XP total</div>
     </div>

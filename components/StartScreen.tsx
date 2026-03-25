@@ -540,7 +540,7 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
             const pvpButton = (
               <button
                 onClick={() => handleStart('h2h')}
-                className="flex-1 py-4 term-border font-mono font-bold tracking-widest text-sm active:scale-95 transition-all border-2 border-[rgba(255,0,128,0.5)] text-[#ff0080] hover:bg-[rgba(255,0,128,0.04)]"
+                className="flex-1 py-4 term-border font-mono font-bold tracking-widest text-sm active:scale-95 transition-all border-2 border-[rgba(255,0,128,0.5)] text-[#ff0080] hover:bg-[rgba(255,0,128,0.04)] btn-glow"
               >
                 [ PvP MODE ]
                 <div className="text-[var(--c-secondary)] text-xs mt-1 font-normal tracking-wide">RANKED COMPETITIVE</div>
@@ -551,7 +551,7 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
             const dailyButton = (
               <button
                 onClick={() => tryStart('daily')}
-                className="flex-1 py-4 term-border-bright text-[var(--c-primary)] font-mono font-bold tracking-widest text-sm hover:bg-[color-mix(in_srgb,var(--c-primary)_8%,transparent)] active:bg-[color-mix(in_srgb,var(--c-primary)_15%,transparent)] transition-all"
+                className="flex-1 py-4 term-border-bright text-[var(--c-primary)] font-mono font-bold tracking-widest text-sm hover:bg-[color-mix(in_srgb,var(--c-primary)_8%,transparent)] active:bg-[color-mix(in_srgb,var(--c-primary)_15%,transparent)] transition-all btn-glow"
               >
                 [ DAILY ]
                 <div className="text-[var(--c-secondary)] text-xs mt-1 font-normal tracking-wide">{dateLabel}</div>
@@ -562,7 +562,7 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
             const freeplayButton = (
               <button
                 onClick={() => tryStart('freeplay')}
-                className="flex-1 py-4 term-border font-mono font-bold tracking-widest text-sm active:scale-95 transition-all text-[var(--c-secondary)] hover:bg-[color-mix(in_srgb,var(--c-primary)_5%,transparent)]"
+                className="flex-1 py-4 term-border font-mono font-bold tracking-widest text-sm active:scale-95 transition-all text-[var(--c-secondary)] hover:bg-[color-mix(in_srgb,var(--c-primary)_5%,transparent)] btn-glow"
               >
                 [ FREEPLAY ]
               </button>
@@ -748,7 +748,7 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                   {/* Big research button — separate from quest */}
                   <button
                     onClick={() => handleStart('research')}
-                    className="w-full py-5 term-border font-mono font-bold tracking-widest text-lg active:scale-95 transition-all border-2 border-[color-mix(in_srgb,var(--c-accent)_60%,transparent)] text-[var(--c-accent)] hover:bg-[color-mix(in_srgb,var(--c-accent)_8%,transparent)]"
+                    className="w-full py-5 term-border font-mono font-bold tracking-widest text-lg active:scale-95 transition-all border-2 border-[color-mix(in_srgb,var(--c-accent)_60%,transparent)] text-[var(--c-accent)] hover:bg-[color-mix(in_srgb,var(--c-accent)_8%,transparent)] btn-glow"
                   >
                     [ RESEARCH MODE ]
                     <div className="text-[var(--c-secondary)] text-sm mt-1 font-normal tracking-wide">Analyze emails. Earn clearance.</div>
@@ -784,7 +784,7 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                         </div>
                         <button
                           onClick={() => handleStart('research')}
-                          className="w-full py-4 term-border font-mono font-bold tracking-widest text-base active:scale-95 transition-all border-2 border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] text-[var(--c-accent)] hover:bg-[color-mix(in_srgb,var(--c-accent)_8%,transparent)]"
+                          className="w-full py-4 term-border font-mono font-bold tracking-widest text-base active:scale-95 transition-all border-2 border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] text-[var(--c-accent)] hover:bg-[color-mix(in_srgb,var(--c-accent)_8%,transparent)] btn-glow"
                         >
                           [ RESEARCH MODE ]
                         </button>
@@ -836,7 +836,7 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                       <div className="px-4 pb-3">
                         <button
                           onClick={(e) => { e.stopPropagation(); handleStart('research'); }}
-                          className="w-full py-3 term-border font-mono font-bold tracking-widest text-sm active:scale-95 transition-all border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] text-[var(--c-accent)] hover:bg-[color-mix(in_srgb,var(--c-accent)_8%,transparent)]"
+                          className="w-full py-3 term-border font-mono font-bold tracking-widest text-sm active:scale-95 transition-all border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] text-[var(--c-accent)] hover:bg-[color-mix(in_srgb,var(--c-accent)_8%,transparent)] btn-glow"
                         >
                           [ RESEARCH MODE ]
                         </button>

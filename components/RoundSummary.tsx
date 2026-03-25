@@ -160,10 +160,13 @@ export function RoundSummary({ score, total, totalScore, results, mode, sessionI
         <div className="term-border bg-[var(--c-bg)] px-3 py-3 space-y-2">
           <div className="flex justify-between text-sm font-mono">
             <span className="text-[var(--c-secondary)]">XP EARNED</span>
-            <span className="text-[var(--c-primary)] font-bold">+{xpResult.xpEarned} XP</span>
+            <span className="text-[var(--c-primary)] font-bold anim-xp-pop">+{xpResult.xpEarned} XP</span>
           </div>
           {xpResult.levelUp && (
-            <div className="text-[var(--c-accent)] text-sm font-mono text-center">LEVEL UP → {xpResult.level}</div>
+            <>
+              <div className="anim-level-up text-[var(--c-accent)] text-sm font-mono text-center">LEVEL UP → {xpResult.level}</div>
+              <div className="level-flash-overlay" />
+            </>
           )}
           {xpResult.graduated && (
             <div className="term-border border-[color-mix(in_srgb,var(--c-accent)_40%,transparent)] px-2 py-2 text-center">
