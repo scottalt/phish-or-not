@@ -42,7 +42,15 @@ export async function POST() {
 
   const admin = getSupabaseAdminClient();
 
-  // Check no active match already
+  // Cancel any stale active matches (older than 10 minutes) before checking
+  const staleThreshold = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+  await admin.from('h2h_matches')
+    .update({ status: 'cancelled', ended_at: new Date().toISOString() })
+    .eq('status', 'active')
+    .or(`player1_id.eq.${playerId},player2_id.eq.${playerId}`)
+    .lt('started_at', staleThreshold);
+
+  // Check no active match already (recent ones only, stale ones just cleaned)
   const { data: activeMatch } = await admin
     .from('h2h_matches')
     .select('id')

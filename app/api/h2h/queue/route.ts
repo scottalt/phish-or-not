@@ -149,8 +149,16 @@ export async function POST() {
   await redis.del(`h2h:matched:${playerId}`);
   await removeFromQueue(playerId);
 
-  // Check if player is already in an active match
+  // Cancel stale active matches (older than 10 minutes)
   const admin0 = getSupabaseAdminClient();
+  const staleThreshold = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+  await admin0.from('h2h_matches')
+    .update({ status: 'cancelled', ended_at: new Date().toISOString() })
+    .eq('status', 'active')
+    .or(`player1_id.eq.${playerId},player2_id.eq.${playerId}`)
+    .lt('started_at', staleThreshold);
+
+  // Check if player is already in an active match (recent only)
   const { data: activeMatch } = await admin0
     .from('h2h_matches')
     .select('id')
