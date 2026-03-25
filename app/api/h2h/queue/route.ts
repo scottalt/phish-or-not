@@ -18,7 +18,6 @@ async function dealMatchCards(matchId: string, playerIds: string[]): Promise<str
 
   if (!data || data.length < H2H_CARDS_PER_MATCH) return [];
 
-  // Fisher-Yates shuffle
   const arr = [...data];
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -44,13 +43,11 @@ async function dealMatchCards(matchId: string, playerIds: string[]): Promise<str
 
   await redis.set(`match-cards:${matchId}`, JSON.stringify(cards), { ex: H2H_MATCH_TTL });
 
-  // Set server-side render timestamp for card 0 for all players (for timing verification)
   const now = Date.now();
   for (const pid of playerIds) {
     await redis.set(`match-render:${matchId}:${pid}:0`, now, { ex: H2H_MATCH_TTL });
   }
 
-  // Update match record with card IDs
   await supabase.from('h2h_matches').update({
     card_ids: cards.map((c) => c.id),
   }).eq('id', matchId);
@@ -88,7 +85,7 @@ async function getAuthenticatedPlayer(): Promise<AuthenticatedPlayer | null> {
   return player ?? null;
 }
 
-// ── Queue entry stored in a separate Redis key per player ──
+// ── Queue entry shape ──
 
 interface QueueEntry {
   playerId: string;
@@ -99,36 +96,40 @@ interface QueueEntry {
   joinedAt: number;
 }
 
-// Queue uses sorted set with player ID as member (score = join timestamp).
-// Entry data stored separately at h2h:queue:entry:{playerId}.
-// This avoids Upstash JSON serialization issues with sorted set members.
+// Simplified queue: each waiting player stores their entry at a known key.
+// A "registry" key lists all waiting player IDs.
+// No sorted sets — just simple get/set/del.
 
-const QUEUE_KEY = 'h2h:queue:v2';
-const QUEUE_ENTRY_PREFIX = 'h2h:queue:entry:';
-const QUEUE_MARKER_PREFIX = 'h2h:queue:player:';
-const STALE_THRESHOLD_MS = 45_000;
+const QUEUE_REGISTRY = 'h2h:queue:registry'; // Set of player IDs
+const QUEUE_PREFIX = 'h2h:queue:data:';       // Per-player entry data
+const QUEUE_TTL = 90;                          // Entry TTL in seconds
 
-async function getQueueEntries(): Promise<QueueEntry[]> {
-  // Get all player IDs from sorted set with scores (joinedAt timestamps)
-  const members = await redis.zrange(QUEUE_KEY, 0, -1, { withScores: true }) as (string | number)[];
-
-  // Parse pairs: [member, score, member, score, ...]
-  const entries: QueueEntry[] = [];
-  for (let i = 0; i < members.length; i += 2) {
-    const playerId = String(members[i]);
-    const joinedAt = Number(members[i + 1]);
-    const data = await redis.get<QueueEntry>(`${QUEUE_ENTRY_PREFIX}${playerId}`);
-    if (data) {
-      entries.push({ ...data, playerId, joinedAt });
-    }
-  }
-  return entries;
+async function addToQueue(entry: QueueEntry) {
+  await redis.set(`${QUEUE_PREFIX}${entry.playerId}`, JSON.stringify(entry), { ex: QUEUE_TTL });
+  await redis.sadd(QUEUE_REGISTRY, entry.playerId);
 }
 
 async function removeFromQueue(playerId: string) {
-  await redis.zrem(QUEUE_KEY, playerId);
-  await redis.del(`${QUEUE_ENTRY_PREFIX}${playerId}`);
-  await redis.del(`${QUEUE_MARKER_PREFIX}${playerId}`);
+  await redis.del(`${QUEUE_PREFIX}${playerId}`);
+  await redis.srem(QUEUE_REGISTRY, playerId);
+}
+
+async function getQueueEntries(): Promise<QueueEntry[]> {
+  const playerIds = await redis.smembers(QUEUE_REGISTRY);
+  const entries: QueueEntry[] = [];
+
+  for (const pid of playerIds) {
+    const raw = await redis.get<string | QueueEntry>(`${QUEUE_PREFIX}${pid}`);
+    if (!raw) {
+      // Entry expired but ID still in registry — clean up
+      await redis.srem(QUEUE_REGISTRY, pid);
+      continue;
+    }
+    const entry: QueueEntry = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    entries.push(entry);
+  }
+
+  return entries;
 }
 
 // ── POST — Join the matchmaking queue ──
@@ -144,7 +145,7 @@ export async function POST() {
 
   const playerId = player.id;
 
-  // Clean up stale match key and any previous queue entry (handles browser crash/reconnect)
+  // Clean up stale state
   await redis.del(`h2h:matched:${playerId}`);
   await removeFromQueue(playerId);
 
@@ -162,13 +163,7 @@ export async function POST() {
     return NextResponse.json({ error: 'Already in an active match' }, { status: 409 });
   }
 
-  // Prevent double-queue
-  const alreadyQueued = await redis.get(`${QUEUE_MARKER_PREFIX}${playerId}`);
-  if (alreadyQueued) {
-    return NextResponse.json({ error: 'Already in queue' }, { status: 409 });
-  }
-
-  // Get player's rank points for current season (default 0)
+  // Get player's rank points for current season
   const admin = getSupabaseAdminClient();
   const { data: stats } = await admin
     .from('h2h_player_stats')
@@ -179,7 +174,6 @@ export async function POST() {
 
   const rankPoints = stats?.rank_points ?? 0;
   const now = Date.now();
-
   const themeColor = THEMES.find(t => t.id === (player.theme_id ?? 'phosphor'))?.colors.primary ?? '#00ff41';
 
   const entry: QueueEntry = {
@@ -191,12 +185,7 @@ export async function POST() {
     joinedAt: now,
   };
 
-  // Store entry data separately, add player ID to sorted set
-  await redis.set(`${QUEUE_ENTRY_PREFIX}${playerId}`, JSON.stringify(entry), { ex: 120 });
-  await redis.zadd(QUEUE_KEY, { score: now, member: playerId });
-
-  // Mark player as queued with 60s TTL
-  await redis.set(`${QUEUE_MARKER_PREFIX}${playerId}`, '1', { ex: 60 });
+  await addToQueue(entry);
 
   return NextResponse.json({ queued: true });
 }
@@ -211,13 +200,9 @@ export async function GET() {
 
   const playerId = player.id;
 
-  // Refresh queue marker TTL on each poll (proves player is still online)
-  await redis.expire(`${QUEUE_MARKER_PREFIX}${playerId}`, 15);
-
   // Check if already matched
   const existingMatchId = await redis.get<string>(`h2h:matched:${playerId}`);
   if (existingMatchId) {
-    // Clean up queue keys
     await removeFromQueue(playerId);
     return NextResponse.json({ matched: true, matchId: existingMatchId });
   }
@@ -226,27 +211,29 @@ export async function GET() {
   const allEntries = await getQueueEntries();
   const now = Date.now();
 
-  // Clean up stale entries — players who left without cancelling
-  for (const e of allEntries) {
-    if (now - e.joinedAt > STALE_THRESHOLD_MS && e.playerId !== playerId) {
-      await removeFromQueue(e.playerId);
-    }
-  }
-
-  // Re-read after cleanup
-  const entries = await getQueueEntries();
-
-  // Find self in queue
-  const selfEntry = entries.find((e) => e.playerId === playerId);
+  // Find self
+  const selfEntry = allEntries.find((e) => e.playerId === playerId);
   if (!selfEntry) {
     return NextResponse.json({ matched: false });
   }
 
-  // Filter to non-stale entries
-  const activeEntries = entries.filter((e) => now - e.joinedAt <= STALE_THRESHOLD_MS || e.playerId === playerId);
+  // Clean stale entries (older than 45s, not self)
+  for (const e of allEntries) {
+    if (now - e.joinedAt > 45_000 && e.playerId !== playerId) {
+      await removeFromQueue(e.playerId);
+    }
+  }
+
+  // Refresh self entry TTL (proves still online)
+  await redis.expire(`${QUEUE_PREFIX}${playerId}`, QUEUE_TTL);
+
+  // Filter to active entries
+  const activeEntries = allEntries.filter(
+    (e) => (now - e.joinedAt <= 45_000 || e.playerId === playerId)
+  );
 
   if (activeEntries.length < 2) {
-    // Not enough players — check for timeout → bot match
+    // Solo in queue — check for bot timeout
     const waitMs = now - selfEntry.joinedAt;
     if (waitMs >= H2H_QUEUE_TIMEOUT_MS) {
       const admin = getSupabaseAdminClient();
@@ -270,10 +257,7 @@ export async function GET() {
         return NextResponse.json({ error: 'Failed to create match' }, { status: 500 });
       }
 
-      // Deal cards for the bot match
       await dealMatchCards(match.id, [playerId]);
-
-      // Clean up queue
       await removeFromQueue(playerId);
 
       return NextResponse.json({ matched: true, matchId: match.id, isBot: true });
@@ -283,29 +267,13 @@ export async function GET() {
   }
 
   // >= 2 entries — skill-based matchmaking
-  // Prefer same-tier opponents, widen search over time
   const selfRank = getRankFromPoints(selfEntry.rankPoints);
   const selfRankIdx = getRankIndex(selfRank.tier);
   const waitSeconds = (now - selfEntry.joinedAt) / 1000;
-
-  // Tier search radius widens: 0-5s = same tier, 5-15s = ±1, 15s+ = any
   const maxTierDiff = waitSeconds < 5 ? 0 : waitSeconds < 15 ? 1 : Infinity;
 
-  // Find best opponent within tier range (closest rank first)
-  // Only consider opponents whose queue marker key still exists (they're still polling)
-  const candidateEntries = activeEntries.filter((e) => e.playerId !== playerId);
-  const activeCandidates: QueueEntry[] = [];
-  for (const c of candidateEntries) {
-    const stillQueued = await redis.get(`${QUEUE_MARKER_PREFIX}${c.playerId}`);
-    if (stillQueued) {
-      activeCandidates.push(c);
-    } else {
-      // Stale entry — clean up
-      await removeFromQueue(c.playerId);
-    }
-  }
-
-  const candidates = activeCandidates
+  const candidates = activeEntries
+    .filter((e) => e.playerId !== playerId)
     .map((e) => {
       const oppRank = getRankFromPoints(e.rankPoints);
       const oppRankIdx = getRankIndex(oppRank.tier);
@@ -319,14 +287,11 @@ export async function GET() {
     return NextResponse.json({ matched: false });
   }
 
-  // Deterministic lock key: sorted player IDs to prevent race conditions
+  // Deterministic lock
   const sortedIds = [playerId, opponentEntry.playerId].sort();
   const lockKey = `h2h:matching:${sortedIds[0]}:${sortedIds[1]}`;
-
-  // Try to acquire lock (SET NX with 10s TTL)
   const acquired = await redis.set(lockKey, '1', { ex: 10, nx: true });
   if (!acquired) {
-    // Another instance is already creating this match
     return NextResponse.json({ matched: false });
   }
 
@@ -348,21 +313,16 @@ export async function GET() {
     .single();
 
   if (error || !match) {
-    // Release lock on failure so others can retry
     await redis.del(lockKey);
     return NextResponse.json({ error: 'Failed to create match' }, { status: 500 });
   }
 
   const matchId = match.id;
-
-  // Deal cards for the match
   await dealMatchCards(matchId, sortedIds);
 
-  // Set matched keys for both players (60s TTL so the other player sees it on next poll)
   await redis.set(`h2h:matched:${sortedIds[0]}`, matchId, { ex: 60 });
   await redis.set(`h2h:matched:${sortedIds[1]}`, matchId, { ex: 60 });
 
-  // Remove both from queue
   await removeFromQueue(sortedIds[0]);
   await removeFromQueue(sortedIds[1]);
 
