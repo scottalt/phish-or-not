@@ -66,7 +66,7 @@ export function NavBar() {
             href="/changelog"
             onClick={() => { try { localStorage.setItem('lastSeenVersion', version); setHasUnread(false); } catch {} }}
             className={`relative text-[17px] tracking-wider transition-colors ${
-              pathname.startsWith('/changelog') ? 'text-[var(--c-primary)]' : 'text-[var(--c-secondary)] hover:text-[var(--c-secondary)]'
+              pathname.startsWith('/changelog') ? 'text-[var(--c-primary)]' : 'text-[var(--c-secondary)] hover:text-[var(--c-primary)]'
             }`}
           >
             WHAT&apos;S NEW
