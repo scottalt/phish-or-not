@@ -463,26 +463,42 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
   }, [matchId, playerId, isBot, loading, onMatchEnd]);
 
   // ── Bot opponent simulation ──
-  // Bot has realistic speed, can make mistakes, and CAN beat the player
+  // Simulates a realistic human opponent: variable speed, hesitation, mistakes
   useEffect(() => {
     if (!isBot || loading || eliminated || finished || cards.length === 0) return;
 
-    // Bot speed scales with card complexity (body length as proxy)
-    // Faster than before — bots are competitive
+    // ── Personality: randomize bot behavior per match ──
+    // Some bots are fast+reckless, others are slow+careful
+    const speedFactor = 0.7 + Math.random() * 0.6; // 0.7x (fast) to 1.3x (slow)
+
+    // ── Per-card timing: realistic human reading patterns ──
     const botTimes = cards.map((card) => {
       const len = card.body.length;
-      // Short emails (<300 chars): 4-9s, Medium (300-600): 7-14s, Long (600+): 10-20s
-      if (len < 300) return 4000 + Math.random() * 5000;
-      if (len < 600) return 7000 + Math.random() * 7000;
-      return 10000 + Math.random() * 10000;
+      let baseMs: number;
+      if (len < 300) baseMs = 4000 + Math.random() * 5000;       // 4-9s
+      else if (len < 600) baseMs = 7000 + Math.random() * 7000;  // 7-14s
+      else baseMs = 10000 + Math.random() * 10000;                // 10-20s
+
+      // Apply personality speed factor
+      baseMs *= speedFactor;
+
+      // Occasional hesitation: 20% chance the bot pauses an extra 2-5s on a card
+      // (like a real player re-reading something suspicious)
+      if (Math.random() < 0.2) {
+        baseMs += 2000 + Math.random() * 3000;
+      }
+
+      return baseMs;
     });
 
-    // Failure chance: ~25% chance the bot gets eliminated somewhere in the match
-    // Per-card: Short: 5%, Medium: 8%, Long: 12%
+    // ── Failure: ~30% chance the bot gets eliminated somewhere ──
+    // Later cards are harder — cumulative fail chance increases
     let botEliminationCard = -1;
     for (let i = 0; i < cards.length; i++) {
       const len = cards[i].body.length;
-      const failChance = len < 300 ? 0.05 : len < 600 ? 0.08 : 0.12;
+      // Base fail chance + increases on later cards (fatigue/complexity)
+      const cardPositionBonus = i * 0.02; // +2% per card position
+      const failChance = (len < 300 ? 0.04 : len < 600 ? 0.07 : 0.11) + cardPositionBonus;
       if (Math.random() < failChance) {
         botEliminationCard = i;
         break;
@@ -496,11 +512,12 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
       totalElapsed += botTimes[i];
 
       if (i === botEliminationCard) {
-        // Bot gets eliminated on this card
+        // Bot gets eliminated — add a small "thinking" delay before the wrong answer
+        const thinkDelay = 1000 + Math.random() * 2000;
         const t = setTimeout(() => {
           setOpponentIndex(i + 1);
           setOpponentEliminated(true);
-        }, totalElapsed);
+        }, totalElapsed + thinkDelay);
         timers.push(t);
         break;
       }
@@ -512,12 +529,11 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
 
         // Bot finished all cards — if player hasn't finished yet, bot wins
         if (capturedIndex + 1 >= H2H_CARDS_PER_MATCH && !matchEndedRef.current) {
-          // Give player a brief moment to see "bot finished" before ending
           setTimeout(() => {
             if (!matchEndedRef.current) {
               matchEndedRef.current = true;
               onMatchEnd({
-                winnerId: null, // result screen will show loss
+                winnerId: null,
                 myPointsDelta: 0,
                 opponentPointsDelta: 0,
                 reason: 'completed',

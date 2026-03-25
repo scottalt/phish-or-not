@@ -205,10 +205,17 @@ export function H2HResult({
             {matchData.myBadgeIcon && <span className="mr-1">{matchData.myBadgeIcon}</span>}
             {playerSummary('YOU', matchData.myCards, matchData.myTimeMs, matchData.myEliminated)}
           </p>
-          <p className="mt-1" style={{ color: matchData.oppThemeColor }}>
-            {matchData.oppBadgeIcon && <span className="mr-1">{matchData.oppBadgeIcon}</span>}
-            {playerSummary('OPP', matchData.oppCards, matchData.oppTimeMs, matchData.oppEliminated)}
-          </p>
+          {!isBot && (
+            <p className="mt-1" style={{ color: matchData.oppThemeColor }}>
+              {matchData.oppBadgeIcon && <span className="mr-1">{matchData.oppBadgeIcon}</span>}
+              {playerSummary('OPP', matchData.oppCards, matchData.oppTimeMs, matchData.oppEliminated)}
+            </p>
+          )}
+          {isBot && (
+            <p className="mt-1 text-[var(--c-muted)]">
+              OPP: BOT
+            </p>
+          )}
         </div>
       )}
 
