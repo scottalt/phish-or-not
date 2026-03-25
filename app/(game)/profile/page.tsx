@@ -109,7 +109,22 @@ export default function ProfilePage() {
     fetch('/api/player/admin-check').then(r => { if (r.ok) setIsAdmin(true); });
   }, []);
 
-  // Lazy-load friends data when tab selected
+  // Eagerly fetch incoming friend request count for notification badge
+  const [incomingCount, setIncomingCount] = useState(0);
+  useEffect(() => {
+    if (!signedIn) return;
+    fetch('/api/friends')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data) {
+          setIncomingCount(data.incoming?.length ?? 0);
+          setFriendsData(data); // cache it so the tab doesn't re-fetch
+        }
+      })
+      .catch(() => {});
+  }, [signedIn]);
+
+  // Lazy-load friends data when tab selected (fallback if eager fetch hasn't completed)
   useEffect(() => {
     if (profileTab !== 'friends' || friendsData || friendsLoading) return;
     setFriendsLoading(true);
@@ -530,13 +545,18 @@ export default function ProfilePage() {
           </button>
           <button
             onClick={() => setProfileTab('friends')}
-            className={`flex-1 py-2 text-sm font-mono tracking-widest transition-colors ${
+            className={`relative flex-1 py-2 text-sm font-mono tracking-widest transition-colors ${
               profileTab === 'friends'
                 ? 'text-[var(--c-primary)] bg-[color-mix(in_srgb,var(--c-primary)_6%,transparent)] border-b-2 border-[var(--c-primary)]'
                 : 'text-[var(--c-secondary)] hover:text-[var(--c-primary)] border-b-2 border-transparent'
             }`}
           >
             FRIENDS
+            {incomingCount > 0 && profileTab !== 'friends' && (
+              <span className="absolute top-1 right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-[var(--c-accent)] text-[var(--c-bg)] text-[10px] font-bold animate-pulse">
+                {incomingCount}
+              </span>
+            )}
           </button>
         </div>
 

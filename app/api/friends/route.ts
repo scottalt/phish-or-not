@@ -88,12 +88,14 @@ export async function GET() {
     .eq('player_id', player.id)
     .eq('status', 'pending');
 
-  // Resolve accepted friends
-  const friendIds = (accepted ?? []).map(r =>
-    r.player_id === player.id ? r.friend_id : r.player_id
+  // Resolve accepted friends — deduplicate since both directions exist in the table
+  const friendIdSet = new Set(
+    (accepted ?? []).map(r =>
+      r.player_id === player.id ? r.friend_id : r.player_id
+    )
   );
   const friends = (
-    await Promise.all(friendIds.map(id => friendSummary(admin, id)))
+    await Promise.all([...friendIdSet].map(id => friendSummary(admin, id)))
   ).filter(Boolean);
 
   // Resolve incoming request senders

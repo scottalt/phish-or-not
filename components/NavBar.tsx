@@ -29,8 +29,13 @@ export function NavBar() {
   const { soundEnabled, toggleSound } = useSoundEnabled();
 
   const [hasUnread, setHasUnread] = useState(false);
+  const [pendingFriends, setPendingFriends] = useState(0);
   useEffect(() => {
     try { setHasUnread(localStorage.getItem('lastSeenVersion') !== version); } catch {}
+    // Fetch pending friend request count for notification badge
+    fetch('/api/friends').then(r => r.ok ? r.json() : null).then(data => {
+      if (data?.incoming) setPendingFriends(data.incoming.length);
+    }).catch(() => {});
   }, []);
 
   if (!signedIn) return null;
@@ -49,16 +54,20 @@ export function NavBar() {
         <div className="flex items-center gap-6">
           {links.map((link) => {
             const active = link.match(pathname);
+            const showDot = link.label === 'PROFILE' && pendingFriends > 0;
             return (
               <Link
                 key={link.path}
                 href={link.path}
                 aria-current={active ? 'page' : undefined}
-                className={`text-[17px] tracking-wider transition-colors ${
+                className={`relative text-[17px] tracking-wider transition-colors ${
                   active ? 'text-[var(--c-primary)]' : 'text-[var(--c-secondary)] hover:text-[var(--c-primary)]'
                 }`}
               >
                 {link.label}
+                {showDot && (
+                  <span className="absolute -top-0.5 -right-2 w-2 h-2 rounded-full bg-[var(--c-accent)] animate-pulse" />
+                )}
               </Link>
             );
           })}
@@ -93,17 +102,21 @@ export function NavBar() {
         <div className="flex justify-around py-2.5">
           {links.map((link) => {
             const active = link.match(pathname);
+            const showDot = link.label === 'PROFILE' && pendingFriends > 0;
             return (
               <Link
                 key={link.path}
                 href={link.path}
                 aria-current={active ? 'page' : undefined}
-                className={`text-sm tracking-wider transition-colors px-3 py-1.5 ${
+                className={`relative text-sm tracking-wider transition-colors px-3 py-1.5 ${
                   active ? 'text-[var(--c-primary)] font-bold' : 'text-[var(--c-secondary)]'
                 }`}
                 style={active ? { textShadow: '0 0 8px color-mix(in srgb, var(--c-primary) 50%, transparent)' } : undefined}
               >
                 {link.label}
+                {showDot && (
+                  <span className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-[var(--c-accent)] animate-pulse" />
+                )}
               </Link>
             );
           })}
