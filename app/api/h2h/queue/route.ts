@@ -224,6 +224,7 @@ export async function GET() {
   const selfIdx = entries.findIndex((e) => e.playerId === playerId);
   if (selfIdx === -1) {
     // Player not in queue — nothing to do
+    console.log(`[h2h:queue] player ${playerId} NOT found in queue, entries: ${entries.length}`);
     return NextResponse.json({ matched: false });
   }
 
@@ -231,7 +232,9 @@ export async function GET() {
 
   if (entries.length < 2) {
     // Not enough players — check for timeout → bot match
-    if (now - selfEntry.joinedAt >= H2H_QUEUE_TIMEOUT_MS) {
+    const waitMs = now - selfEntry.joinedAt;
+    console.log(`[h2h:queue] solo in queue, waited ${waitMs}ms / ${H2H_QUEUE_TIMEOUT_MS}ms, entries: ${entries.length}, selfIdx: ${selfIdx}`);
+    if (waitMs >= H2H_QUEUE_TIMEOUT_MS) {
       const admin = getSupabaseAdminClient();
       const { data: match, error } = await admin
         .from('h2h_matches')
