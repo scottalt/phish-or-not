@@ -82,6 +82,10 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     try {
       const supabase = getSupabaseBrowserClient();
       const { error } = await supabase.auth.verifyOtp({ email, token: code, type: 'email' });
+      if (!error) {
+        // Revoke all other sessions — enforces single-device login
+        fetch('/api/auth/revoke-others', { method: 'POST' }).catch(() => {});
+      }
       return { error: error?.message ?? null };
     } catch {
       return { error: 'Verification failed' };
