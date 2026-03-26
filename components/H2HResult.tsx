@@ -218,21 +218,39 @@ export function H2HResult({
 
       {/* Scoreboard */}
       {matchData && (
-        <div className="w-full term-border p-3 text-sm">
-          <p className="text-[var(--c-primary)]">
-            {matchData.myBadgeIcon && <span className="mr-1">{matchData.myBadgeIcon}</span>}
-            {playerSummary('YOU', matchData.myCards, matchData.myTimeMs, matchData.myEliminated)}
-          </p>
-          {!isBot && (
-            <p className="mt-1" style={{ color: matchData.oppThemeColor }}>
-              {matchData.oppBadgeIcon && <span className="mr-1">{matchData.oppBadgeIcon}</span>}
-              {playerSummary('OPP', matchData.oppCards, matchData.oppTimeMs, matchData.oppEliminated)}
-            </p>
-          )}
-          {isBot && (
-            <p className="mt-1 text-[var(--c-muted)]">
-              OPP: BOT
-            </p>
+        <div className="w-full term-border p-4 space-y-3">
+          {/* You */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {matchData.myBadgeIcon && <span className="text-lg text-[var(--c-primary)]">{matchData.myBadgeIcon}</span>}
+              <span className="text-[var(--c-primary)] font-bold text-sm">{matchData.myName}</span>
+            </div>
+            <span className={`text-xs font-mono ${matchData.myEliminated ? 'text-[#ff3333]' : 'text-[var(--c-primary)]'}`}>
+              {matchData.myEliminated
+                ? `${matchData.myCards}/${H2H_CARDS_PER_MATCH} eliminated`
+                : `${matchData.myCards}/${H2H_CARDS_PER_MATCH} · ${formatTime(matchData.myTimeMs)}`
+              }
+            </span>
+          </div>
+          {/* Opponent */}
+          {!isBot ? (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {matchData.oppBadgeIcon && <span className="text-lg" style={{ color: matchData.oppThemeColor }}>{matchData.oppBadgeIcon}</span>}
+                <span className="font-bold text-sm" style={{ color: matchData.oppThemeColor }}>{matchData.oppName}</span>
+              </div>
+              <span className={`text-xs font-mono ${matchData.oppEliminated ? 'text-[#ff3333]' : 'text-[var(--c-secondary)]'}`}>
+                {matchData.oppEliminated
+                  ? `${matchData.oppCards}/${H2H_CARDS_PER_MATCH} eliminated`
+                  : `${matchData.oppCards}/${H2H_CARDS_PER_MATCH} · ${formatTime(matchData.oppTimeMs)}`
+                }
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between">
+              <span className="text-[var(--c-muted)] text-sm">BOT</span>
+              <span className="text-[var(--c-muted)] text-xs">practice match</span>
+            </div>
           )}
         </div>
       )}

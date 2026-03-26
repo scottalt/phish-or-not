@@ -233,6 +233,7 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   // ── Opponent state ──
+  const [myName, setMyName] = useState<string>('YOU');
   const [opponentName, setOpponentName] = useState<string>('OPPONENT');
   const [opponentIndex, setOpponentIndex] = useState(0);
   const [opponentEliminated, setOpponentEliminated] = useState(false);
@@ -335,8 +336,9 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
           setOpponentName(getRandomBotName());
         }
 
-        // Set own badge
+        // Set own name + badge
         const me = matchData.players[playerId];
+        if (me?.displayName) setMyName(me.displayName);
         if (me?.featuredBadge) {
           setMyBadgeIcon(ACHIEVEMENTS.find(a => a.id === me.featuredBadge)?.icon ?? null);
         }
@@ -793,35 +795,28 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
             <span className="text-[#ff0080] text-sm tracking-widest">MATCH_LOBBY</span>
           </div>
           <div className="px-4 py-6 space-y-6 text-center">
-            <div className="text-[var(--c-muted)] text-xs font-mono tracking-widest">
-              OPPONENT FOUND
-            </div>
-
-            {/* VS display — big names */}
-            <div className="flex items-center justify-center gap-4 font-mono">
-              <div className="text-center">
-                {myBadgeIcon && <div className="text-[var(--c-primary)] text-lg">{myBadgeIcon}</div>}
-                <div className="text-[var(--c-primary)] text-lg font-black tracking-wide">YOU</div>
-              </div>
-              <div className="text-[var(--c-muted)] text-xl font-black">VS</div>
-              <div className="text-center">
-                {opponentBadgeIcon && <div style={{ color: opponentThemeColor }} className="text-lg">{opponentBadgeIcon}</div>}
-                <div className="text-lg font-black tracking-wide" style={{ color: opponentThemeColor }}>{opponentName}</div>
-              </div>
-            </div>
-
-            {/* Ready status */}
-            <div className="flex justify-around text-sm font-mono">
-              <div className="space-y-1">
-                <div className="text-[var(--c-muted)]">YOU</div>
-                <div className={ready ? 'text-[var(--c-primary)]' : 'text-[var(--c-muted)]'}>
-                  {ready ? 'READY' : 'NOT READY'}
+            {/* VS display — prominent names with badges */}
+            <div className="flex items-stretch gap-3 font-mono">
+              {/* You */}
+              <div className="flex-1 term-border p-3 space-y-2">
+                {myBadgeIcon && <div className="text-[var(--c-primary)] text-2xl">{myBadgeIcon}</div>}
+                <div className="text-[var(--c-primary)] text-base font-black tracking-wide truncate">{myName}</div>
+                <div className={`text-xs tracking-widest ${ready ? 'text-[var(--c-primary)]' : 'text-[var(--c-muted)]'}`}>
+                  {ready ? '✓ READY' : 'NOT READY'}
                 </div>
               </div>
-              <div className="space-y-1">
-                <div className="text-[var(--c-dark)]">OPPONENT</div>
-                <div className={opponentReady ? 'text-[var(--c-primary)]' : 'text-[var(--c-muted)] animate-pulse'}>
-                  {opponentReady ? 'READY' : 'WAITING...'}
+
+              {/* VS divider */}
+              <div className="flex items-center">
+                <span className="text-[var(--c-muted)] text-lg font-black">VS</span>
+              </div>
+
+              {/* Opponent */}
+              <div className="flex-1 term-border p-3 space-y-2" style={{ borderColor: `color-mix(in srgb, ${opponentThemeColor} 35%, transparent)` }}>
+                {opponentBadgeIcon && <div className="text-2xl" style={{ color: opponentThemeColor }}>{opponentBadgeIcon}</div>}
+                <div className="text-base font-black tracking-wide truncate" style={{ color: opponentThemeColor }}>{opponentName}</div>
+                <div className={`text-xs tracking-widest ${opponentReady ? 'text-[var(--c-primary)]' : 'text-[var(--c-muted)] animate-pulse'}`}>
+                  {opponentReady ? '✓ READY' : 'WAITING...'}
                 </div>
               </div>
             </div>
