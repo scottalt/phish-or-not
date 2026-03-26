@@ -44,10 +44,10 @@ export function Handler({ lines, buttonText = 'CONTINUE', onDismiss }: Props) {
   const isLastLine = currentLine >= lines.length - 1;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-start justify-center pt-20 lg:pt-24 px-4 anim-fade-in" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
+    <div className="fixed top-4 left-4 right-4 z-[100] flex justify-center anim-fade-in-up pointer-events-none">
       <div
-        className="w-full max-w-sm anim-fade-in-up term-border bg-[var(--c-bg)] border-[color-mix(in_srgb,var(--c-accent)_40%,transparent)]"
-        style={{ boxShadow: '0 8px 40px rgba(0,0,0,0.5), 0 0 30px color-mix(in srgb, var(--c-accent) 10%, transparent)' }}
+        className="w-full max-w-sm pointer-events-auto term-border bg-[var(--c-bg)] border-[color-mix(in_srgb,var(--c-accent)_40%,transparent)]"
+        style={{ boxShadow: '0 8px 40px rgba(0,0,0,0.6), 0 0 30px color-mix(in srgb, var(--c-accent) 15%, transparent)' }}
       >
         {/* Header */}
         <div className="border-b border-[color-mix(in_srgb,var(--c-accent)_30%,transparent)] px-3 py-2 flex items-center justify-between">
