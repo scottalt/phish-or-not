@@ -37,15 +37,6 @@ export async function POST() {
   }
   const playerId = player.id as string;
 
-  // Daily bot match cap: check before creating (increment happens after success)
-  const today = new Date().toISOString().slice(0, 10);
-  const botDailyKey = `h2h:bot-daily:${playerId}:${today}`;
-  const currentCount = await redis.get<number>(botDailyKey);
-  if ((currentCount ?? 0) >= 10) {
-    console.log(`[bot] daily cap hit for ${playerId.slice(0,8)}`);
-    return NextResponse.json({ error: 'Daily bot match limit reached (10)' }, { status: 429 });
-  }
-
   // Prevent creating multiple bot matches concurrently
   // Short lock (30s) — released on match end, expires naturally if client fails to release
   const lockKey = `h2h:bot-lock:${playerId}`;
@@ -152,10 +143,6 @@ export async function POST() {
   await redis.set(`match-render:${match.id}:${playerId}:0`, Date.now(), { ex: H2H_MATCH_TTL });
   await admin.from('h2h_matches').update({ card_ids: cards.map((c) => c.id) }).eq('id', match.id);
 
-  // Increment daily counter only after successful match creation
-  const newCount = await redis.incr(botDailyKey);
-  if (newCount === 1) await redis.expire(botDailyKey, 24 * 60 * 60);
-
-  console.log(`[bot] match created for ${playerId.slice(0,8)}: ${match.id} (daily: ${newCount}/10)`);
+  console.log(`[bot] match created for ${playerId.slice(0,8)}: ${match.id}`);
   return NextResponse.json({ matchId: match.id });
 }
