@@ -267,9 +267,10 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
   const isPlayer1Ref = useRef(true);
   const opponentIdRef = useRef<string | null>(null);
 
-  // Reset render timer when card changes
+  // Reset render timer + scroll to top when card changes
   useEffect(() => {
     renderTime.current = Date.now();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [cardIndex]);
 
   // ── Handle incoming match result (from realtime or API) ──
@@ -1011,7 +1012,7 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
         flash === 'correct' ? 'ring-2 ring-[var(--c-primary)] ring-opacity-60' :
         flash === 'wrong' ? 'ring-2 ring-[#ff3333] ring-opacity-60' : ''
       }`}>
-        <CardDisplay card={currentCard} />
+        <CardDisplay key={cardIndex} card={currentCard} />
       </div>
 
       {/* Answer buttons */}
