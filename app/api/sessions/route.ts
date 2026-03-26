@@ -35,6 +35,16 @@ export async function PATCH(req: NextRequest) {
     const { data: { user } } = await authClient.auth.getUser();
     if (!user) return NextResponse.json({ ok: true }); // silent reject
 
+    const supabase = getSupabaseAdminClient();
+
+    // Resolve player_id from auth_id — needed for ownership check
+    const { data: player } = await supabase
+      .from('players')
+      .select('id')
+      .eq('auth_id', user.id)
+      .single();
+    if (!player) return NextResponse.json({ ok: true }); // silent reject — no player record
+
     const { sessionId, finalScore, finalRank, completedAt, cardsAnswered } = await req.json();
     if (!sessionId || typeof sessionId !== 'string') return NextResponse.json({ ok: true });
 
@@ -46,7 +56,19 @@ export async function PATCH(req: NextRequest) {
     const safeCompletedAt = typeof completedAt === 'string' && !isNaN(Date.parse(completedAt))
       ? completedAt : new Date().toISOString();
 
-    const supabase = getSupabaseAdminClient();
+    // Ownership check: verify session has answers from this player (sessions table
+    // doesn't have a player_id column — TODO: add player_id column via migration).
+    // For now, check that the session's answers belong to this player.
+    const { data: sessionAnswers } = await supabase
+      .from('answers')
+      .select('player_id')
+      .eq('session_id', sessionId)
+      .limit(1);
+
+    if (sessionAnswers && sessionAnswers.length > 0 && sessionAnswers[0].player_id !== player.id) {
+      return NextResponse.json({ ok: true }); // silent reject — not your session
+    }
+
     await supabase
       .from('sessions')
       .update({

@@ -78,6 +78,21 @@ export async function POST(req: NextRequest) {
 
     const supabase = getSupabaseAdminClient();
 
+    // Session ownership check — if session already has answers from a different player, reject silently
+    if (playerId) {
+      const { data: existingAnswers } = await supabase
+        .from('answers')
+        .select('player_id')
+        .eq('session_id', a.sessionId)
+        .neq('player_id', playerId)
+        .limit(1);
+
+      if (existingAnswers && existingAnswers.length > 0) {
+        console.warn('[answers] reject: session belongs to another player', { sessionId: a.sessionId, playerId });
+        return NextResponse.json({ ok: true }); // silent reject — not your session
+      }
+    }
+
     // Universal per-session answer cap — prevents inflating answer counts for XP manipulation
     {
       const { count: sessionAnswerCount } = await supabase

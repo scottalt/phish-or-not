@@ -39,8 +39,11 @@ export async function PATCH(req: NextRequest) {
     if (typeof body.bio !== 'string') {
       return NextResponse.json({ error: 'Invalid bio' }, { status: 400 });
     }
-    // Strip HTML tags and trim
-    const cleaned = body.bio.replace(/<[^>]*>/g, '').trim().slice(0, MAX_BIO_LENGTH);
+    // Reject bios containing < or > characters (plain text only, no HTML)
+    if (body.bio.includes('<') || body.bio.includes('>')) {
+      return NextResponse.json({ error: 'Bio cannot contain < or > characters' }, { status: 400 });
+    }
+    const cleaned = body.bio.trim().slice(0, MAX_BIO_LENGTH);
     if (filter.check(cleaned)) {
       return NextResponse.json({ error: 'Keep it clean, operative.' }, { status: 400 });
     }
@@ -64,6 +67,9 @@ export async function PATCH(req: NextRequest) {
     }
     if (body.featuredBadges.length > MAX_FEATURED_BADGES) {
       return NextResponse.json({ error: `Max ${MAX_FEATURED_BADGES} featured badges` }, { status: 400 });
+    }
+    if (!body.featuredBadges.every((id: unknown) => typeof id === 'string' && id.length > 0)) {
+      return NextResponse.json({ error: 'Each featured badge must be a non-empty string' }, { status: 400 });
     }
 
     // Look up the player to validate badge ownership

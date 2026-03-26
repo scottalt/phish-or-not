@@ -390,16 +390,8 @@ export async function POST(
   }
   const verifiedTimeMs = now - renderTimestamp;
 
-  // Mark as checked in Redis (30 min TTL)
-  await redis.set(checkedKey, '1', { ex: 1800 });
-
-  // Set render timestamp for the NEXT card
-  if (correct && cardIndex + 1 < H2H_CARDS_PER_MATCH) {
-    await redis.set(`match-render:${matchId}:${playerId}:${cardIndex + 1}`, now, { ex: 1800 });
-  }
-
-  // Insert answer record
-  await admin.from('h2h_match_answers').insert({
+  // Insert answer record — do this BEFORE marking as checked so retries are possible on insert failure
+  const { error: insertError } = await admin.from('h2h_match_answers').insert({
     match_id: matchId,
     player_id: playerId,
     card_index: cardIndex,
@@ -408,6 +400,19 @@ export async function POST(
     correct,
     time_from_render_ms: verifiedTimeMs,
   });
+
+  if (insertError) {
+    console.error('[h2h/answer] insert failed:', insertError);
+    return NextResponse.json({ error: 'Failed to record answer' }, { status: 500 });
+  }
+
+  // Mark as checked in Redis AFTER successful DB insert (30 min TTL)
+  await redis.set(checkedKey, '1', { ex: 1800 });
+
+  // Set render timestamp for the NEXT card
+  if (correct && cardIndex + 1 < H2H_CARDS_PER_MATCH) {
+    await redis.set(`match-render:${matchId}:${playerId}:${cardIndex + 1}`, now, { ex: 1800 });
+  }
 
   const playerCardsField = isPlayer1
     ? 'player1_cards_completed'

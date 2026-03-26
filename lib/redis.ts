@@ -6,9 +6,7 @@ export const redis = new Redis({
   token: process.env.KV_REST_API_TOKEN!,
 });
 
-/** Get the real client IP from Vercel's trusted headers (not spoofable X-Forwarded-For) */
+/** Get the real client IP from Vercel's trusted x-real-ip header only */
 export function getClientIp(req: NextRequest): string {
-  return req.headers.get('x-real-ip')
-    ?? req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-    ?? 'unknown';
+  return req.headers.get('x-real-ip') ?? 'unknown';
 }

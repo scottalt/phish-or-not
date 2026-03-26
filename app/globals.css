@@ -329,6 +329,16 @@ body {
     animation: none !important;
     opacity: 1;
   }
+  .anim-fade-in-up {
+    opacity: 1 !important;
+  }
+  .anim-glitch,
+  .anim-hint-pulse,
+  .anim-hint-text-pulse,
+  .breach-overlay,
+  .clear-overlay {
+    animation: none !important;
+  }
   .anim-card-entry,
   .anim-fade-in,
   .anim-fade-in-up,

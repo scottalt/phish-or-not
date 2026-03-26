@@ -283,6 +283,11 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: 'friendId is required' }, { status: 400 });
   }
 
+  // Validate friendId is a valid UUID format
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(friendId)) {
+    return NextResponse.json({ error: 'Invalid friendId format' }, { status: 400 });
+  }
+
   // Delete rows in both directions
   await admin
     .from('player_friends')

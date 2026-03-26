@@ -36,11 +36,13 @@ export function NavBar() {
       setHasUnread(localStorage.getItem('lastSeenVersion') !== version);
       setBootSeen(sessionStorage.getItem('bootSeen') === '1');
     } catch {}
-    // Fetch pending friend request count for notification badge
-    fetch('/api/friends').then(r => r.ok ? r.json() : null).then(data => {
-      if (data?.incoming) setPendingFriends(data.incoming.length);
-    }).catch(() => {});
-  }, []);
+    // Fetch pending friend request count for notification badge (only if signed in)
+    if (signedIn) {
+      fetch('/api/friends').then(r => r.ok ? r.json() : null).then(data => {
+        if (data?.incoming) setPendingFriends(data.incoming.length);
+      }).catch(() => {});
+    }
+  }, [signedIn]);
 
   if (!signedIn) return null;
   if (navHidden) return null;
