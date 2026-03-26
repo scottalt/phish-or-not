@@ -4,8 +4,10 @@ import { useState, useEffect, useRef } from 'react';
 import { getRankFromPoints, H2H_CARDS_PER_MATCH } from '@/lib/h2h';
 import type { H2HRank } from '@/lib/h2h';
 import { ACHIEVEMENTS } from '@/lib/achievements';
-import { playVictory, playDefeat } from '@/lib/sounds';
+import { xpToNextLevel, getLevelFromXp, LEVEL_THRESHOLDS, MAX_LEVEL } from '@/lib/xp';
+import { playVictory, playDefeat, playLevelUp } from '@/lib/sounds';
 import { useSoundEnabled } from '@/lib/useSoundEnabled';
+import { usePlayer } from '@/lib/usePlayer';
 
 interface Props {
   matchId: string;
@@ -69,12 +71,46 @@ export function H2HResult({
   const [stats, setStats] = useState<StatsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [showReview, setShowReview] = useState(false);
+
+  // XP bar animation
+  const { profile, refreshProfile } = usePlayer();
+  const [xpBarPct, setXpBarPct] = useState(0);
+  const [xpLevel, setXpLevel] = useState(1);
+  const [xpLeveledUp, setXpLeveledUp] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [reviewCards, setReviewCards] = useState<any[]>([]);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [myAnswers, setMyAnswers] = useState<any[]>([]);
 
   const { soundEnabled } = useSoundEnabled();
+
+  // XP bar animation — animate from 0 to current progress when profile loads
+  const xpAnimated = useRef(false);
+  useEffect(() => {
+    if (!profile || xpAnimated.current || loading) return;
+    xpAnimated.current = true;
+    const xp = profile.xp;
+    const level = profile.level;
+    const info = xpToNextLevel(xp);
+    setXpLevel(level);
+
+    // Animate bar from 0% to current %
+    const targetPct = info.needed > 0 ? (info.current / info.needed) * 100 : 100;
+    let start: number | null = null;
+    const duration = 1200;
+
+    function animate(ts: number) {
+      if (!start) start = ts;
+      const elapsed = ts - start;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setXpBarPct(eased * targetPct);
+      if (progress < 1) requestAnimationFrame(animate);
+    }
+    // Small delay so the screen renders first
+    setTimeout(() => requestAnimationFrame(animate), 500);
+  }, [profile, loading]);
 
   // Prefer server-fetched winnerId over client prop (client passes null for eliminations/forfeits)
   const resolvedWinnerId = matchData?.serverWinnerId ?? winnerId;
@@ -159,7 +195,11 @@ export function H2HResult({
       } catch {
         // silently handle — UI will show what it can
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+          // Refresh profile to get updated XP after match
+          refreshProfile();
+        }
       }
     }
 
@@ -282,6 +322,28 @@ export function H2HResult({
           )}
         </div>
       ) : null}
+
+      {/* XP Bar */}
+      {profile && !isBot && (
+        <div className="w-full term-border p-3 space-y-2">
+          <div className="flex items-center justify-between text-xs font-mono">
+            <span className="text-[var(--c-secondary)] tracking-widest">LEVEL {xpLevel}</span>
+            <span className="text-[var(--c-muted)]">
+              {profile.xp} / {xpLevel < MAX_LEVEL ? LEVEL_THRESHOLDS[xpLevel] : '∞'} XP
+            </span>
+          </div>
+          <div className="w-full h-2.5 bg-[var(--c-dark)] overflow-hidden">
+            <div
+              className="h-full transition-none"
+              style={{
+                width: `${xpBarPct}%`,
+                backgroundColor: 'var(--c-primary)',
+                boxShadow: '0 0 8px var(--c-primary), 0 0 16px color-mix(in srgb, var(--c-primary) 30%, transparent)',
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Review cards */}
       {reviewCards.length > 0 && (
