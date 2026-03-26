@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import { playClick, playKeyPress } from '@/lib/sounds';
 
 const MUSIC_SRC = '/audio/joelfazhari-synthetic-deception-loopable-epic-cyberpunk-crime-music-157454.mp3';
-const MUSIC_GAIN = 0.015; // Keep music well below SFX
+const MUSIC_GAIN = 0.04; // Audible on mobile but still below SFX
 
 const SKIP_KEYS = new Set([
   'Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'NumLock', 'ScrollLock',
