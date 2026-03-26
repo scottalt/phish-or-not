@@ -121,6 +121,9 @@ export function TutorialCard({ onComplete }: Props) {
             <div className="text-[#ffaa00] text-sm font-mono break-all">{TUTORIAL_EMAIL.url}</div>
           </div>
         )}
+        <div className="border-t border-[color-mix(in_srgb,var(--c-primary)_10%,transparent)] px-3 py-1.5">
+          <p className="text-[var(--c-muted)] text-[9px] font-mono opacity-50 text-center">AI-generated for research. Brand names used for realism only — no affiliation.</p>
+        </div>
       </div>
 
       {/* Confidence selector */}
