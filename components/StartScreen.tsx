@@ -247,8 +247,8 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
     const callsign = profile.displayName ?? 'operative';
     let dialogue: { lines: string[]; buttonText?: string } | null = null;
 
-    if (answers === 0) {
-      // Brand new player — full intro
+    if (answers === 0 && !hasSeenMoment('boot_greeting')) {
+      // Brand new player — full intro (only once)
       dialogue = HANDLER_DIALOGUES.boot_greeting;
     } else if (!(profile.seenMoments ?? []).includes('v2_intro') && !hasSeenMoment('v2_intro')) {
       // v1 veteran seeing SIGINT for the first time (check DB + localStorage fallback)
@@ -439,7 +439,9 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
             const answers = profile?.researchAnswersSubmitted ?? 0;
             // Mark greeted with timestamp
             try { sessionStorage.setItem('sigint_greeted', String(Date.now())); } catch {}
-            // Only mark permanently seen if player has actually done research
+            // Mark boot_greeting as seen so new players don't see it every session
+            if (answers === 0) markMomentSeen('boot_greeting');
+            // Mark v2_intro permanently seen if player has done research
             if (answers > 0 && !hasSeenMoment('v2_intro')) markMomentSeen('v2_intro');
             setShowHandlerGreeting(false);
             // Milestones fire via useEffect when showHandlerGreeting becomes false

@@ -327,6 +327,11 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
             else playWrong();
           }
 
+          // SIGINT: first correct answer ever
+          if (data.correct && correctCount === 0) {
+            triggerSigint('first_correct');
+          }
+
           // Log answer event (fire and forget — skip in preview mode)
           if (typeof window !== 'undefined' && mode !== 'preview') {
             logAnswerEvent(fullCard, answer, data.correct, confidence, data.streak, newCorrectCount, timing);
