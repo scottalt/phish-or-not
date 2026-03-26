@@ -13,13 +13,12 @@ const SKIP_KEYS = new Set([
   'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12',
 ]);
 
-function sfxEnabled(): boolean {
-  try { return localStorage.getItem('sfx_enabled') === 'true'; } catch { return false; }
+function musicEnabled(): boolean {
+  try { return localStorage.getItem('music_enabled') !== 'false'; } catch { return true; }
 }
 
 // Route MP3 through Web Audio API GainNode for volume control.
 // iOS Safari ignores HTMLAudioElement.volume — it's always 1.0.
-// Web Audio API gain works correctly on all platforms including iOS.
 interface MusicState {
   audio: HTMLAudioElement;
   ctx: AudioContext;
@@ -42,7 +41,7 @@ function createMusic(): MusicState {
 export function TerminalSounds() {
   const musicRef = useRef<MusicState | null>(null);
 
-  // Background music — persists across all routes
+  // Background music — persists across all routes, toggled independently from SFX
   useEffect(() => {
     function startMusic() {
       if (!musicRef.current) {
@@ -62,7 +61,7 @@ export function TerminalSounds() {
 
     // Retry on first user gesture to bypass autoplay block
     function handleFirstInteraction() {
-      if (sfxEnabled()) {
+      if (musicEnabled()) {
         if (!musicRef.current) {
           musicRef.current = createMusic();
         }
@@ -81,29 +80,29 @@ export function TerminalSounds() {
       document.removeEventListener('touchstart', handleFirstInteraction);
     }
 
-    // React to SFX toggle
-    function handleSfxChange(e: Event) {
+    // React to music toggle
+    function handleMusicChange(e: Event) {
       const enabled = (e as CustomEvent<boolean>).detail;
       if (enabled) startMusic(); else stopMusic();
     }
 
-    if (sfxEnabled()) startMusic();
+    if (musicEnabled()) startMusic();
 
     document.addEventListener('click', handleFirstInteraction);
     document.addEventListener('touchstart', handleFirstInteraction);
-    window.addEventListener('sfx-change', handleSfxChange);
+    window.addEventListener('music-change', handleMusicChange);
 
     return () => {
       document.removeEventListener('click', handleFirstInteraction);
       document.removeEventListener('touchstart', handleFirstInteraction);
-      window.removeEventListener('sfx-change', handleSfxChange);
+      window.removeEventListener('music-change', handleMusicChange);
       musicRef.current?.audio.pause();
     };
   }, []);
 
+  // SFX — always on (click sounds, keypress sounds)
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (!sfxEnabled()) return;
       const target = e.target as HTMLElement;
       if (target.closest('button') || target.closest('[role="button"]') || target.closest('a')) {
         playClick();
@@ -111,7 +110,6 @@ export function TerminalSounds() {
     }
 
     function handleKeyDown(e: KeyboardEvent) {
-      if (!sfxEnabled()) return;
       if (SKIP_KEYS.has(e.key)) return;
       const target = e.target as HTMLElement;
       const tag = target.tagName;

@@ -22,8 +22,8 @@ interface Props {
   total: number;
   streak: number;
   totalScore: number;
-  soundEnabled: boolean;
-  onToggleSound: () => void;
+  musicEnabled: boolean;
+  onToggleMusic: () => void;
   onQuit: () => void;
   mode?: GameMode;
 }
@@ -270,7 +270,7 @@ function SMSDisplay({ card, onScroll, onUrlInspected }: {
   );
 }
 
-export function GameCard({ card, onAnswer, questionNumber, total, streak, totalScore, soundEnabled, onToggleSound, onQuit, mode }: Props) {
+export function GameCard({ card, onAnswer, questionNumber, total, streak, totalScore, musicEnabled, onToggleMusic, onQuit, mode }: Props) {
   const [confidence, setConfidence] = useState<Confidence | null>(null);
   const [flying, setFlying] = useState(false);
   const [processing, setProcessing] = useState(false);
@@ -284,7 +284,7 @@ export function GameCard({ card, onAnswer, questionNumber, total, streak, totalS
 
   function handleButton(answer: Answer) {
     if (!confidence || answered.current) return;
-    if (soundEnabled) playCommit();
+    playCommit();
     answered.current = true;
     setProcessing(true);
     setFlying(true);
@@ -343,10 +343,10 @@ export function GameCard({ card, onAnswer, questionNumber, total, streak, totalS
           </span>
           <span className="text-[var(--c-secondary)]">PTS:<span className="text-[var(--c-primary)]">{totalScore}</span></span>
           <button
-            onClick={onToggleSound}
-            className={`font-mono text-sm transition-colors p-2 -m-2 ${soundEnabled ? 'text-[var(--c-primary)]' : 'text-[var(--c-secondary)]'}`}
+            onClick={onToggleMusic}
+            className={`font-mono text-sm transition-colors p-2 -m-2 ${musicEnabled ? 'text-[var(--c-primary)]' : 'text-[var(--c-secondary)]'}`}
           >
-            {soundEnabled ? '[SFX]' : '[SFX OFF]'}
+            {musicEnabled ? '[MUSIC]' : '[MUSIC OFF]'}
           </button>
         </div>
       </div>

@@ -1,34 +1,41 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 
-const STORAGE_KEY = 'sfx_enabled';
-
-function readInitial(): boolean {
-  if (typeof window === 'undefined') return false;
-  try {
-    const val = localStorage.getItem(STORAGE_KEY);
-    // Default to false if never set
-    return val === 'true';
-  } catch { return false; }
+// SFX are always on — no toggle needed.
+// This hook is kept for backward compatibility with components that check soundEnabled.
+export function useSoundEnabled() {
+  return { soundEnabled: true, toggleSound: () => {} };
 }
 
-export function useSoundEnabled() {
-  const [soundEnabled, setSoundEnabled] = useState(false);
-  const sfxEnabledRef = useRef(false);
+// Music toggle — persisted in localStorage
+const MUSIC_KEY = 'music_enabled';
+
+function readMusicInitial(): boolean {
+  if (typeof window === 'undefined') return true;
+  try {
+    const val = localStorage.getItem(MUSIC_KEY);
+    // Default to ON if never set
+    return val !== 'false';
+  } catch { return true; }
+}
+
+export function useMusicEnabled() {
+  const [musicEnabled, setMusicEnabled] = useState(true);
+  const musicEnabledRef = useRef(true);
 
   // Hydrate from localStorage after mount (avoids SSR mismatch)
   useEffect(() => {
-    const initial = readInitial();
-    sfxEnabledRef.current = initial;
-    setSoundEnabled(initial);
+    const initial = readMusicInitial();
+    musicEnabledRef.current = initial;
+    setMusicEnabled(initial);
   }, []);
 
-  const toggleSound = useCallback(() => {
-    const next = !sfxEnabledRef.current;
-    sfxEnabledRef.current = next;
-    setSoundEnabled(next);
-    try { localStorage.setItem(STORAGE_KEY, String(next)); } catch {}
-    window.dispatchEvent(new CustomEvent('sfx-change', { detail: next }));
+  const toggleMusic = useCallback(() => {
+    const next = !musicEnabledRef.current;
+    musicEnabledRef.current = next;
+    setMusicEnabled(next);
+    try { localStorage.setItem(MUSIC_KEY, String(next)); } catch {}
+    window.dispatchEvent(new CustomEvent('music-change', { detail: next }));
   }, []);
 
-  return { soundEnabled, toggleSound };
+  return { musicEnabled, toggleMusic };
 }

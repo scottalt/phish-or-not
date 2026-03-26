@@ -49,7 +49,7 @@ import { H2HMatch } from './H2HMatch';
 import { H2HResult } from './H2HResult';
 import type { Card, DealCard, Answer, Confidence, RoundResult, GameMode, AnswerEvent, SessionPayload } from '@/lib/types';
 import type { SafeDealCard } from '@/lib/card-utils';
-import { useSoundEnabled } from '@/lib/useSoundEnabled';
+import { useSoundEnabled, useMusicEnabled } from '@/lib/useSoundEnabled';
 import { usePlayer } from '@/lib/usePlayer';
 import { useNavVisibility } from '@/lib/NavVisibilityContext';
 import { useSigint } from '@/lib/SigintContext';
@@ -86,7 +86,8 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
   const [totalScore, setTotalScore] = useState(0);
   const [mode, setMode] = useState<GameMode>('freeplay');
   const [dailyResult, setDailyResult] = useState<{ score: number; totalScore: number } | null>(null);
-  const { soundEnabled, toggleSound } = useSoundEnabled();
+  const { soundEnabled } = useSoundEnabled();
+  const { musicEnabled, toggleMusic } = useMusicEnabled();
   const { profile, refreshProfile } = usePlayer();
   const sessionId = useRef<string>('');
   const sessionStartedAt = useRef<string>('');
@@ -576,7 +577,7 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
   }
 
   if (phase === 'start') {
-    return <StartScreen onStart={startRound} soundEnabled={soundEnabled} onToggleSound={toggleSound} />;
+    return <StartScreen onStart={startRound} musicEnabled={musicEnabled} onToggleMusic={toggleMusic} />;
   }
 
   if (phase === ('loading' as GamePhase)) {
@@ -774,8 +775,8 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
           total={ROUND_SIZE}
           streak={streak}
           totalScore={totalScore}
-          soundEnabled={soundEnabled}
-          onToggleSound={toggleSound}
+          musicEnabled={musicEnabled}
+          onToggleMusic={toggleMusic}
           onQuit={() => setPhase('start')}
           mode={mode}
         />

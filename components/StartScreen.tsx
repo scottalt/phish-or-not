@@ -25,8 +25,8 @@ interface LeaderboardEntry {
 
 interface Props {
   onStart: (mode: GameMode) => void;
-  soundEnabled: boolean;
-  onToggleSound: () => void;
+  musicEnabled: boolean;
+  onToggleMusic: () => void;
 }
 
 const BACKGROUND_OPTIONS: { value: PlayerBackground; label: string }[] = [
@@ -49,7 +49,7 @@ const BOOT_LINES: { text: string; bright: boolean }[] = [
   { text: '> SYSTEM READY.',                bright: true  },
 ];
 
-export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound }: Props) {
+export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic }: Props) {
   const bootSeen = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('bootSeen') === '1';
   const [visibleCount, setVisibleCount] = useState(bootSeen ? BOOT_LINES.length : 0);
   // Handler greeting — different dialogue depending on player state
@@ -403,11 +403,11 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
             <span className="text-[var(--c-secondary)] text-sm tracking-widest">ANALYST_TERMINAL</span>
             <div className="flex items-center gap-3">
               <button
-                onClick={toggleSound}
-                aria-label={soundEnabled ? 'Mute sound effects' : 'Enable sound effects'}
-                className={`lg:hidden text-sm font-mono transition-colors p-2 -m-2 ${soundEnabled ? 'text-[var(--c-primary)]' : 'text-[var(--c-muted)]'}`}
+                onClick={toggleMusic}
+                aria-label={musicEnabled ? 'Mute music' : 'Enable music'}
+                className={`lg:hidden text-sm font-mono transition-colors p-2 -m-2 ${musicEnabled ? 'text-[var(--c-primary)]' : 'text-[var(--c-muted)]'}`}
               >
-                {soundEnabled ? '[SFX]' : '[SFX OFF]'}
+                {musicEnabled ? '[MUSIC]' : '[MUSIC OFF]'}
               </button>
               <span className="text-[var(--c-secondary)] text-sm">■ □ □</span>
             </div>
@@ -449,15 +449,15 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
 
       {showButton && (
         <div className="anim-fade-in-up space-y-4">
-          {/* SFX toggle — mobile only, visible when not signed in (signed-in users see it in profile header) */}
+          {/* Music toggle — mobile only, visible when not signed in (signed-in users see it in profile header) */}
           {!signedIn && (
             <div className="flex justify-end lg:hidden">
               <button
-                onClick={toggleSound}
-                aria-label={soundEnabled ? 'Mute sound effects' : 'Enable sound effects'}
-                className={`text-sm font-mono transition-colors ${soundEnabled ? 'text-[var(--c-primary)]' : 'text-[var(--c-muted)]'}`}
+                onClick={toggleMusic}
+                aria-label={musicEnabled ? 'Mute music' : 'Enable music'}
+                className={`text-sm font-mono transition-colors ${musicEnabled ? 'text-[var(--c-primary)]' : 'text-[var(--c-muted)]'}`}
               >
-                {soundEnabled ? '[SFX]' : '[SFX OFF]'}
+                {musicEnabled ? '[MUSIC]' : '[MUSIC OFF]'}
               </button>
             </div>
           )}
@@ -478,8 +478,8 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
                       const color = RARITY_COLORS[badge.rarity];
                       return <span style={{ color }}>{badge.icon}</span>;
                     })()}
-                    <button onClick={toggleSound} className={`text-sm font-mono ${soundEnabled ? 'text-[var(--c-primary)]' : 'text-[var(--c-muted)]'} hover:text-[var(--c-secondary)]`}>
-                      SFX {soundEnabled ? '[ON]' : '[OFF]'}
+                    <button onClick={toggleMusic} className={`text-sm font-mono ${musicEnabled ? 'text-[var(--c-primary)]' : 'text-[var(--c-muted)]'} hover:text-[var(--c-secondary)]`}>
+                      MUSIC {musicEnabled ? '[ON]' : '[OFF]'}
                     </button>
                     <button onClick={async () => { await signOut(); }} className="text-[var(--c-muted)] text-sm font-mono hover:text-[var(--c-secondary)]">SIGN OUT</button>
                   </div>
