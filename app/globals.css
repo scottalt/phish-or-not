@@ -318,6 +318,52 @@ body {
   animation: hint-text-pulse 1.6s ease-in-out infinite;
 }
 
+/* ── SIGINT overlay animations ── */
+
+/* Breathing glow pulse on SIGINT dialog box */
+@keyframes sigint-glow {
+  0%, 100% { box-shadow: 0 8px 40px rgba(0,0,0,0.6), 0 0 40px color-mix(in srgb, var(--c-accent) 15%, transparent); }
+  50% { box-shadow: 0 8px 40px rgba(0,0,0,0.6), 0 0 60px color-mix(in srgb, var(--c-accent) 25%, transparent), 0 0 100px color-mix(in srgb, var(--c-accent) 8%, transparent); }
+}
+.sigint-box {
+  animation: sigint-glow 3s ease-in-out infinite;
+}
+
+/* Scanning accent line under SIGINT header while typing */
+@keyframes sigint-scan {
+  0% { background-position: -100% 0; }
+  100% { background-position: 200% 0; }
+}
+.sigint-scanline {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--c-accent) 50%, transparent 100%);
+  background-size: 50% 100%;
+  animation: sigint-scan 2s linear infinite;
+}
+.sigint-scanline-done {
+  height: 1px;
+  background: color-mix(in srgb, var(--c-accent) 30%, transparent);
+  animation: none;
+}
+
+/* Left border pulse while SIGINT typewriter is active */
+@keyframes sigint-border-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.sigint-typing-border {
+  animation: sigint-border-pulse 1.2s ease-in-out infinite;
+}
+
+/* AI tag subtle brightness pulse */
+@keyframes sigint-ai-pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+.sigint-ai-tag {
+  animation: sigint-ai-pulse 2s ease-in-out infinite;
+}
+
 /* Respect reduced motion — pauses decorative animations on iOS low power / accessibility */
 @media (prefers-reduced-motion: reduce) {
   .scanline-sweep,
@@ -336,7 +382,11 @@ body {
   .anim-hint-pulse,
   .anim-hint-text-pulse,
   .breach-overlay,
-  .clear-overlay {
+  .clear-overlay,
+  .sigint-box,
+  .sigint-scanline,
+  .sigint-typing-border,
+  .sigint-ai-tag {
     animation: none !important;
   }
   .anim-card-entry,
