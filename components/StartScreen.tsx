@@ -479,6 +479,8 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
               if (answers >= 30) markMomentSeen('freeplay_unlock');
               markMomentSeen('first_correct');
               markMomentSeen('first_session_complete');
+              // Refresh profile so seenMoments is up to date (prevents re-triggering)
+              refreshProfile();
             }
             setShowHandlerGreeting(false);
             // After greeting, fire bonus milestones (level, sessions) via SigintContext queue

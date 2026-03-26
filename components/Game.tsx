@@ -327,11 +327,6 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
             else playWrong();
           }
 
-          // SIGINT: first correct answer ever
-          if (data.correct && correctCount === 0) {
-            triggerSigint('first_correct');
-          }
-
           // Log answer event (fire and forget — skip in preview mode)
           if (typeof window !== 'undefined' && mode !== 'preview') {
             logAnswerEvent(fullCard, answer, data.correct, confidence, data.streak, newCorrectCount, timing);
@@ -373,11 +368,6 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
       if (streakBonus > 0) playStreak();
       else if (correct) playCorrect();
       else playWrong();
-    }
-
-    // SIGINT: first correct answer ever
-    if (correct && correctCount === 0) {
-      triggerSigint('first_correct');
     }
 
     // Log answer event (fire and forget — skip in preview mode)
@@ -482,7 +472,8 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
           }),
         }).then((r) => { if (!r.ok) console.error('[sessions] finalize failed:', r.status); }).catch((err) => { console.error('[sessions] finalize failed:', err); });
       }
-      // SIGINT: round completion moments
+      // SIGINT: round completion moments (deferred to summary, not mid-card)
+      if (correctCount > 0) triggerSigint('first_correct');
       triggerSigint('first_session_complete');
       if (mode === 'daily') triggerSigint('first_daily');
 

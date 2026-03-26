@@ -62,7 +62,7 @@ function createNote(
 
 export function playCorrect() {
   try {
-    const ctx = new AudioContext();
+    const ctx = getCtx();
     const t = ctx.currentTime;
     createNote(ctx, 523, t,        0.08); // C5
     createNote(ctx, 784, t + 0.09, 0.14); // G5
@@ -71,7 +71,7 @@ export function playCorrect() {
 
 export function playWrong() {
   try {
-    const ctx = new AudioContext();
+    const ctx = getCtx();
     const t = ctx.currentTime;
     createNote(ctx, 220, t,        0.08); // A3
     createNote(ctx, 165, t + 0.09, 0.14); // E3
@@ -80,7 +80,7 @@ export function playWrong() {
 
 export function playBootTick() {
   try {
-    const ctx = new AudioContext();
+    const ctx = getCtx();
     const t = ctx.currentTime;
     createNote(ctx, 480, t, 0.04, 0.07);
   } catch { /* silently ignore if audio unavailable */ }
@@ -88,7 +88,7 @@ export function playBootTick() {
 
 export function playStreak() {
   try {
-    const ctx = new AudioContext();
+    const ctx = getCtx();
     const t = ctx.currentTime;
     createNote(ctx, 523, t,        0.08); // C5
     createNote(ctx, 659, t + 0.09, 0.08); // E5

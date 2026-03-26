@@ -48,9 +48,13 @@ export function TerminalSounds() {
         musicRef.current = createMusic();
       }
       if (musicRef.current.ctx.state === 'suspended') {
-        musicRef.current.ctx.resume().catch(() => {});
+        // Chain play off resume to avoid iOS race condition
+        musicRef.current.ctx.resume()
+          .then(() => musicRef.current?.audio.play())
+          .catch(() => {});
+      } else {
+        musicRef.current.audio.play().catch(() => {});
       }
-      musicRef.current.audio.play().catch(() => {});
     }
 
     function stopMusic() {

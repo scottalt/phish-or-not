@@ -27,61 +27,65 @@ export function SigintProvider({ children }: { children: ReactNode }) {
   const [lines, setLines] = useState<string[]>([]);
   const [buttonText, setButtonText] = useState('CONTINUE');
   const queueRef = useRef<string[]>([]);
+  // Sync ref to avoid stale closure when multiple triggerSigint calls happen in same render
+  const activeRef = useRef<string | null>(null);
 
   const triggerSigint = useCallback((momentId: string) => {
     // Check DB-backed seen list from profile
     if (profile?.seenMoments?.includes(momentId)) return;
-    // Also check if already queued or active to prevent duplicates
+    // Prevent duplicates in queue or active
+    if (activeRef.current === momentId) return;
     if (queueRef.current.includes(momentId)) return;
 
     const dialogue = ALL_DIALOGUES[momentId];
     if (!dialogue) return;
 
     // If another dialogue is already showing, queue this one
-    if (activeMoment !== null) {
+    if (activeRef.current !== null) {
       queueRef.current.push(momentId);
       return;
     }
 
+    activeRef.current = momentId;
     setLines(dialogue.lines);
     setButtonText(dialogue.buttonText ?? 'CONTINUE');
     setActiveMoment(momentId);
-  }, [profile?.seenMoments, activeMoment]);
+  }, [profile?.seenMoments]);
 
   const showNext = useCallback(() => {
-    const next = queueRef.current.shift();
-    if (!next) return;
+    // Loop to skip invalid IDs without recursion
+    while (queueRef.current.length > 0) {
+      const next = queueRef.current.shift()!;
+      const dialogue = ALL_DIALOGUES[next];
+      if (!dialogue) continue;
 
-    const dialogue = ALL_DIALOGUES[next];
-    if (!dialogue) {
-      // Skip invalid, try next
-      showNext();
+      activeRef.current = next;
+      setLines(dialogue.lines);
+      setButtonText(dialogue.buttonText ?? 'CONTINUE');
+      setActiveMoment(next);
       return;
     }
-
-    setLines(dialogue.lines);
-    setButtonText(dialogue.buttonText ?? 'CONTINUE');
-    setActiveMoment(next);
   }, []);
 
   const handleDismiss = useCallback(() => {
-    if (activeMoment) {
+    if (activeRef.current) {
       // Persist to DB (fire and forget)
       fetch('/api/player/moments', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ momentId: activeMoment }),
+        body: JSON.stringify({ momentId: activeRef.current }),
       }).then(() => refreshProfile()).catch(() => {});
     }
+    activeRef.current = null;
     setActiveMoment(null);
     setLines([]);
 
     // Show next queued dialogue after a brief pause
     setTimeout(showNext, 300);
-  }, [activeMoment, refreshProfile, showNext]);
+  }, [refreshProfile, showNext]);
 
   return (
-    <SigintContext.Provider value={{ triggerSigint, isShowing: activeMoment !== null }}>
+    <SigintContext.Provider value={{ triggerSigint, isShowing: activeRef.current !== null }}>
       {children}
       {activeMoment && lines.length > 0 && (
         <Handler
