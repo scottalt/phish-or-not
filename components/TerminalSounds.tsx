@@ -14,7 +14,7 @@ const SKIP_KEYS = new Set([
 ]);
 
 function sfxEnabled(): boolean {
-  try { return sessionStorage.getItem('sfx_enabled') === 'true'; } catch { return false; }
+  try { return localStorage.getItem('sfx_enabled') === 'true'; } catch { return false; }
 }
 
 // Route MP3 through Web Audio API GainNode for volume control.
