@@ -514,6 +514,65 @@ body {
   font-family: var(--font-geist-mono), monospace;
 }
 
+/* ═══════════════════════════════════════════════════
+   BADGE RARITY — progressively more exciting visuals
+   ═══════════════════════════════════════════════════ */
+
+/* Common — clean, no effects */
+.badge-common {
+  color: #00aa28;
+}
+
+/* Uncommon — subtle glow */
+.badge-uncommon {
+  color: #00ff41;
+  text-shadow: 0 0 6px rgba(0, 255, 65, 0.4);
+}
+
+/* Rare — amber glow + pulse */
+.badge-rare {
+  color: #ffaa00;
+  text-shadow: 0 0 8px rgba(255, 170, 0, 0.5), 0 0 20px rgba(255, 170, 0, 0.2);
+  animation: badge-rare-pulse 2s ease-in-out infinite;
+}
+@keyframes badge-rare-pulse {
+  0%, 100% { text-shadow: 0 0 8px rgba(255, 170, 0, 0.5), 0 0 20px rgba(255, 170, 0, 0.2); }
+  50% { text-shadow: 0 0 12px rgba(255, 170, 0, 0.7), 0 0 30px rgba(255, 170, 0, 0.3); }
+}
+
+/* Legendary — red glow + stronger pulse + scale breathe */
+.badge-legendary {
+  color: #ff3333;
+  text-shadow: 0 0 10px rgba(255, 51, 51, 0.6), 0 0 25px rgba(255, 51, 51, 0.3);
+  animation: badge-legendary-pulse 1.8s ease-in-out infinite;
+}
+@keyframes badge-legendary-pulse {
+  0%, 100% { text-shadow: 0 0 10px rgba(255, 51, 51, 0.6), 0 0 25px rgba(255, 51, 51, 0.3); transform: scale(1); }
+  50% { text-shadow: 0 0 16px rgba(255, 51, 51, 0.8), 0 0 40px rgba(255, 51, 51, 0.4); transform: scale(1.05); }
+}
+
+/* Mythic — gold shimmer + glow ring + continuous rotation shimmer */
+.badge-mythic {
+  color: #ffd700;
+  text-shadow: 0 0 12px rgba(255, 215, 0, 0.7), 0 0 30px rgba(255, 215, 0, 0.3), 0 0 60px rgba(255, 215, 0, 0.15);
+  animation: badge-mythic-shimmer 2.5s ease-in-out infinite;
+}
+@keyframes badge-mythic-shimmer {
+  0%, 100% { text-shadow: 0 0 12px rgba(255, 215, 0, 0.7), 0 0 30px rgba(255, 215, 0, 0.3), 0 0 60px rgba(255, 215, 0, 0.15); transform: scale(1); filter: brightness(1); }
+  25% { filter: brightness(1.2); }
+  50% { text-shadow: 0 0 18px rgba(255, 215, 0, 0.9), 0 0 45px rgba(255, 215, 0, 0.5), 0 0 80px rgba(255, 215, 0, 0.25); transform: scale(1.08); filter: brightness(1.3); }
+  75% { filter: brightness(1.1); }
+}
+
+/* Reduced motion — disable badge animations */
+@media (prefers-reduced-motion: reduce) {
+  .badge-rare,
+  .badge-legendary,
+  .badge-mythic {
+    animation: none !important;
+  }
+}
+
 /* Card scanlines — slightly more visible */
 .scanline::after {
   background: repeating-linear-gradient(

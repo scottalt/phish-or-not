@@ -83,6 +83,15 @@ export const RARITY_COLORS: Record<AchievementRarity, string> = {
 
 export const RARITY_ORDER: AchievementRarity[] = ['common', 'uncommon', 'rare', 'legendary', 'mythic'];
 
+/** CSS class for badge rarity visual effects (glow, pulse, shimmer) */
+export const RARITY_BADGE_CLASS: Record<AchievementRarity, string> = {
+  common:    'badge-common',
+  uncommon:  'badge-uncommon',
+  rare:      'badge-rare',
+  legendary: 'badge-legendary',
+  mythic:    'badge-mythic',
+};
+
 export const CATEGORY_LABELS: Record<AchievementCategory, string> = {
   progression:   'PROGRESSION',
   skill:         'SKILL',

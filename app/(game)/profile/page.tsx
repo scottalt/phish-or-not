@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { usePlayer } from '@/lib/usePlayer';
 import { LevelMeter } from '@/components/LevelMeter';
 import { getRankFromLevel } from '@/lib/rank';
-import { ACHIEVEMENTS, RARITY_COLORS, CATEGORY_LABELS, type AchievementCategory } from '@/lib/achievements';
+import { ACHIEVEMENTS, RARITY_COLORS, RARITY_BADGE_CLASS, CATEGORY_LABELS, type AchievementCategory } from '@/lib/achievements';
 import { getRankFromPoints, H2H_DAILY_RATED_CAP } from '@/lib/h2h';
 import { QUESTS } from '@/lib/quests';
 import Link from 'next/link';
@@ -671,7 +671,7 @@ export default function ProfilePage() {
                             className="flex flex-col items-center gap-1 px-3 py-2 border min-w-[70px]"
                             style={{ borderColor: isPvpBadge ? color : `${color}40` }}
                           >
-                            <span className="text-xl font-mono" style={{ color }}>{badge.icon}</span>
+                            <span className={`text-xl font-mono ${RARITY_BADGE_CLASS[badge.rarity]}`} style={{ color }}>{badge.icon}</span>
                             <span className="text-xs font-mono font-bold tracking-wider" style={{ color }}>{badge.name}</span>
                           </div>
                           <div className="flex gap-1 mt-1">
@@ -737,7 +737,7 @@ export default function ProfilePage() {
                             style={{ color }}
                             title={`Add ${a.name} to shelf`}
                           >
-                            <span>{a.icon}</span>
+                            <span className={RARITY_BADGE_CLASS[a.rarity]}>{a.icon}</span>
                             <span className="text-xs tracking-wider">{a.name}</span>
                           </button>
                         );

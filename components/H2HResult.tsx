@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { getRankFromPoints, H2H_CARDS_PER_MATCH } from '@/lib/h2h';
 import type { H2HRank } from '@/lib/h2h';
-import { ACHIEVEMENTS } from '@/lib/achievements';
+import { ACHIEVEMENTS, RARITY_BADGE_CLASS, type AchievementRarity } from '@/lib/achievements';
 import { LevelMeter } from './LevelMeter';
 import { playVictory, playDefeat, playLevelUp } from '@/lib/sounds';
 import { useSoundEnabled } from '@/lib/useSoundEnabled';
@@ -27,6 +27,8 @@ interface MatchData {
   myBadgeName: string | null;
   oppBadgeIcon: string | null;
   oppBadgeName: string | null;
+  myBadgeRarity: AchievementRarity | null;
+  oppBadgeRarity: AchievementRarity | null;
   oppThemeColor: string;
   myCards: number;
   oppCards: number;
@@ -121,13 +123,18 @@ export function H2HResult({
           const myBadgeId = myPlayer?.featuredBadge ?? null;
           const oppBadgeId = oppPlayer?.featuredBadge ?? null;
 
+          const myAch = myBadgeId ? ACHIEVEMENTS.find(a => a.id === myBadgeId) : null;
+          const oppAch = oppBadgeId ? ACHIEVEMENTS.find(a => a.id === oppBadgeId) : null;
+
           setMatchData({
             myName: myPlayer?.displayName ?? 'YOU',
             oppName: oppPlayer?.displayName ?? 'OPPONENT',
-            myBadgeIcon: myBadgeId ? (ACHIEVEMENTS.find(a => a.id === myBadgeId)?.icon ?? null) : null,
-            myBadgeName: myBadgeId ? (ACHIEVEMENTS.find(a => a.id === myBadgeId)?.name ?? null) : null,
-            oppBadgeIcon: oppBadgeId ? (ACHIEVEMENTS.find(a => a.id === oppBadgeId)?.icon ?? null) : null,
-            oppBadgeName: oppBadgeId ? (ACHIEVEMENTS.find(a => a.id === oppBadgeId)?.name ?? null) : null,
+            myBadgeIcon: myAch?.icon ?? null,
+            myBadgeName: myAch?.name ?? null,
+            oppBadgeIcon: oppAch?.icon ?? null,
+            oppBadgeName: oppAch?.name ?? null,
+            myBadgeRarity: myAch?.rarity ?? null,
+            oppBadgeRarity: oppAch?.rarity ?? null,
             oppThemeColor: oppPlayer?.themeColor ?? '#00ff41',
             myCards,
             oppCards,
@@ -227,7 +234,7 @@ export function H2HResult({
           {/* You */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 min-w-0">
-              {matchData.myBadgeIcon && <span className="text-lg text-[var(--c-primary)]">{matchData.myBadgeIcon}</span>}
+              {matchData.myBadgeIcon && <span className={`text-lg text-[var(--c-primary)] ${matchData.myBadgeRarity ? RARITY_BADGE_CLASS[matchData.myBadgeRarity] : ''}`}>{matchData.myBadgeIcon}</span>}
               <div className="min-w-0">
                 <div className="text-[var(--c-primary)] font-bold text-sm truncate">{matchData.myName}</div>
                 {matchData.myBadgeName && <div className="text-[var(--c-accent)] text-[10px] tracking-widest">{matchData.myBadgeName}</div>}
@@ -244,7 +251,7 @@ export function H2HResult({
           {!isBot ? (
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 min-w-0">
-                {matchData.oppBadgeIcon && <span className="text-lg" style={{ color: matchData.oppThemeColor }}>{matchData.oppBadgeIcon}</span>}
+                {matchData.oppBadgeIcon && <span className={`text-lg ${matchData.oppBadgeRarity ? RARITY_BADGE_CLASS[matchData.oppBadgeRarity] : ''}`} style={{ color: matchData.oppThemeColor }}>{matchData.oppBadgeIcon}</span>}
                 <div className="min-w-0">
                   <div className="font-bold text-sm truncate" style={{ color: matchData.oppThemeColor }}>{matchData.oppName}</div>
                   {matchData.oppBadgeName && <div className="text-[10px] tracking-widest" style={{ color: matchData.oppThemeColor, opacity: 0.7 }}>{matchData.oppBadgeName}</div>}

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { usePlayer } from '@/lib/usePlayer';
 import { THEMES, isThemeUnlocked } from '@/lib/themes';
-import { ACHIEVEMENTS, RARITY_COLORS } from '@/lib/achievements';
+import { ACHIEVEMENTS, RARITY_COLORS, RARITY_BADGE_CLASS } from '@/lib/achievements';
 import { useTheme } from '@/lib/ThemeContext';
 import { getRankFromPoints } from '@/lib/h2h';
 import Link from 'next/link';
@@ -96,7 +96,7 @@ export default function InventoryPage() {
                     </div>
                     <div className="flex items-center justify-center gap-2 text-sm font-mono">
                       {featuredAchievement && (
-                        <span style={{ color: RARITY_COLORS[featuredAchievement.rarity] }}>
+                        <span className={RARITY_BADGE_CLASS[featuredAchievement.rarity]} style={{ color: RARITY_COLORS[featuredAchievement.rarity] }}>
                           {featuredAchievement.icon}
                         </span>
                       )}
@@ -272,7 +272,7 @@ export default function InventoryPage() {
                   }}
                 >
                   {/* Icon */}
-                  <div className="text-2xl text-center mb-1" style={{ color: earned ? rarityColor : '#555' }}>
+                  <div className={`text-2xl text-center mb-1 ${earned ? RARITY_BADGE_CLASS[achievement.rarity] : ''}`} style={{ color: earned ? rarityColor : '#555' }}>
                     {earned ? achievement.icon : '🔒'}
                   </div>
 

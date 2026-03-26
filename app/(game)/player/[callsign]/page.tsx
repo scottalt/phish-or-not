@@ -1,7 +1,7 @@
 import { getSupabaseAdminClient } from '@/lib/supabase';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { ACHIEVEMENTS, RARITY_COLORS, CATEGORY_LABELS, type AchievementCategory } from '@/lib/achievements';
+import { ACHIEVEMENTS, RARITY_COLORS, RARITY_BADGE_CLASS, CATEGORY_LABELS, type AchievementCategory } from '@/lib/achievements';
 import { getRankFromPoints, CURRENT_SEASON } from '@/lib/h2h';
 import { getRankFromLevel } from '@/lib/rank';
 import Link from 'next/link';
@@ -182,7 +182,7 @@ export default async function PublicProfilePage({ params }: Props) {
                       className="flex flex-col items-center gap-1 px-3 py-2 border border-[color-mix(in_srgb,var(--c-primary)_15%,transparent)] min-w-[80px]"
                       style={{ borderColor: `${color}40` }}
                     >
-                      <span className="text-2xl font-mono" style={{ color }}>{badge.icon}</span>
+                      <span className={`text-2xl font-mono ${RARITY_BADGE_CLASS[badge.rarity]}`} style={{ color }}>{badge.icon}</span>
                       <span className="text-xs font-mono font-bold tracking-wider text-center" style={{ color }}>{badge.name}</span>
                       <span className="text-xs font-mono tracking-wider" style={{ color, opacity: 0.7 }}>{badge.rarity.toUpperCase()}</span>
                     </div>
@@ -244,7 +244,7 @@ export default async function PublicProfilePage({ params }: Props) {
                       return (
                         <div key={a.id} className="px-3 py-2 bg-[var(--c-bg)]">
                           <div className="flex items-center gap-2">
-                            <span className="text-lg font-mono" style={{ color }}>{a.icon}</span>
+                            <span className={`text-lg font-mono ${RARITY_BADGE_CLASS[a.rarity]}`} style={{ color }}>{a.icon}</span>
                             <span className="text-xs font-mono font-bold tracking-wider" style={{ color }}>{a.name}</span>
                           </div>
                           <div className="text-xs font-mono mt-0.5 text-[var(--c-secondary)]">{a.description}</div>
