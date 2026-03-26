@@ -14,6 +14,7 @@ import { version } from '@/package.json';
 import { QUESTS } from '@/lib/quests';
 import { Handler } from './Handler';
 import { HANDLER_DIALOGUES, hasSeenMoment, markMomentSeen } from '@/lib/handler-dialogues';
+import { dynamicDialogue } from '@/lib/sigint-personality';
 
 interface LeaderboardEntry {
   name: string;
@@ -50,9 +51,11 @@ const BOOT_LINES: { text: string; bright: boolean }[] = [
 export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound }: Props) {
   const bootSeen = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('bootSeen') === '1';
   const [visibleCount, setVisibleCount] = useState(bootSeen ? BOOT_LINES.length : 0);
-  // Handler greeting shows for new players (0 answers) who haven't dismissed it this session
+  // Handler greeting — different dialogue depending on player state
   const [showButton, setShowButton] = useState(bootSeen);
   const [showHandlerGreeting, setShowHandlerGreeting] = useState(false);
+  const [handlerLines, setHandlerLines] = useState<string[]>([]);
+  const [handlerButton, setHandlerButton] = useState('CONTINUE');
   const [bootDone, setBootDone] = useState(bootSeen);
   const [bootHidden, setBootHidden] = useState(bootSeen);
   const [dailyLeaderboard, setDailyLeaderboard] = useState<LeaderboardEntry[]>([]);
@@ -230,14 +233,32 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
     }
   }, [bootDone, bootHidden]);
 
-  // Show SIGINT greeting for signed-in players with 0 research answers (once per session)
+  // Show SIGINT greeting — different dialogue based on player state
   const greetingShownThisSession = useRef(false);
   useEffect(() => {
     if (!showButton || greetingShownThisSession.current) return;
     if (!signedIn || !profile) return;
+    if (sessionStorage.getItem('sigint_greeted')) return;
+
     const answers = profile.researchAnswersSubmitted ?? 0;
-    if (answers === 0 && !sessionStorage.getItem('sigint_greeted')) {
+    const callsign = profile.displayName ?? 'operative';
+    let dialogue: { lines: string[]; buttonText?: string } | null = null;
+
+    if (answers === 0) {
+      // Brand new player — full intro
+      dialogue = HANDLER_DIALOGUES.boot_greeting;
+    } else if (!hasSeenMoment('v2_intro')) {
+      // v1 veteran seeing SIGINT for the first time
+      dialogue = dynamicDialogue('v2_intro', callsign);
+    } else if (!sessionStorage.getItem('sigint_greeted')) {
+      // Returning v2 player — personalized welcome back
+      dialogue = dynamicDialogue('welcome_back', callsign);
+    }
+
+    if (dialogue) {
       greetingShownThisSession.current = true;
+      setHandlerLines(dialogue.lines);
+      setHandlerButton(dialogue.buttonText ?? 'CONTINUE');
       setShowHandlerGreeting(true);
     }
   }, [showButton, signedIn, profile]);
@@ -385,12 +406,14 @@ export function StartScreen({ onStart, soundEnabled, onToggleSound: toggleSound 
       )}
 
       {/* SIGINT handler greeting — new players only, above main content */}
-      {showHandlerGreeting && (
+      {showHandlerGreeting && handlerLines.length > 0 && (
         <Handler
-          lines={HANDLER_DIALOGUES.boot_greeting.lines}
-          buttonText={HANDLER_DIALOGUES.boot_greeting.buttonText}
+          lines={handlerLines}
+          buttonText={handlerButton}
           onDismiss={() => {
             try { sessionStorage.setItem('sigint_greeted', '1'); } catch {}
+            // Mark v2_intro as permanently seen (so they get welcome_back next time)
+            if (!hasSeenMoment('v2_intro')) markMomentSeen('v2_intro');
             setShowHandlerGreeting(false);
           }}
         />

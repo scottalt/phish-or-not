@@ -28,7 +28,35 @@ export interface SigintDialogue {
   buttonText?: string; // default: "CONTINUE"
 }
 
-// ── Onboarding (new players) ──
+/** Generate a dynamic dialogue with player name inserted */
+export function dynamicDialogue(id: string, callsign: string): SigintDialogue | null {
+  switch (id) {
+    case 'welcome_back':
+      return {
+        lines: [
+          `${callsign}. You're back.`,
+          "Miss me? Don't answer that.",
+          "New emails in the queue. Let's get to work.",
+        ],
+        buttonText: "LET'S GO",
+      };
+    case 'v2_intro':
+      return {
+        lines: [
+          `${callsign}. We need to talk.`,
+          "I'm SIGINT. New around here — they installed me in the v2 update.",
+          "I run threat analysis now. PvP mode, ranked matches, badges — that's all me.",
+          "Your research data carried over. Everything you've done still counts.",
+          "But there's a lot of new stuff. Poke around. I'll be here if you need me.",
+        ],
+        buttonText: "GOT IT",
+      };
+    default:
+      return null;
+  }
+}
+
+// ── Onboarding (brand new players with 0 answers) ──
 
 export const ONBOARDING = {
   boot_greeting: {
