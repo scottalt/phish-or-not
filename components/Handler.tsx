@@ -39,8 +39,8 @@ export function Handler({ lines, buttonText = 'CONTINUE', onDismiss }: Props) {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 anim-fade-in">
-      {/* Subtle backdrop — slight dim, no blur, game still visible */}
-      <div className="absolute inset-0 bg-black/30" aria-hidden="true" />
+      {/* Subtle vignette — darkens edges, keeps center visible, feels layered */}
+      <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.45) 100%)' }} aria-hidden="true" />
 
       {/* Dialog box */}
       <div
