@@ -664,15 +664,15 @@ export default function ProfilePage() {
                       const isPvpBadge = idx === 0;
                       return (
                         <div key={badge.id} className="relative flex flex-col items-center gap-1">
-                          {isPvpBadge && (
-                            <span className="text-[9px] font-mono font-bold px-1" style={{ color }}>PvP BADGE</span>
-                          )}
                           <div
                             className="flex flex-col items-center gap-1 px-3 py-2 border min-w-[70px]"
                             style={{ borderColor: isPvpBadge ? color : `${color}40` }}
                           >
+                            {isPvpBadge && (
+                              <span className="text-[8px] font-mono font-bold tracking-widest" style={{ color }}>PvP</span>
+                            )}
                             <span className={`text-xl font-mono ${RARITY_BADGE_CLASS[badge.rarity]}`} style={{ color }}>{badge.icon}</span>
-                            <span className="text-xs font-mono font-bold tracking-wider" style={{ color }}>{badge.name}</span>
+                            <span className="text-[10px] font-mono font-bold tracking-wider" style={{ color }}>{badge.name}</span>
                           </div>
                           <div className="flex gap-1 mt-1">
                             {!isPvpBadge && (
