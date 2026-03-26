@@ -164,3 +164,51 @@ export async function GET(
     reviewCards,
   });
 }
+
+// ── PATCH /api/h2h/match/[id] — Mark a bot match as complete ──
+
+export async function PATCH(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+
+  // Auth
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } }
+  );
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+
+  const admin = getSupabaseAdminClient();
+  const { data: player } = await admin.from('players').select('id').eq('auth_id', user.id).single();
+  if (!player) return NextResponse.json({ error: 'Player not found' }, { status: 404 });
+
+  const body = await req.json().catch(() => null);
+  if (body?.action !== 'complete') {
+    return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+  }
+
+  // Only allow completing bot matches (is_ghost_match = true) that the player is in
+  const { data: updated } = await admin
+    .from('h2h_matches')
+    .update({
+      status: 'complete',
+      winner_id: body.winnerId ?? player.id,
+      ended_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .eq('status', 'active')
+    .eq('is_ghost_match', true)
+    .eq('player1_id', player.id)
+    .select('id');
+
+  if (!updated || updated.length === 0) {
+    return NextResponse.json({ error: 'Match not found or already complete' }, { status: 409 });
+  }
+
+  return NextResponse.json({ ok: true });
+}

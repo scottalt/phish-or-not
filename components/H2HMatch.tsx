@@ -602,9 +602,15 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
             setCardIndex(nextIndex);
             if (nextIndex >= H2H_CARDS_PER_MATCH) {
               if (isBot) {
-                // Bot match — player finished all cards, they win (beat the bot)
+                // Bot match — player finished all cards, mark complete server-side (enables review)
                 if (!matchEndedRef.current) {
                   matchEndedRef.current = true;
+                  // Mark match complete with player as winner
+                  fetch(`/api/h2h/match/${matchId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'complete', winnerId: playerId }),
+                  }).catch(() => {});
                   onMatchEnd({
                     winnerId: playerId,
                     myPointsDelta: 0,
@@ -829,8 +835,8 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
   const currentCard = cards[cardIndex];
   const myProgress = cardIndex;
 
-  // ── Waiting for opponent (finished all cards) ──
-  if (finished && !matchEndedRef.current) {
+  // ── Waiting for opponent (finished all cards) — real PvP only, not bot matches ──
+  if (finished && !matchEndedRef.current && !isBot) {
     return (
       <div className="flex flex-col items-center gap-4 w-full max-w-sm lg:max-w-lg px-4 pb-safe">
         <div className="w-full term-border px-3 py-2">

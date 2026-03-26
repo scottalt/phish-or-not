@@ -210,6 +210,18 @@ export default function InventoryPage() {
 
         {tab === 'badges' && (
           <>
+          {/* Instructions */}
+          <div className="term-border bg-[var(--c-bg)] px-3 py-2 mb-3">
+            <p className="text-[var(--c-muted)] text-xs font-mono leading-relaxed">
+              Tap earned badges to add them to your <span className="text-[var(--c-secondary)]">shelf</span> (up to 5).
+              Your shelf is visible on your profile. To set a <span className="text-[var(--c-accent)]">PvP display badge</span>, go to
+              your <span className="text-[var(--c-secondary)]">Profile → INFO</span> tab and tap SET PvP on any shelf badge.
+            </p>
+            <p className="text-[var(--c-muted)] text-xs font-mono mt-1">
+              Shelf: <span className="text-[var(--c-primary)]">{profile.featuredBadges?.length ?? 0}/5</span>
+              {(profile.featuredBadges?.length ?? 0) >= 5 && <span className="text-[var(--c-accent)]"> — FULL</span>}
+            </p>
+          </div>
           {/* Rarity filter */}
           <div className="flex gap-2 flex-wrap mb-3">
             <button
