@@ -500,30 +500,8 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
                 setPhase('h2h_countdown');
               });
             } else {
-              // Resolve real opponent name + badge before countdown
-              fetch(`/api/h2h/match/${matchId}`)
-                .then(r => r.ok ? r.json() : null)
-                .then(data => {
-                  if (data?.match && data?.players && profile) {
-                    const isP1 = data.match.player1Id === profile.id;
-                    const oppId = isP1 ? data.match.player2Id : data.match.player1Id;
-                    const opp = data.players[oppId];
-                    if (opp) {
-                      setH2HOpponentName(opp.displayName ?? 'OPPONENT');
-                      setH2HOpponentThemeColor(opp.themeColor ?? '#00ff41');
-                      if (opp.featuredBadge) {
-                        import('@/lib/achievements').then(({ ACHIEVEMENTS }) => {
-                          setH2HOpponentBadge(ACHIEVEMENTS.find(a => a.id === opp.featuredBadge)?.icon ?? null);
-                        });
-                      }
-                    }
-                  }
-                  setPhase('h2h_countdown');
-                })
-                .catch(() => {
-                  setH2HOpponentName('OPPONENT');
-                  setPhase('h2h_countdown');
-                });
+              // Real PvP — skip countdown, go straight to match lobby (which has its own accept + countdown)
+              setPhase('h2h_match');
             }
           }}
           onCancel={() => setPhase('start')}
