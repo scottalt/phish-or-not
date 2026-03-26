@@ -20,7 +20,7 @@ function SfxToggle() {
     <button
       onClick={toggleSound}
       aria-label={soundEnabled ? 'Mute sound effects' : 'Enable sound effects'}
-      className="lg:hidden fixed top-3 right-3 z-40 px-2 py-1 text-xs font-mono tracking-widest transition-colors bg-[var(--c-bg)] border border-[color-mix(in_srgb,var(--c-primary)_25%,transparent)] rounded"
+      className="lg:hidden fixed top-2 right-2 z-40 px-2 py-1 text-[10px] font-mono tracking-widest transition-colors bg-[var(--c-bg)] border border-[color-mix(in_srgb,var(--c-primary)_20%,transparent)] rounded opacity-60 hover:opacity-100"
     >
       SFX {soundEnabled
         ? <span className="text-[var(--c-primary)]">[ON]</span>

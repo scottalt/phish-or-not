@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { getSupabaseAdminClient } from '@/lib/supabase';
+import { redis } from '@/lib/redis';
 import { THEMES } from '@/lib/themes';
 
 // ── GET /api/h2h/match/[id] — Return match state for initial load / reconnection ──
@@ -209,6 +210,9 @@ export async function PATCH(
   if (!updated || updated.length === 0) {
     return NextResponse.json({ error: 'Match not found or already complete' }, { status: 409 });
   }
+
+  // Release bot lock so player can queue again immediately
+  await redis.del(`h2h:bot-lock:${player.id}`);
 
   return NextResponse.json({ ok: true });
 }

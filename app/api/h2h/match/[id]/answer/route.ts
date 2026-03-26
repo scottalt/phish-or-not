@@ -294,10 +294,11 @@ export async function POST(
     if (opponentId) {
       await finalizeMatch(matchId, opponentId, playerId);
     } else {
-      // Bot match — just cancel
+      // Bot match — cancel and release bot lock
       await admin.from('h2h_matches')
         .update({ status: 'cancelled', ended_at: new Date().toISOString() })
         .eq('id', matchId).eq('status', 'active');
+      await redis.del(`h2h:bot-lock:${playerId}`);
     }
     return NextResponse.json({ ok: true, forfeited: true });
   }
