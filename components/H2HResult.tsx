@@ -47,15 +47,7 @@ function formatTime(ms: number): string {
   return (ms / 1000).toFixed(1) + 's';
 }
 
-function playerSummary(
-  label: string,
-  cards: number,
-  timeMs: number,
-  eliminated: boolean,
-): string {
-  if (eliminated) return `${label}: ${cards}/${H2H_CARDS_PER_MATCH} (eliminated)`;
-  return `${label}: ${cards}/${H2H_CARDS_PER_MATCH} (${formatTime(timeMs)})`;
-}
+// playerSummary removed — scoreboard now uses inline JSX with real names
 
 export function H2HResult({
   matchId,
