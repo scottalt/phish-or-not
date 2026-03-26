@@ -466,14 +466,12 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
             // so v1 veterans don't get milestone dialogues for things they already had
             if (answers > 0 && !hasSeenMoment('v2_intro')) {
               markMomentSeen('v2_intro');
+              // Pre-mark only answer-threshold milestones they already passed
               if (graduated || answers >= 10) markMomentSeen('pvp_unlock');
               if (answers >= 15) markMomentSeen('research_halfway');
               if (answers >= 20) markMomentSeen('daily_unlock');
               if (answers >= 30) markMomentSeen('freeplay_unlock');
-              // Pre-mark level/session milestones too
-              if (profile && profile.level >= 10) markMomentSeen('level_10');
-              if (profile && profile.level >= 20) markMomentSeen('level_20');
-              if (profile && profile.totalSessions >= 7) markMomentSeen('played_7_days');
+              markMomentSeen('first_correct');
               markMomentSeen('first_session_complete');
             }
             setShowHandlerGreeting(false);
