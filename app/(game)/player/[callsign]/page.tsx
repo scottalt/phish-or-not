@@ -68,6 +68,20 @@ export default async function PublicProfilePage({ params }: Props) {
   const privacyLevel = (player.privacy_level as string) ?? 'public';
   const playerId = player.id as string;
 
+  // Check friendship status for the Add Friend button
+  let friendshipStatus: 'none' | 'friends' | 'pending' = 'none';
+  if (viewerId && !isOwnProfile) {
+    const { data: existingFriend } = await admin
+      .from('player_friends')
+      .select('status')
+      .or(`and(player_id.eq.${viewerId},friend_id.eq.${playerId}),and(player_id.eq.${playerId},friend_id.eq.${viewerId})`)
+      .limit(1)
+      .maybeSingle();
+    if (existingFriend) {
+      friendshipStatus = existingFriend.status === 'accepted' ? 'friends' : 'pending';
+    }
+  }
+
   // Privacy check — own profile always visible
   if (!isOwnProfile && (privacyLevel === 'private' || privacyLevel === 'friends')) {
     let isFriend = false;
@@ -148,7 +162,7 @@ export default async function PublicProfilePage({ params }: Props) {
               {bio}
             </div>
           )}
-          {!isOwnProfile && <AddFriendButton callsign={displayName} />}
+          {!isOwnProfile && <AddFriendButton callsign={displayName} friendshipStatus={friendshipStatus} />}
         </div>
 
         {/* Featured badge shelf */}

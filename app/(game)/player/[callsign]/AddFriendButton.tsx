@@ -2,9 +2,32 @@
 
 import { useState } from 'react';
 
-export function AddFriendButton({ callsign }: { callsign: string }) {
+interface Props {
+  callsign: string;
+  friendshipStatus?: 'none' | 'friends' | 'pending';
+}
+
+export function AddFriendButton({ callsign, friendshipStatus = 'none' }: Props) {
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [msg, setMsg] = useState('');
+
+  // Already friends — show status instead of button
+  if (friendshipStatus === 'friends') {
+    return (
+      <div className="text-[var(--c-primary)] text-xs font-mono mt-2 tracking-wider opacity-60">
+        FRIENDS ✓
+      </div>
+    );
+  }
+
+  // Request already pending
+  if (friendshipStatus === 'pending') {
+    return (
+      <div className="text-[var(--c-accent)] text-xs font-mono mt-2 tracking-wider opacity-60">
+        REQUEST PENDING
+      </div>
+    );
+  }
 
   if (status === 'sent') {
     return (
