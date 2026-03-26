@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { getSupabaseAdminClient } from '@/lib/supabase';
+import filter from 'leo-profanity';
 
 const VALID_PRIVACY_LEVELS = ['public', 'friends', 'private'] as const;
 const MAX_BIO_LENGTH = 200;
@@ -40,6 +41,9 @@ export async function PATCH(req: NextRequest) {
     }
     // Strip HTML tags and trim
     const cleaned = body.bio.replace(/<[^>]*>/g, '').trim().slice(0, MAX_BIO_LENGTH);
+    if (filter.check(cleaned)) {
+      return NextResponse.json({ error: 'Keep it clean, operative.' }, { status: 400 });
+    }
     updates.bio = cleaned;
   }
 
