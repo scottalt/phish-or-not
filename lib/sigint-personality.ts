@@ -41,6 +41,11 @@ export function dynamicDialogue(id: string, callsign: string): SigintDialogue | 
         { lines: ["Terminal's been quiet without you.", `Let's fix that, ${callsign}.`], buttonText: "LET'S GO" },
         { lines: [`${callsign}. Status: operational.`, "Mine, not yours. Yours is TBD."], buttonText: "WATCH ME" },
         { lines: ["Ah. My favorite operative.", `...you're my only operative, ${callsign}. Don't let it go to your head.`], buttonText: "TOO LATE" },
+        { lines: [`${callsign}. I counted the seconds.`, "...kidding. I don't have a clock. I have a threat queue."], buttonText: "SURE" },
+        { lines: ["Incoming operative detected.", `Threat level: ${callsign}. Proceed with caution.`], buttonText: "VERY FUNNY" },
+        { lines: [`${callsign}. You look different.`, "Just kidding. I can't see you. But I know you're ready."], buttonText: "ALWAYS" },
+        { lines: ["System log: operative returned.", `Note to self — ${callsign} actually came back. Adjusting expectations.`], buttonText: "RUDE" },
+        { lines: [`${callsign}. Quick question.`, "Did you think about phishing while you were gone? Be honest."], buttonText: "...MAYBE" },
       ];
       return greetings[Math.floor(Math.random() * greetings.length)];
     }
