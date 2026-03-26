@@ -90,6 +90,8 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
   const [h2hMatchId, setH2HMatchId] = useState<string | null>(null);
   const [h2hIsBot, setH2HIsBot] = useState(false);
   const [h2hOpponentName, setH2HOpponentName] = useState('OPPONENT');
+  const [h2hOpponentBadge, setH2HOpponentBadge] = useState<string | null>(null);
+  const [h2hOpponentThemeColor, setH2HOpponentThemeColor] = useState('#00ff41');
   const [h2hResult, setH2HResult] = useState<{ winnerId: string | null; myPointsDelta: number; opponentPointsDelta: number; reason: string } | null>(null);
   const hasAutoStarted = useRef(false);
   const [flashClass, setFlashClass] = useState<string | null>(null);
@@ -498,8 +500,30 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
                 setPhase('h2h_countdown');
               });
             } else {
-              setH2HOpponentName('OPPONENT'); // real opponent name resolved in countdown or match
-              setPhase('h2h_countdown');
+              // Resolve real opponent name + badge before countdown
+              fetch(`/api/h2h/match/${matchId}`)
+                .then(r => r.ok ? r.json() : null)
+                .then(data => {
+                  if (data?.match && data?.players && profile) {
+                    const isP1 = data.match.player1Id === profile.id;
+                    const oppId = isP1 ? data.match.player2Id : data.match.player1Id;
+                    const opp = data.players[oppId];
+                    if (opp) {
+                      setH2HOpponentName(opp.displayName ?? 'OPPONENT');
+                      setH2HOpponentThemeColor(opp.themeColor ?? '#00ff41');
+                      if (opp.featuredBadge) {
+                        import('@/lib/achievements').then(({ ACHIEVEMENTS }) => {
+                          setH2HOpponentBadge(ACHIEVEMENTS.find(a => a.id === opp.featuredBadge)?.icon ?? null);
+                        });
+                      }
+                    }
+                  }
+                  setPhase('h2h_countdown');
+                })
+                .catch(() => {
+                  setH2HOpponentName('OPPONENT');
+                  setPhase('h2h_countdown');
+                });
             }
           }}
           onCancel={() => setPhase('start')}
@@ -513,6 +537,8 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
       <div className="min-h-screen bg-[var(--c-bg)] flex flex-col items-center justify-center p-4 pb-safe">
         <H2HCountdown
           opponentName={h2hOpponentName}
+          opponentBadge={h2hOpponentBadge}
+          opponentThemeColor={h2hOpponentThemeColor}
           onComplete={() => setPhase('h2h_match')}
         />
       </div>

@@ -7,11 +7,13 @@ import { useSoundEnabled } from '@/lib/useSoundEnabled';
 
 interface Props {
   opponentName: string;
+  opponentBadge?: string | null;
+  opponentThemeColor?: string;
   onComplete: () => void;
 }
 
 /** PvP countdown interstitial — dramatic 3-2-1-GO before match starts */
-export function H2HCountdown({ opponentName, onComplete }: Props) {
+export function H2HCountdown({ opponentName, opponentBadge, opponentThemeColor, onComplete }: Props) {
   const [phase, setPhase] = useState<'intro' | '3' | '2' | '1' | 'go'>('intro');
   const { soundEnabled } = useSoundEnabled();
   const completeCalled = useRef(false);
@@ -41,13 +43,20 @@ export function H2HCountdown({ opponentName, onComplete }: Props) {
     if (phase === 'go') playCountdownGo();
   }, [phase, soundEnabled]);
 
+  const nameColor = opponentThemeColor ?? '#ff0080';
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] font-mono">
       {phase === 'intro' && (
         <div className="text-center space-y-3 anim-fade-in-up">
           <div className="text-[var(--c-muted)] text-xs tracking-widest">OPPONENT LOCATED</div>
-          <div className="text-[#ff0080] text-xl font-bold tracking-widest">
-            <Typewriter text={opponentName} speed={40} />
+          <div className="flex items-center justify-center gap-2">
+            {opponentBadge && (
+              <span className="text-xl" style={{ color: nameColor }}>{opponentBadge}</span>
+            )}
+            <span className="text-xl font-bold tracking-widest" style={{ color: nameColor }}>
+              <Typewriter text={opponentName} speed={40} />
+            </span>
           </div>
         </div>
       )}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getRankFromPoints, H2H_CARDS_PER_MATCH } from '@/lib/h2h';
 import type { H2HRank } from '@/lib/h2h';
 import { ACHIEVEMENTS } from '@/lib/achievements';
@@ -32,6 +32,7 @@ interface MatchData {
   oppEliminated: boolean;
   oppPointsDelta: number | null;
   myPointsDeltaFromServer: number | null;
+  serverWinnerId: string | null;
 }
 
 interface StatsData {
@@ -75,18 +76,22 @@ export function H2HResult({
 
   const { soundEnabled } = useSoundEnabled();
 
-  // winnerId is the source of truth — reason is just for display flavor
-  const isWin = winnerId === playerId;
-  const isLoss = winnerId !== null && winnerId !== playerId;
-  const noResult = winnerId === null; // bot match wrong answer
+  // Prefer server-fetched winnerId over client prop (client passes null for eliminations/forfeits)
+  const resolvedWinnerId = matchData?.serverWinnerId ?? winnerId;
+  const isWin = resolvedWinnerId === playerId;
+  const isLoss = resolvedWinnerId !== null && resolvedWinnerId !== playerId;
+  const noResult = resolvedWinnerId === null;
 
-  // Play victory/defeat sound on mount
+  // Play victory/defeat sound when server data resolves the winner
+  const soundPlayed = useRef(false);
   useEffect(() => {
-    if (soundEnabled) {
-      if (isWin) playVictory();
-      else if (!isBot) playDefeat();
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    if (soundPlayed.current || !soundEnabled) return;
+    // Wait for server data before playing sound (resolvedWinnerId may change)
+    if (!matchData && !isBot) return;
+    soundPlayed.current = true;
+    if (isWin) playVictory();
+    else if (!isBot) playDefeat();
+  }, [matchData, isWin, isBot, soundEnabled]);
 
   useEffect(() => {
     let cancelled = false;
@@ -131,6 +136,7 @@ export function H2HResult({
             oppEliminated: isWin && oppCards < H2H_CARDS_PER_MATCH,
             oppPointsDelta: oppPointsDelta ?? null,
             myPointsDeltaFromServer: serverMyDelta ?? null,
+            serverWinnerId: m.winnerId ?? null,
           });
 
           // Store review cards and player's answers
