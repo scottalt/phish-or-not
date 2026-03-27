@@ -291,8 +291,17 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
       triggerSigint(pendingMilestone);
       // Queue bonus milestones behind it (level, sessions)
       if (profile.level >= 30) triggerSigint('max_level');
+      else if (profile.level >= 28) triggerSigint('level_28');
+      else if (profile.level >= 25) triggerSigint('level_25');
+      else if (profile.level >= 22) triggerSigint('level_22');
       else if (profile.level >= 20) triggerSigint('level_20');
+      else if (profile.level >= 18) triggerSigint('level_18');
+      else if (profile.level >= 15) triggerSigint('level_15');
+      else if (profile.level >= 13) triggerSigint('level_13');
       else if (profile.level >= 10) triggerSigint('level_10');
+      else if (profile.level >= 7) triggerSigint('level_7');
+      else if (profile.level >= 5) triggerSigint('level_5');
+      else if (profile.level >= 3) triggerSigint('level_3');
       if (profile.totalSessions >= 7) triggerSigint('played_7_days');
       return;
     }
@@ -303,8 +312,17 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
     if (lastGreeted && Date.now() - lastGreeted < 2 * 60 * 60 * 1000) {
       // Even without greeting, check bonus milestones
       if (profile.level >= 30) triggerSigint('max_level');
+      else if (profile.level >= 28) triggerSigint('level_28');
+      else if (profile.level >= 25) triggerSigint('level_25');
+      else if (profile.level >= 22) triggerSigint('level_22');
       else if (profile.level >= 20) triggerSigint('level_20');
+      else if (profile.level >= 18) triggerSigint('level_18');
+      else if (profile.level >= 15) triggerSigint('level_15');
+      else if (profile.level >= 13) triggerSigint('level_13');
       else if (profile.level >= 10) triggerSigint('level_10');
+      else if (profile.level >= 7) triggerSigint('level_7');
+      else if (profile.level >= 5) triggerSigint('level_5');
+      else if (profile.level >= 3) triggerSigint('level_3');
       if (profile.totalSessions >= 7) triggerSigint('played_7_days');
       return;
     }
@@ -506,8 +524,17 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
             // After greeting, fire bonus milestones (level, sessions) via SigintContext queue
             setTimeout(() => {
               if (profile && profile.level >= 30) triggerSigint('max_level');
+              else if (profile && profile.level >= 28) triggerSigint('level_28');
+              else if (profile && profile.level >= 25) triggerSigint('level_25');
+              else if (profile && profile.level >= 22) triggerSigint('level_22');
               else if (profile && profile.level >= 20) triggerSigint('level_20');
+              else if (profile && profile.level >= 18) triggerSigint('level_18');
+              else if (profile && profile.level >= 15) triggerSigint('level_15');
+              else if (profile && profile.level >= 13) triggerSigint('level_13');
               else if (profile && profile.level >= 10) triggerSigint('level_10');
+              else if (profile && profile.level >= 7) triggerSigint('level_7');
+              else if (profile && profile.level >= 5) triggerSigint('level_5');
+              else if (profile && profile.level >= 3) triggerSigint('level_3');
               if (profile && profile.totalSessions >= 7) triggerSigint('played_7_days');
             }, 300);
           }}

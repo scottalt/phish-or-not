@@ -303,6 +303,31 @@ export const MILESTONES = {
     buttonText: "FAIR POINT",
   } as SigintDialogue,
 
+  level_3: {
+    lines: [
+      "Level 3. You figured out the buttons.",
+      "Most people quit before this. You didn't. That's something.",
+    ],
+    buttonText: "LOW BAR",
+  } as SigintDialogue,
+
+  level_5: {
+    lines: [
+      "Level 5. You're past the tutorial zone.",
+      "The emails get weirder from here. I wouldn't worry about it.",
+      "...I would worry about it.",
+    ],
+    buttonText: "NOTED",
+  } as SigintDialogue,
+
+  level_7: {
+    lines: [
+      "Level 7. You just unlocked your first theme.",
+      "Go check Inventory. Make this terminal yours.",
+    ],
+    buttonText: "CUSTOMISE",
+  } as SigintDialogue,
+
   level_10: {
     lines: [
       "Level 10. Double digits.",
@@ -311,12 +336,65 @@ export const MILESTONES = {
     buttonText: "I'LL TAKE IT",
   } as SigintDialogue,
 
+  level_13: {
+    lines: [
+      "Level 13. Unlucky number.",
+      "Unless you're the one sending the phishing emails. Then it's very lucky.",
+      "...That was a joke. Please don't send phishing emails.",
+    ],
+    buttonText: "NO PROMISES",
+  } as SigintDialogue,
+
+  level_15: {
+    lines: [
+      "Level 15. Halfway to the ceiling.",
+      "You've seen more fake emails than most people see real ones.",
+      "That's either impressive or concerning.",
+    ],
+    buttonText: "BOTH",
+  } as SigintDialogue,
+
+  level_18: {
+    lines: [
+      "Level 18. Your pattern recognition is sharper than most SOC analysts.",
+      "I base that on nothing. But it feels true.",
+    ],
+    buttonText: "I BELIEVE YOU",
+  } as SigintDialogue,
+
   level_20: {
     lines: [
       "Level 20.",
       "At this point I'm just running diagnostics to make sure you're human.",
     ],
     buttonText: "STILL HERE",
+  } as SigintDialogue,
+
+  level_22: {
+    lines: [
+      "Level 22. Red Team theme unlocked.",
+      "You're playing with the offensive color palette now.",
+      "Try not to let it go to your head.",
+    ],
+    buttonText: "TOO LATE",
+  } as SigintDialogue,
+
+  level_25: {
+    lines: [
+      "Level 25. Five more to the ceiling.",
+      "You've spent more time reading fake emails than some people spend reading real ones.",
+      "I'd call it dedication. HR might call it something else.",
+    ],
+    buttonText: "WORTH IT",
+  } as SigintDialogue,
+
+  level_28: {
+    lines: [
+      "Level 28. Ghost Protocol theme unlocked.",
+      "The final cosmetic. Grayscale stealth mode.",
+      "You're running out of things to unlock. But not out of threats to catch.",
+    ],
+    buttonText: "TWO MORE",
   } as SigintDialogue,
 
   played_7_days: {
