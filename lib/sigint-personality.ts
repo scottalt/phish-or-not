@@ -105,8 +105,8 @@ export function dynamicDialogue(id: string, callsign: string): SigintDialogue | 
       return {
         lines: [
           `${callsign}. We need to talk.`,
-          "I'm SIGINT. New around here — they installed me in the v2 update.",
-          "I run threat analysis now. PvP mode, ranked matches, badges — that's all me.",
+          "I'm SIGINT — Signals Intelligence. The name's from real intel tradecraft. Felt appropriate.",
+          "They installed me in the v2 update. I run threat analysis now — PvP mode, ranked matches, badges. That's all me.",
           "Your research data carried over. Everything you've done still counts.",
           "But there's a lot of new stuff. Poke around. I'll be here if you need me.",
         ],
@@ -122,8 +122,8 @@ export function dynamicDialogue(id: string, callsign: string): SigintDialogue | 
 export const ONBOARDING = {
   boot_greeting: {
     lines: [
-      "Hey. I'm SIGINT. Welcome to the terminal.",
-      "I run threat analysis here. You're my new operative.",
+      "Hey. I'm SIGINT — short for Signals Intelligence. It's a real thing. Look it up.",
+      "I'm the AI that runs this terminal. Threat analysis, pattern detection, sarcasm — the full package.",
       "Emails are coming in. Some are real. Some are phishing. All of them are written by AI — so don't expect typos to save you.",
       "Hit Research Mode and classify 10. Then we'll talk about the fun stuff.",
     ],
