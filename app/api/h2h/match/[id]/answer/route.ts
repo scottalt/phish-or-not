@@ -212,6 +212,7 @@ async function finalizeMatch(
     );
 
     // Award XP to both players — count correct answers from DB (not stale match snapshot)
+    // Same daily cap as rank points (20 rated matches/day) — prevents XP farming
     const [{ count: winnerCorrect }, { count: loserCorrect }] = await Promise.all([
       admin.from('h2h_match_answers').select('id', { count: 'exact', head: true })
         .eq('match_id', matchId).eq('player_id', winnerId).eq('correct', true),
@@ -219,10 +220,10 @@ async function finalizeMatch(
         .eq('match_id', matchId).eq('player_id', loserId).eq('correct', true),
     ]);
 
-    await Promise.all([
-      awardH2HXp(admin, winnerId, winnerCorrect ?? 0, true),
-      awardH2HXp(admin, loserId, loserCorrect ?? 0, false),
-    ]);
+    const xpAwards: Promise<void>[] = [];
+    if (winnerRatedToday < 20) xpAwards.push(awardH2HXp(admin, winnerId, winnerCorrect ?? 0, true));
+    if (loserRatedToday < 20) xpAwards.push(awardH2HXp(admin, loserId, loserCorrect ?? 0, false));
+    await Promise.all(xpAwards);
 
     // Release bot lock if this was a ghost match
     if (match.is_ghost_match && match.player1_id) {
