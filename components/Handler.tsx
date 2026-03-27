@@ -16,7 +16,9 @@ interface Props {
  * Shows one message at a time. Player taps NEXT to advance.
  * Final message shows a custom button to dismiss.
  */
-export function Handler({ lines, buttonText = 'CONTINUE', onDismiss }: Props) {
+export function Handler({ lines: rawLines, buttonText = 'CONTINUE', onDismiss }: Props) {
+  // Guard against undefined/empty lines (prevents crash if dialogue key is missing)
+  const lines = rawLines?.length ? rawLines : ['...'];
   const [currentLine, setCurrentLine] = useState(0);
   const [typingDone, setTypingDone] = useState(false);
   const { soundEnabled } = useSoundEnabled();
