@@ -38,7 +38,7 @@ export function Handler({ lines, buttonText = 'CONTINUE', onDismiss }: Props) {
   const isLastLine = currentLine >= lines.length - 1;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 anim-fade-in">
+    <div className="fixed inset-0 z-[100] flex items-center lg:items-start justify-center px-4 lg:pt-32 anim-fade-in">
       {/* Subtle vignette — darkens edges, keeps center visible, feels layered */}
       <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.45) 100%)' }} aria-hidden="true" />
 
