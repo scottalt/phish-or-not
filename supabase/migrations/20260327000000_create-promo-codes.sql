@@ -40,5 +40,5 @@ CREATE POLICY "Players can read own redemptions"
 
 -- Seed the THOUGHT_LEADER promo code (first 100 redemptions)
 INSERT INTO promo_codes (code, badge_id, max_uses, active)
-VALUES ('THOUGHT-LEADER', 'thought_leader', 100, true)
+VALUES ('OPEN-TO-WORK', 'thought_leader', 100, true)
 ON CONFLICT (code) DO NOTHING;
