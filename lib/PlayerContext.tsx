@@ -30,6 +30,12 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         if (data.cooldown) {
           try { localStorage.setItem('xp_cooldown', JSON.stringify(data.cooldown)); } catch {}
         }
+        // Seed seen moments cache from server (player-scoped, prevents cross-account leaks)
+        if (data.seenMoments) {
+          try { localStorage.setItem('handler_moments_seen', JSON.stringify(data.seenMoments)); } catch {}
+        } else {
+          try { localStorage.removeItem('handler_moments_seen'); } catch {}
+        }
         setProfile(data);
       } else {
         setProfile(null);
@@ -96,7 +102,12 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     const supabase = getSupabaseBrowserClient();
     await supabase.auth.signOut();
     setProfile(null);
-    try { localStorage.removeItem('xp_cooldown'); } catch {}
+    try {
+      localStorage.removeItem('xp_cooldown');
+      localStorage.removeItem('handler_moments_seen');
+      sessionStorage.removeItem('sigint_greeting_done');
+      sessionStorage.removeItem('sigint_greeted');
+    } catch {}
   }
 
   return (
