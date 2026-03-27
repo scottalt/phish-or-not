@@ -742,7 +742,27 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
     }
   }
 
-  // ── Forfeit ──
+  // ── Decline (pre-game cancel — no rank penalty) ──
+  async function handleDecline() {
+    if (matchEndedRef.current) return;
+    matchEndedRef.current = true;
+    try {
+      await fetch(`/api/h2h/match/${matchId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'cancel' }),
+        keepalive: true,
+      });
+    } catch { /* best effort */ }
+    onMatchEnd({
+      winnerId: null,
+      myPointsDelta: 0,
+      opponentPointsDelta: 0,
+      reason: 'completed',
+    });
+  }
+
+  // ── Forfeit (mid-game — counts as a loss) ──
   async function handleForfeit() {
     if (matchEndedRef.current) return;
     matchEndedRef.current = true;
@@ -944,7 +964,7 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
                       [ ACCEPT MATCH ]
                     </button>
                     <button
-                      onClick={handleForfeit}
+                      onClick={handleDecline}
                       className="w-full py-2 text-[var(--c-muted)] font-mono text-xs tracking-widest hover:text-[#ff3333] transition-colors"
                     >
                       [ DECLINE ]
@@ -956,7 +976,7 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
                       Waiting for opponent...
                     </div>
                     <button
-                      onClick={handleForfeit}
+                      onClick={handleDecline}
                       className="w-full py-2 text-[var(--c-muted)] font-mono text-xs tracking-widest hover:text-[#ff3333] transition-colors"
                     >
                       [ CANCEL ]
