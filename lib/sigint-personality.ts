@@ -433,21 +433,13 @@ export const PAGE_VISITS = {
     buttonText: "GOT IT",
   } as SigintDialogue,
 
-  first_shop:
+  first_shop: {
     lines: [
       "Shop's not open yet. Season 1.",
       "Coins, exclusive cosmetics, limited-time drops. The works.",
       "For now, enjoy the free stuff. You'll miss it when it's gone.",
     ],
     buttonText: "CAN'T WAIT",
-  } as SigintDialogue,
-
-  first_codes: {
-    lines: [
-      "Promo codes. Limited drops. If you have one, enter it here.",
-      "If you don't have one... well, maybe follow the right people.",
-    ],
-    buttonText: "GOT IT",
   } as SigintDialogue,
 };
 
