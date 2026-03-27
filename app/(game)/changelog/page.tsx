@@ -95,6 +95,26 @@ export default function ChangelogPage() {
                       {entry.body && (
                         <div className="text-[var(--c-secondary)] text-sm font-mono leading-relaxed">{entry.body}</div>
                       )}
+                      {entry.details && entry.details.length > 0 && (
+                        <div className="mt-3 space-y-2 border-t border-[rgba(255,0,128,0.15)] pt-3">
+                          {entry.details.map((detail, j) => {
+                            const dashIdx = detail.indexOf(' — ');
+                            return (
+                              <div key={j} className="text-sm font-mono leading-relaxed flex gap-2">
+                                <span className="text-[#ff0080] shrink-0">{'>'}</span>
+                                {dashIdx > 0 ? (
+                                  <span>
+                                    <span className="text-[var(--c-primary)] font-bold">{detail.slice(0, dashIdx)}</span>
+                                    <span className="text-[var(--c-secondary)]">{detail.slice(dashIdx)}</span>
+                                  </span>
+                                ) : (
+                                  <span className="text-[var(--c-secondary)]">{detail}</span>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div key={i} className="border-l-2 border-[color-mix(in_srgb,var(--c-primary)_25%,transparent)] pl-3">

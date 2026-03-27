@@ -5,6 +5,7 @@ export interface ChangelogEntry {
   category: ChangelogCategory;
   title: string;
   body?: string;
+  details?: string[]; // bullet-point feature list for major releases
   highlight?: boolean; // major release — render with special styling
 }
 
@@ -101,8 +102,20 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     date: '2026-03-22',
     category: 'update',
-    title: 'v2.0.0 — PvP mode + unlock ladder',
-    body: 'New competitive mode: 1v1 ranked matches in real time. 5 cards, same deck, pure speed. Wrong answer eliminates. Seasonal ranks from Bronze to Elite with skill-based point scaling. Expert mode merged into Freeplay. New unlock progression: 10 research answers unlocks PvP, 20 unlocks Daily Challenge, 30 unlocks Freeplay.',
+    title: 'v2.0.0 — Season 0',
+    body: 'Head-to-head PvP, a ranked competitive system, a new AI companion, and a complete progression overhaul.',
+    details: [
+      'HEAD-TO-HEAD PVP — Real-time 1v1 ranked matches. 5 cards, same deck, pure speed. Wrong answer eliminates. First to finish wins.',
+      'RANKED SYSTEM — 7 tiers from Bronze to Elite with skill-based point scaling. Beat higher-ranked opponents for bigger gains.',
+      'SEASON 0 EXCLUSIVES — Earn seasonal badges tied to your final rank. Founder badge for early adopters. These won\'t return.',
+      'SIGINT — Your terminal handler. 50+ rotating greetings, milestone reactions, and commentary. Cross-device persistence.',
+      'UNLOCK LADDER — 10 research answers unlocks PvP, 20 unlocks Daily Challenge, 30 unlocks Freeplay.',
+      'INVENTORY — Themes, badges, and promo codes in one place. Badge rarities with visual effects (glow, pulse, shimmer).',
+      'FRIENDS — Add friends, view profiles, see their featured badges and stats.',
+      'AFK PROTECTION — 90-second per-card inactivity timeout. Idle players are auto-forfeited.',
+      'FREEPLAY — Expert mode merged into Freeplay with a combined card pool. Unlimited practice, no XP cooldown.',
+      'PHASE 2 RESEARCH — Auth headers, Reply-To, and Send Time removed to focus on technique detection. Phase 1 data preserved.',
+    ],
     highlight: true,
   },
 ];
