@@ -156,9 +156,9 @@ const ONBOARDING_EXTRA = {
 
   tutorial_intro: {
     lines: [
-      "Training sim loaded.",
-      "See that sender field? Tap the arrow. Go on.",
-      "Check the attachment too. And the URLs. I highlighted the clickable bits.",
+      "Training sim loaded. This is a practice email.",
+      "The glowing bits are forensic tools. The sender field reveals the real email address. The URL shows where the link actually goes.",
+      "Read the email. Use the tools. Then set your confidence and make the call.",
     ],
     buttonText: "GOT IT",
   } as SigintDialogue,
@@ -167,8 +167,8 @@ const ONBOARDING_EXTRA = {
     lines: [
       "You left last time without classifying anything. I noticed.",
       "Same drill. Read the email. Think about the context. Who sent it, what they want, whether any of it adds up.",
-      "The glowing bits are forensic tools. Tap them. But they're not the whole picture. Your instinct matters too.",
-      "Pick a confidence level, then call it. Phishing or legit.",
+      "The glowing bits are forensic tools. They reveal the real sender address and where links actually go. But they're not the whole picture. Your instinct matters too.",
+      "Pick a confidence level, then make the call. Phishing or legit.",
       "Don't leave me hanging again.",
     ],
     buttonText: "I'M ON IT",
