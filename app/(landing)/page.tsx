@@ -148,12 +148,16 @@ export default async function LandingPage() {
                 to avoid service interruption.
               </div>
               <div className="mt-3.5 flex gap-2 pointer-events-none">
-                <div className="flex-1 py-2.5 text-center font-[family-name:var(--font-jetbrains)] text-[11px] font-bold tracking-wider border border-[rgba(255,51,51,0.4)] text-[#ff3333] rounded-md">
+                <div className="flex-1 py-2.5 text-center font-[family-name:var(--font-jetbrains)] text-[11px] font-bold tracking-wider border border-[rgba(255,51,51,0.4)] text-[#ff3333] rounded-md hover:bg-[rgba(255,51,51,0.08)] transition-colors">
                   PHISHING
                 </div>
-                <div className="flex-1 py-2.5 text-center font-[family-name:var(--font-jetbrains)] text-[11px] font-bold tracking-wider border border-[rgba(0,255,65,0.3)] text-[#00ff41] rounded-md">
+                <div className="flex-1 py-2.5 text-center font-[family-name:var(--font-jetbrains)] text-[11px] font-bold tracking-wider border border-[rgba(0,255,65,0.3)] text-[#00ff41] rounded-md hover:bg-[rgba(0,255,65,0.06)] transition-colors">
                   LEGIT
                 </div>
+              </div>
+              <div className="mt-3 flex items-center gap-1 font-[family-name:var(--font-jetbrains)] text-[10px] text-[#33bb55]">
+                <span>&gt; AWAITING CLASSIFICATION</span>
+                <span className="inline-block w-1.5 h-3 bg-[#00ff41] animate-pulse" />
               </div>
             </div>
           </div>
@@ -233,8 +237,9 @@ export default async function LandingPage() {
                 See how you compare
               </h3>
               <p className="text-sm text-[#a1a1aa] leading-relaxed">
-                Get instant feedback, earn XP, climb the leaderboard. After 30
-                answers, unlock Expert mode and full research analytics.
+                Get instant feedback, earn XP, and climb the ranks. Unlock
+                competitive PvP, daily challenges, and live research analytics
+                as you progress.
               </p>
             </div>
           </div>
@@ -256,9 +261,10 @@ export default async function LandingPage() {
             reliable signals, what do humans actually look for?
           </p>
           <p className="text-[15px] text-[#a1a1aa] leading-relaxed mb-4">
-            Every answer you submit contributes to real data. Your responses
-            help us understand which forensic cues matter most when traditional
-            red flags have been eliminated by AI.
+            Every answer you submit contributes to real data. Compete in
+            ranked 1v1 matches, complete daily challenges, and help us
+            understand which phishing techniques humans miss most when
+            AI writes the emails.
           </p>
           <div className="text-[13px] text-[#71717a] mt-6">
             A research project by{' '}

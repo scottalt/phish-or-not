@@ -38,15 +38,17 @@ const BACKGROUND_OPTIONS: { value: PlayerBackground; label: string }[] = [
 
 // bright=true → phosphor green + glow (separators, READY line)
 const BOOT_LINES: { text: string; bright: boolean }[] = [
-  { text: '> THREAT_TERMINAL ANALYZER',  bright: false },
-  { text: '> RESEARCH PLATFORM v1.0',       bright: false },
-  { text: '> ─────────────────────────────', bright: true  },
-  { text: '> LOADING RESEARCH DATASET.....', bright: false },
-  { text: '> DATASET: v1.0',                bright: false },
-  { text: '> CONFIDENCE SCORING: ENABLED',  bright: false },
-  { text: '> STREAK DETECTION: ONLINE',     bright: false },
-  { text: '> ─────────────────────────────', bright: true  },
-  { text: '> SYSTEM READY.',                bright: true  },
+  { text: '> THREAT_TERMINAL v2.0',          bright: false },
+  { text: '> RESEARCH PLATFORM — SEASON 0',  bright: false },
+  { text: '> ─────────────────────────────',  bright: true  },
+  { text: '> LOADING RESEARCH DATASET......', bright: false },
+  { text: '> CARDS LOADED: 1000+',            bright: false },
+  { text: '> THREAT ANALYSIS: ONLINE',        bright: false },
+  { text: '> CONFIDENCE SCORING: ENABLED',    bright: false },
+  { text: '> PVP MATCHMAKING: STANDBY',       bright: false },
+  { text: '> RANKED SYSTEM: ACTIVE',          bright: false },
+  { text: '> ─────────────────────────────',  bright: true  },
+  { text: '> ALL SYSTEMS OPERATIONAL.',       bright: true  },
 ];
 
 export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic }: Props) {
@@ -202,16 +204,21 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
     return () => { cancelled = true; };
   }, [profile?.researchGraduated]);
 
+  // Boot line animation — staggered reveal with brief power-on delay
   useEffect(() => {
-    const interval = setInterval(() => {
-      setVisibleCount((prev) => {
-        if (prev < BOOT_LINES.length) return prev + 1;
-        clearInterval(interval);
-        return prev;
-      });
-    }, 220);
-    return () => clearInterval(interval);
-  }, []);
+    if (bootSeen) return;
+    const startDelay = setTimeout(() => {
+      const interval = setInterval(() => {
+        setVisibleCount((prev) => {
+          if (prev < BOOT_LINES.length) return prev + 1;
+          clearInterval(interval);
+          return prev;
+        });
+      }, 280);
+      return () => clearInterval(interval);
+    }, 400); // brief "power-on" delay before text appears
+    return () => clearTimeout(startDelay);
+  }, [bootSeen]);
 
   useEffect(() => {
     if (visibleCount === BOOT_LINES.length) {
@@ -448,16 +455,20 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
             </div>
           </div>
           <div className="px-3 py-4 min-h-48 space-y-1 overflow-hidden">
-            {BOOT_LINES.slice(0, visibleCount).map((line, i) => (
-              <div
-                key={i}
-                className={`anim-fade-in text-sm font-mono leading-relaxed ${
-                  line.bright ? 'text-[var(--c-primary)]' : 'text-[var(--c-secondary)]'
-                }`}
-              >
-                {line.text}
-              </div>
-            ))}
+            {BOOT_LINES.slice(0, visibleCount).map((line, i) => {
+              const isLastLine = i === BOOT_LINES.length - 1;
+              return (
+                <div
+                  key={i}
+                  className={`anim-fade-in text-sm font-mono leading-relaxed ${
+                    line.bright ? 'text-[var(--c-primary)]' : 'text-[var(--c-secondary)]'
+                  }`}
+                  style={isLastLine ? { textShadow: '0 0 8px var(--c-primary), 0 0 20px rgba(0,255,65,0.3)' } : undefined}
+                >
+                  {line.text}
+                </div>
+              );
+            })}
             {!showButton && visibleCount < BOOT_LINES.length && (
               <span className="cursor" />
             )}
