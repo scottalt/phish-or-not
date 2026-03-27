@@ -73,6 +73,7 @@ export default function ProfilePage() {
   const [editingBio, setEditingBio] = useState(false);
   const [bioValue, setBioValue] = useState('');
   const [bioSaving, setBioSaving] = useState(false);
+  const [bioError, setBioError] = useState('');
   const [privacySaving, setPrivacySaving] = useState(false);
   const [shelfSaving, setShelfSaving] = useState(false);
   const [h2hStats, setH2HStats] = useState<{
@@ -328,7 +329,6 @@ export default function ProfilePage() {
     }
   }
 
-  const [bioError, setBioError] = useState('');
   async function handleSaveBio() {
     setBioSaving(true);
     setBioError('');
