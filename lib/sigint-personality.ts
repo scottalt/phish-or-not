@@ -384,6 +384,8 @@ export const PAGE_VISITS = {
       "So you found the war room.",
       "Ranked matches. 5 emails each. First wrong answer and you're out.",
       "Your rank goes up when you win, down when you lose. Simple math.",
+      "Fair warning. PvP is still in beta. My systems are... mostly stable.",
+      "If something breaks, tell Scott Altiparmak. He built this place. I just live here.",
       "Queue up when you're ready. I'll find you an opponent.",
     ],
     buttonText: "UNDERSTOOD",
