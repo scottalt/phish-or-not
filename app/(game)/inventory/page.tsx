@@ -30,6 +30,19 @@ export default function InventoryPage() {
     }
   }, [signedIn, profile, triggerSigint]);
   const [tab, setTab] = useState<Tab>('themes');
+
+  // SIGINT: fire one-time dialogue when switching to each tab
+  const TAB_MOMENTS: Record<Tab, string | null> = {
+    themes: 'first_tab_themes',
+    badges: 'first_tab_badges',
+    codes: 'first_tab_codes',
+    shop: null, // shop has its own first_shop moment
+  };
+  function handleTabChange(t: Tab) {
+    setTab(t);
+    const moment = TAB_MOMENTS[t];
+    if (moment) triggerSigint(moment);
+  }
   const [showPreview, setShowPreview] = useState(false);
   const [rarityFilter, setRarityFilter] = useState<AchievementRarity | 'all'>('all');
   const [h2hRank, setH2HRank] = useState<{ rankLabel: string; rankPoints: number; rankColor: string } | null>(null);
@@ -138,7 +151,7 @@ export default function InventoryPage() {
           {(['themes', 'badges', 'codes', 'shop'] as Tab[]).map((t) => (
             <button
               key={t}
-              onClick={() => setTab(t)}
+              onClick={() => handleTabChange(t)}
               className={`flex-1 py-2 text-sm font-mono tracking-widest transition-colors ${
                 tab === t
                   ? 'text-[var(--c-primary)] bg-[color-mix(in_srgb,var(--c-primary)_6%,transparent)] border-b-2 border-[var(--c-primary)]'

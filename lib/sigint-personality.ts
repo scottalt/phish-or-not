@@ -409,7 +409,31 @@ export const PAGE_VISITS = {
     buttonText: "NOTED",
   } as SigintDialogue,
 
-  first_shop: {
+  first_tab_themes: {
+    lines: [
+      "Themes. Each one changes the whole terminal aesthetic.",
+      "Pick one that matches your vibe. Or your mood. I won't judge.",
+    ],
+    buttonText: "BROWSING",
+  } as SigintDialogue,
+
+  first_tab_badges: {
+    lines: [
+      "Your badge collection. Tap one to add it to your shelf.",
+      "Your opponents see these in PvP. Choose wisely. Or don't. It's cosmetic.",
+    ],
+    buttonText: "GOT IT",
+  } as SigintDialogue,
+
+  first_tab_codes: {
+    lines: [
+      "Promo codes. Limited drops. If you have one, enter it here.",
+      "If you don't have one... maybe follow the right people.",
+    ],
+    buttonText: "GOT IT",
+  } as SigintDialogue,
+
+  first_shop:
     lines: [
       "Shop's not open yet. Season 1.",
       "Coins, exclusive cosmetics, limited-time drops. The works.",
