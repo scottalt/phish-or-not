@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 interface Props {
-  onComplete: () => void;
+  onComplete: (correct: boolean) => void;
 }
 
 const TUTORIAL_EMAIL = {
@@ -197,7 +197,7 @@ export function TutorialCard({ onComplete }: Props) {
       {answer && (
         <button
           type="button"
-          onClick={onComplete}
+          onClick={() => onComplete(answer === 'PHISHING')}
           className="w-full py-4 term-border text-[var(--c-primary)] font-mono font-bold tracking-widest text-sm hover:bg-[color-mix(in_srgb,var(--c-primary)_5%,transparent)] active:bg-[color-mix(in_srgb,var(--c-primary)_10%,transparent)] transition-all"
         >
           [ GOT IT — START RESEARCH ]

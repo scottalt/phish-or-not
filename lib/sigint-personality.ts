@@ -184,6 +184,27 @@ const ONBOARDING_EXTRA = {
     buttonText: "READY",
   } as SigintDialogue,
 
+  tutorial_complete_correct: {
+    lines: [
+      "Nice catch. You spotted that one.",
+      "Real emails won't be that obvious. No highlighted clues. No safety net.",
+      "10 answers gets you into PvP. 30 unlocks everything.",
+      "Good luck out there. You'll need it.",
+    ],
+    buttonText: "BRING IT",
+  } as SigintDialogue,
+
+  tutorial_complete_wrong: {
+    lines: [
+      "You missed that one. It happens.",
+      "The sender domain was typosquatted and the URL didn't match. Those were the tells.",
+      "Real emails will be harder. But you'll get better. Everyone does.",
+      "10 answers gets you into PvP. 30 unlocks everything.",
+      "Go. Learn. I'll be watching.",
+    ],
+    buttonText: "I'LL DO BETTER",
+  } as SigintDialogue,
+
   first_research_start: {
     lines: [
       "Live data. No training wheels.",

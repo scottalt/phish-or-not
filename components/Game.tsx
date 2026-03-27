@@ -99,6 +99,7 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
   const [h2hOpponentThemeColor, setH2HOpponentThemeColor] = useState('#00ff41');
   const [h2hResult, setH2HResult] = useState<{ winnerId: string | null; myPointsDelta: number; opponentPointsDelta: number; reason: string } | null>(null);
   const hasAutoStarted = useRef(false);
+  const tutorialCorrectRef = useRef(false);
   const [flashClass, setFlashClass] = useState<string | null>(null);
   const sessionFinalized = useRef<Promise<void>>(Promise.resolve());
   const { setNavHidden } = useNavVisibility();
@@ -645,8 +646,9 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
   }
 
   if (phase === 'tutorial') {
-    return <TutorialCard onComplete={() => {
+    return <TutorialCard onComplete={(correct) => {
       if (!hasSeenMoment('tutorial_complete')) {
+        tutorialCorrectRef.current = correct;
         setPhase('handler_tutorial_complete');
       } else {
         setPhase('playing');
@@ -655,10 +657,14 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
   }
 
   if (phase === 'handler_tutorial_complete') {
-    const d = HANDLER_DIALOGUES.tutorial_complete;
+    const d = tutorialCorrectRef.current
+      ? HANDLER_DIALOGUES.tutorial_complete_correct
+      : HANDLER_DIALOGUES.tutorial_complete_wrong;
+    // Fall back to generic if variant doesn't exist
+    const dialogue = d ?? HANDLER_DIALOGUES.tutorial_complete;
     return (
       <div className="min-h-screen bg-[var(--c-bg)] flex flex-col items-center justify-center p-4 pb-safe">
-        <Handler lines={d.lines} buttonText={d.buttonText} onDismiss={() => {
+        <Handler lines={dialogue.lines} buttonText={dialogue.buttonText} onDismiss={() => {
           markMomentSeen('tutorial_complete');
           setPhase('handler_first_research');
         }} />
