@@ -237,19 +237,40 @@ export async function PATCH(
   }
 
   if (body.action === 'cancel') {
-    // Cancel match without rank changes — used for ready timeout, decline
-    const { data: updated } = await admin
+    // Look up the match to determine if it's a bot match or rated PvP
+    const { data: cancelMatch } = await admin
       .from('h2h_matches')
-      .update({ status: 'cancelled', ended_at: new Date().toISOString() })
+      .select('id, player1_id, player2_id, is_ghost_match, is_rated, player1_cards_completed, player2_cards_completed')
       .eq('id', id)
       .eq('status', 'active')
-      .or(`player1_id.eq.${player.id},player2_id.eq.${player.id}`)
-      .select('id');
+      .single();
 
-    if (updated && updated.length > 0) {
-      await redis.del(`h2h:bot-lock:${player.id}`);
+    if (!cancelMatch || (cancelMatch.player1_id !== player.id && cancelMatch.player2_id !== player.id)) {
+      return NextResponse.json({ error: 'Match not found' }, { status: 404 });
     }
-    return NextResponse.json({ ok: true });
+
+    // Bot matches and pre-game cancels (neither player has answered) — cancel without penalty
+    const p1Cards = cancelMatch.player1_cards_completed ?? 0;
+    const p2Cards = cancelMatch.player2_cards_completed ?? 0;
+    const isPreGame = p1Cards === 0 && p2Cards === 0;
+
+    if (cancelMatch.is_ghost_match || !cancelMatch.is_rated || isPreGame) {
+      await admin.from('h2h_matches')
+        .update({ status: 'cancelled', ended_at: new Date().toISOString() })
+        .eq('id', id)
+        .eq('status', 'active');
+      await redis.del(`h2h:bot-lock:${player.id}`);
+      return NextResponse.json({ ok: true });
+    }
+
+    // Rated PvP match in progress — treat cancel as forfeit (opponent wins)
+    const opponentId = cancelMatch.player1_id === player.id
+      ? cancelMatch.player2_id
+      : cancelMatch.player1_id;
+    if (opponentId) {
+      await finalizeMatch(id, opponentId, player.id);
+    }
+    return NextResponse.json({ ok: true, forfeited: true });
   }
 
   // Complete action — for bot matches marking as done

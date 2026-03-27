@@ -40,11 +40,13 @@ export async function POST() {
   // Enforce minimum queue wait time server-side (prevents bypassing the 30s client timer)
   const queueJoinKey = `h2h:queue-joined:${playerId}`;
   const joinedAt = await redis.get<number>(queueJoinKey);
-  if (joinedAt) {
-    const waitedMs = Date.now() - joinedAt;
-    if (waitedMs < 25_000) { // 25s (slightly less than client 30s to account for network latency)
-      return NextResponse.json({ error: 'Queue timeout not reached' }, { status: 429 });
-    }
+  if (!joinedAt) {
+    // Must join queue first — prevents direct bot endpoint calls
+    return NextResponse.json({ error: 'Must join queue first' }, { status: 429 });
+  }
+  const waitedMs = Date.now() - joinedAt;
+  if (waitedMs < 25_000) { // 25s (slightly less than client 30s to account for network latency)
+    return NextResponse.json({ error: 'Queue timeout not reached' }, { status: 429 });
   }
 
   // Prevent creating multiple bot matches concurrently

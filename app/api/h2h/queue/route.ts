@@ -10,12 +10,16 @@ import { THEMES } from '@/lib/themes';
 
 async function dealMatchCards(matchId: string, playerIds: string[]): Promise<string[]> {
   const supabase = getSupabaseAdminClient();
-  const { data } = await supabase
+  const { data, error: cardErr } = await supabase
     .from('cards_generated')
     .select('*')
     .in('pool', ['freeplay', 'expert'])
     .limit(500);
 
+  if (cardErr) {
+    console.error(`[H2H] Card fetch failed:`, cardErr.message);
+    return [];
+  }
   if (!data || data.length < H2H_CARDS_PER_MATCH) return [];
 
   const arr = [...data];
@@ -41,16 +45,23 @@ async function dealMatchCards(matchId: string, playerIds: string[]): Promise<str
     attachmentName: row.attachment_name ?? undefined,
   }));
 
-  await redis.set(`match-cards:${matchId}`, JSON.stringify(cards), { ex: H2H_MATCH_TTL });
+  const setResult = await redis.set(`match-cards:${matchId}`, JSON.stringify(cards), { ex: H2H_MATCH_TTL });
+  if (!setResult) {
+    console.error(`[H2H] Failed to store match cards in Redis for match ${matchId}`);
+    return [];
+  }
 
   const now = Date.now();
   for (const pid of playerIds) {
     await redis.set(`match-render:${matchId}:${pid}:0`, now, { ex: H2H_MATCH_TTL });
   }
 
-  await supabase.from('h2h_matches').update({
+  const { error: updateErr } = await supabase.from('h2h_matches').update({
     card_ids: cards.map((c) => c.id),
   }).eq('id', matchId);
+  if (updateErr) {
+    console.error(`[H2H] Failed to update card_ids in Supabase for match ${matchId}:`, updateErr.message);
+  }
 
   return cards.map((c) => c.id);
 }
@@ -105,8 +116,11 @@ const QUEUE_PREFIX = 'h2h:queue:data:';       // Per-player entry data
 const QUEUE_TTL = 90;                          // Entry TTL in seconds
 
 async function addToQueue(entry: QueueEntry) {
-  await redis.set(`${QUEUE_PREFIX}${entry.playerId}`, JSON.stringify(entry), { ex: QUEUE_TTL });
-  await redis.sadd(QUEUE_REGISTRY, entry.playerId);
+  // Pipeline for near-atomic add (single HTTP round-trip to Redis)
+  const pipe = redis.pipeline();
+  pipe.set(`${QUEUE_PREFIX}${entry.playerId}`, JSON.stringify(entry), { ex: QUEUE_TTL });
+  pipe.sadd(QUEUE_REGISTRY, entry.playerId);
+  await pipe.exec();
 }
 
 async function removeFromQueue(playerId: string) {
@@ -308,18 +322,15 @@ export async function GET() {
     return NextResponse.json({ matched: false });
   }
 
-  // Per-player locks — prevents the same player being matched into two matches simultaneously
+  // Per-player locks — acquired sequentially in sorted order to prevent deadlocks
   const sortedIds = [playerId, opponentEntry.playerId].sort();
   const lockA = `h2h:player-lock:${sortedIds[0]}`;
   const lockB = `h2h:player-lock:${sortedIds[1]}`;
-  const [acquiredA, acquiredB] = await Promise.all([
-    redis.set(lockA, '1', { ex: 10, nx: true }),
-    redis.set(lockB, '1', { ex: 10, nx: true }),
-  ]);
-  if (!acquiredA || !acquiredB) {
-    // Release any lock we did acquire
-    if (acquiredA) await redis.del(lockA);
-    if (acquiredB) await redis.del(lockB);
+  const acquiredA = await redis.set(lockA, '1', { ex: 30, nx: true });
+  if (!acquiredA) return NextResponse.json({ matched: false });
+  const acquiredB = await redis.set(lockB, '1', { ex: 30, nx: true });
+  if (!acquiredB) {
+    await redis.del(lockA);
     return NextResponse.json({ matched: false });
   }
 
@@ -345,7 +356,9 @@ export async function GET() {
     .single();
 
   if (error || !match) {
-    // Match creation failed — re-add both players to queue so they can retry
+    // Match creation failed — re-add both players with fresh timestamps
+    selfEntry.joinedAt = Date.now();
+    opponentEntry.joinedAt = Date.now();
     await addToQueue(selfEntry);
     await addToQueue(opponentEntry);
     await redis.del(lockA);
@@ -354,13 +367,23 @@ export async function GET() {
   }
 
   const matchId = match.id;
-  const dealtCardIds = await dealMatchCards(matchId, sortedIds);
+
+  // Deal cards — wrapped in try-catch so throws also trigger full cleanup
+  let dealtCardIds: string[];
+  try {
+    dealtCardIds = await dealMatchCards(matchId, sortedIds);
+  } catch (dealErr) {
+    console.error(`[H2H] dealMatchCards threw for match ${matchId}:`, dealErr);
+    dealtCardIds = [];
+  }
 
   if (dealtCardIds.length === 0) {
     // Card dealing failed — cancel the zombie match and re-queue players
     await admin.from('h2h_matches')
       .update({ status: 'cancelled', ended_at: new Date().toISOString() })
       .eq('id', matchId);
+    selfEntry.joinedAt = Date.now();
+    opponentEntry.joinedAt = Date.now();
     await addToQueue(selfEntry);
     await addToQueue(opponentEntry);
     await redis.del(lockA);

@@ -171,9 +171,16 @@ export function H2HQueue({ profile, onMatchFound, onCancel }: Props) {
     cleanup(); // stop polling
 
     let retryTimer: ReturnType<typeof setTimeout> | null = null;
+    let botRetryCount = 0;
+    const MAX_BOT_RETRIES = 10;
 
     async function tryCreateBot() {
       if (matchedRef.current || !mountedRef.current) return;
+      if (botRetryCount >= MAX_BOT_RETRIES) {
+        if (mountedRef.current) setError('Could not create a match. Please try again.');
+        return;
+      }
+      botRetryCount++;
       try {
         const res = await fetch('/api/h2h/queue/bot', { method: 'POST' });
         if (!mountedRef.current) return;

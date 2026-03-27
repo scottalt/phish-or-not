@@ -53,6 +53,7 @@ export async function awardH2HXp(
 
     if (updated && updated.length > 0) return; // success
   }
+  console.error(`[awardH2HXp] Failed to award ${xpEarned} XP to player ${playerId} after 2 attempts (concurrent update conflict)`);
 }
 
 // ── Finalize a completed match ──
