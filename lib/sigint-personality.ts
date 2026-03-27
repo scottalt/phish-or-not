@@ -409,14 +409,6 @@ export const PAGE_VISITS = {
     buttonText: "NOTED",
   } as SigintDialogue,
 
-  first_tab_themes: {
-    lines: [
-      "Themes. Each one changes the whole terminal aesthetic.",
-      "Pick one that matches your vibe. Or your mood. I won't judge.",
-    ],
-    buttonText: "BROWSING",
-  } as SigintDialogue,
-
   first_tab_badges: {
     lines: [
       "Your badge collection. Tap one to add it to your shelf.",

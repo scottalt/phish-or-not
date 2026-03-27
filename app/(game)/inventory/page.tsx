@@ -33,10 +33,10 @@ export default function InventoryPage() {
 
   // SIGINT: fire one-time dialogue when switching to each tab
   const TAB_MOMENTS: Record<Tab, string | null> = {
-    themes: 'first_tab_themes',
+    themes: null, // covered by first_inventory on page load
     badges: 'first_tab_badges',
     codes: 'first_tab_codes',
-    shop: null, // shop has its own first_shop moment
+    shop: null, // shop has its own page
   };
   function handleTabChange(t: Tab) {
     setTab(t);
