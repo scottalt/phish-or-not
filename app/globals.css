@@ -645,6 +645,23 @@ body {
   .badge-mythic {
     animation: none !important;
   }
+  .ticker-scroll {
+    animation: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   Announcement ticker — scrolling news crawl
+   ═══════════════════════════════════════════════════ */
+
+.ticker-scroll {
+  display: inline-block;
+  animation: ticker-scroll 20s linear infinite;
+}
+
+@keyframes ticker-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
 /* Card scanlines — slightly more visible */

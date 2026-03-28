@@ -32,16 +32,13 @@ export function AnnouncementBanner() {
         const msgs = data.messages as AdminMessage[];
         setMessages(msgs);
 
-        // Targeted messages show as SIGINT overlay (first one)
         const targeted = msgs.find((m) => !m.isGlobal);
         if (targeted) setSigintMessage(targeted);
 
-        // Global messages show as top banner
         const global = msgs.find((m) => m.isGlobal);
         if (global) {
           setGlobalBanner(global);
-          // Slide in after a short delay
-          setTimeout(() => setBannerVisible(true), 1000);
+          setTimeout(() => setBannerVisible(true), 2000);
         }
       })
       .catch(() => {});
@@ -59,7 +56,6 @@ export function AnnouncementBanner() {
     if (sigintMessage) {
       dismissMessage(sigintMessage);
       setSigintMessage(null);
-      // Check if there are more targeted messages
       const remaining = messages.filter((m) => !m.isGlobal && m.id !== sigintMessage.id);
       if (remaining.length > 0) {
         setTimeout(() => setSigintMessage(remaining[0]), 500);
@@ -70,32 +66,34 @@ export function AnnouncementBanner() {
   function handleBannerDismiss() {
     if (globalBanner) dismissMessage(globalBanner);
     setBannerDismissed(true);
-    setTimeout(() => setBannerVisible(false), 300);
   }
+
+  // Combine all global message lines into one ticker string
+  const tickerText = globalBanner
+    ? `⚡ SIGINT — ${globalBanner.lines.join('  ·  ')}`
+    : '';
 
   return (
     <>
-      {/* Global announcement banner — slides down from top */}
-      {globalBanner && !bannerDismissed && (
-        <div
-          className={`fixed top-0 left-0 right-0 z-50 transition-transform duration-500 ${
-            bannerVisible ? 'translate-y-0' : '-translate-y-full'
-          }`}
-        >
-          <div className="bg-[var(--c-bg)] border-b-2 border-[var(--c-accent)] px-4 py-3 shadow-[0_4px_20px_rgba(255,170,0,0.15)]">
-            <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3 min-w-0">
-                <span className="text-[var(--c-accent)] text-sm font-mono font-bold shrink-0">⚡ SIGINT</span>
-                <span className="text-[var(--c-primary)] text-sm font-mono truncate">
-                  {globalBanner.lines[0]}
-                </span>
-              </div>
+      {/* Global announcement — scrolling ticker */}
+      {globalBanner && !bannerDismissed && bannerVisible && (
+        <div className="fixed bottom-16 lg:bottom-0 left-0 right-0 z-50 pointer-events-none">
+          <div className="bg-[color-mix(in_srgb,var(--c-bg)_92%,transparent)] border-t border-[color-mix(in_srgb,var(--c-accent)_40%,transparent)] backdrop-blur-sm">
+            <div className="flex items-center">
+              {/* Dismiss button — pointer events enabled */}
               <button
                 onClick={handleBannerDismiss}
-                className="text-[var(--c-muted)] text-xs font-mono hover:text-[var(--c-secondary)] shrink-0 transition-colors"
+                className="pointer-events-auto px-3 py-1.5 text-[var(--c-muted)] text-[10px] font-mono hover:text-[var(--c-accent)] transition-colors shrink-0 border-r border-[color-mix(in_srgb,var(--c-accent)_20%,transparent)]"
               >
-                DISMISS
+                ✕
               </button>
+              {/* Scrolling ticker */}
+              <div className="flex-1 overflow-hidden py-1.5">
+                <div className="ticker-scroll whitespace-nowrap text-[var(--c-accent)] text-xs font-mono tracking-wider">
+                  <span className="inline-block pr-[50vw]">{tickerText}</span>
+                  <span className="inline-block pr-[50vw]">{tickerText}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
