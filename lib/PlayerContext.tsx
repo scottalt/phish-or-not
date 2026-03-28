@@ -118,13 +118,13 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       // Reset theme CSS vars immediately (don't wait for React effect cycle)
       const root = document.documentElement;
       root.style.setProperty('--c-primary', '#00ff41');
-      root.style.setProperty('--c-secondary', '#33bb55');
-      root.style.setProperty('--c-muted', '#1a5c2a');
-      root.style.setProperty('--c-dark', '#0d3318');
-      root.style.setProperty('--c-bg', '#060c06');
-      root.style.setProperty('--c-bg-alt', '#0a140a');
+      root.style.setProperty('--c-secondary', '#3cc462');
+      root.style.setProperty('--c-muted', '#237a3a');
+      root.style.setProperty('--c-dark', '#0d4a1e');
+      root.style.setProperty('--c-bg', '#0a120a');
+      root.style.setProperty('--c-bg-alt', '#060e06');
       root.style.setProperty('--c-accent', '#ffaa00');
-      root.style.setProperty('--c-accent-dim', '#aa7700');
+      root.style.setProperty('--c-accent-dim', '#cc8800');
     } catch {}
   }
 

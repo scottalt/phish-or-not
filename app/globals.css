@@ -11,11 +11,11 @@
 
   /* Theme system — overridden by ThemeContext */
   --c-primary: #00ff41;
-  --c-secondary: #33bb55;
-  --c-muted: #1a5c2a;
-  --c-dark: #003a0e;
-  --c-bg: #060c06;
-  --c-bg-alt: #020902;
+  --c-secondary: #3cc462;
+  --c-muted: #237a3a;
+  --c-dark: #0d4a1e;
+  --c-bg: #0a120a;
+  --c-bg-alt: #060e06;
   --c-accent: #ffaa00;
   --c-accent-dim: #cc8800;
 }
