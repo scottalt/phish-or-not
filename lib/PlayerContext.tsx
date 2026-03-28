@@ -76,22 +76,18 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
   async function signInWithEmail(email: string) {
     try {
-      const supabase = getSupabaseBrowserClient();
-
-      // Fire ensure-user and OTP in parallel — OTP sends immediately while
-      // ensure-user checks if the user is new or returning (for terms UI).
-      const [ensureRes, otpResult] = await Promise.all([
-        fetch('/api/auth/ensure-user', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email }),
-        }),
-        supabase.auth.signInWithOtp({ email }),
-      ]);
-
-      // Default to existing=true on any error — safer to skip terms than to show them incorrectly
+      // Step 1: Pre-create user (must complete before OTP so new users get a code, not a link)
+      const ensureRes = await fetch('/api/auth/ensure-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
       const { existing } = ensureRes.ok ? await ensureRes.json() : { existing: true };
-      return { error: otpResult.error?.message ?? null, existing: !!existing };
+
+      // Step 2: Send OTP (now that user is guaranteed to exist in auth)
+      const supabase = getSupabaseBrowserClient();
+      const { error } = await supabase.auth.signInWithOtp({ email });
+      return { error: error?.message ?? null, existing: !!existing };
     } catch {
       return { error: 'Failed to send code' };
     }

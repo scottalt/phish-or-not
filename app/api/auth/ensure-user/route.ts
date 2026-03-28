@@ -27,41 +27,33 @@ export async function POST(req: NextRequest) {
 
     const supabase = getSupabaseAdminClient();
 
-    // Step 1: Try createUser. For genuinely new emails this is fast.
-    // For existing emails, Supabase either errors or returns the existing user.
+    // Step 1: Check if this email already has a player row (fast DB query).
+    // We query auth.users via admin API to get the auth_id for this email,
+    // then check if a player profile exists.
     const { data: created, error } = await supabase.auth.admin.createUser({
       email,
       email_confirm: true,
     });
 
-    // Case A: Supabase errored — most likely user already exists
-    // Treat ALL createUser errors as "existing" — the OTP will still send
-    // via signInWithOtp on the client side regardless. The only thing
-    // `existing` controls is whether to show the terms checkbox.
     if (error) {
-      console.log(`[ensure-user] createUser error for ${email}: ${error.message} — treating as existing`);
+      // createUser failed — user likely exists. Return existing=true.
+      // The OTP will still work via signInWithOtp on the client.
       return NextResponse.json({ ok: true, existing: true });
     }
 
-    // Case B: createUser "succeeded" — but did it create a new user or return an existing one?
-    // Check if this auth user already has a player profile (terms were agreed previously)
+    // createUser succeeded — this is either a new user or Supabase returned an existing one.
+    // Check the players table to know if they've completed onboarding before.
     if (created?.user?.id) {
-      const { data: player, error: playerErr } = await supabase
+      const { data: player } = await supabase
         .from('players')
         .select('id')
         .eq('auth_id', created.user.id)
         .maybeSingle();
 
-      console.log(`[ensure-user] createUser succeeded for ${email}: auth_id=${created.user.id}, player=${player?.id ?? 'null'}, playerErr=${playerErr?.message ?? 'none'}, created_at=${created.user.created_at}`);
-
-      if (player) {
-        return NextResponse.json({ ok: true, existing: true });
-      }
-    } else {
-      console.log(`[ensure-user] createUser returned no user for ${email}`);
+      return NextResponse.json({ ok: true, existing: !!player });
     }
 
-    // Case C: Genuinely new user
+    // Fallback: genuinely new
     return NextResponse.json({ ok: true, existing: false });
   } catch (err) {
     console.error('[ensure-user] unexpected error:', err);
