@@ -12,6 +12,7 @@ interface Props {
 
 const POLL_INTERVAL_MS = 3000;
 const BOT_TIMEOUT_S = 30;
+const QUEUE_MAX_S = 300; // 5 minutes
 
 export function H2HQueue({ profile, onMatchFound, onCancel }: Props) {
   const [elapsed, setElapsed] = useState(0);
@@ -160,6 +161,15 @@ export function H2HQueue({ profile, onMatchFound, onCancel }: Props) {
       cleanup();
     };
   }, [joined, pollForMatch, cleanup]);
+
+  // ── Queue timeout — auto-cancel after 5 minutes ──
+  useEffect(() => {
+    if (elapsed >= QUEUE_MAX_S && joined && !matchedRef.current) {
+      cleanup();
+      leaveQueue();
+      setError('Queue timed out after 5 minutes. No opponents found.');
+    }
+  }, [elapsed, joined, cleanup, leaveQueue]);
 
   // ── Bot match — user-initiated after timeout ──
   const [botAvailable, setBotAvailable] = useState(false);
