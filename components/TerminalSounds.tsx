@@ -47,7 +47,8 @@ export function TerminalSounds() {
   useEffect(() => {
     function startMusic() {
       if (!musicRef.current) musicRef.current = createMusic();
-      const { audio, ctx } = musicRef.current;
+      const { audio, ctx, gain } = musicRef.current;
+      gain.gain.value = MUSIC_GAIN;
       if (ctx.state === 'suspended') {
         ctx.resume().then(() => audio.play()).catch(() => {});
       } else {
@@ -58,11 +59,8 @@ export function TerminalSounds() {
     function stopMusic() {
       if (!musicRef.current) return;
       musicRef.current.audio.pause();
-      musicRef.current.audio.currentTime = 0;
-      // Suspend the AudioContext to fully stop processing on mobile
-      if (musicRef.current.ctx.state === 'running') {
-        musicRef.current.ctx.suspend().catch(() => {});
-      }
+      // Set gain to 0 immediately to prevent any residual audio on mobile
+      musicRef.current.gain.gain.value = 0;
     }
 
     function handleFirstInteraction() {
