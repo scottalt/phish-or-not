@@ -89,8 +89,10 @@ export function H2HResult({
   // Prefer server-fetched winnerId over client prop (client passes null for eliminations/forfeits)
   const resolvedWinnerId = matchData?.serverWinnerId ?? winnerId;
   const isWin = resolvedWinnerId === playerId;
-  const isLoss = resolvedWinnerId !== null && resolvedWinnerId !== playerId;
-  const noResult = resolvedWinnerId === null;
+  // For bot matches with no winner_id (elimination), reason='eliminated' means we lost
+  const isLoss = (resolvedWinnerId !== null && resolvedWinnerId !== playerId)
+    || (resolvedWinnerId === null && (reason === 'eliminated' || reason === 'forfeit'));
+  const noResult = !isWin && !isLoss;
 
   // SIGINT: PvP result moments (non-bot only, fire once per mount)
   // Multiple can fire — SigintContext queue shows them one at a time.
