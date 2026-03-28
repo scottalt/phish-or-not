@@ -393,7 +393,22 @@ export default function AdminPlayerDetail() {
         <div className="term-border px-4 py-3 space-y-3">
           <div className="text-[var(--c-accent)] text-xs font-mono tracking-widest">SEND SIGINT MESSAGE</div>
           <div className="text-[var(--c-muted)] text-xs font-mono">
-            This will show as a full-screen SIGINT overlay next time this player loads the game.
+            Full-screen SIGINT overlay on their next login. Use variables below.
+          </div>
+          <div className="flex gap-1 flex-wrap">
+            {[
+              { label: '{callsign}', desc: 'player name' },
+              { label: '{level}', desc: 'current level' },
+              { label: '{xp}', desc: 'total XP' },
+            ].map(({ label }) => (
+              <button
+                key={label}
+                onClick={() => setMsgLines((prev) => prev + label)}
+                className="px-2 py-0.5 border border-[color-mix(in_srgb,var(--c-accent)_30%,transparent)] text-[var(--c-accent)] text-[10px] font-mono hover:bg-[color-mix(in_srgb,var(--c-accent)_5%,transparent)] transition-all"
+              >
+                {label}
+              </button>
+            ))}
           </div>
           <textarea
             value={msgLines}

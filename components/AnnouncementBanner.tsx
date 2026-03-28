@@ -13,7 +13,7 @@ interface AdminMessage {
 }
 
 export function AnnouncementBanner() {
-  const { signedIn } = usePlayer();
+  const { signedIn, profile } = usePlayer();
   const [messages, setMessages] = useState<AdminMessage[]>([]);
   const [globalBanner, setGlobalBanner] = useState<AdminMessage | null>(null);
   const [allGlobals, setAllGlobals] = useState<AdminMessage[]>([]);
@@ -116,7 +116,11 @@ export function AnnouncementBanner() {
       {/* Targeted SIGINT message — full Handler overlay */}
       {sigintMessage && (
         <Handler
-          lines={sigintMessage.lines}
+          lines={sigintMessage.lines.map((l) =>
+            l.replace(/\{callsign\}/gi, profile?.displayName ?? 'operative')
+             .replace(/\{level\}/gi, String(profile?.level ?? 1))
+             .replace(/\{xp\}/gi, String(profile?.xp ?? 0))
+          )}
           buttonText={sigintMessage.buttonText}
           onDismiss={handleSigintDismiss}
         />
