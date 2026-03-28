@@ -33,35 +33,28 @@ export async function POST(req: NextRequest) {
       email_confirm: true,
     });
 
+    // Log everything so we can see what's happening
+    console.log(`[ensure-user] email=${email}, error=${error?.message ?? 'none'}, userId=${created?.user?.id ?? 'none'}, created_at=${created?.user?.created_at ?? 'none'}`);
+
     if (error) {
-      // createUser errored. Could be "already registered" or "database error".
-      // Either way the user might exist in auth. Check the error message:
-      const msg = error.message.toLowerCase();
-      const definitelyExists = msg.includes('already been registered')
-        || msg.includes('already exists')
-        || msg.includes('duplicate');
-
-      if (definitelyExists) {
-        return NextResponse.json({ ok: true, existing: true });
-      }
-
-      // Ambiguous error (e.g. "Database error"). We don't know if user is new or existing.
-      // Return existing: null so the client can decide.
-      console.log(`[ensure-user] ambiguous createUser error: ${error.message}`);
-      return NextResponse.json({ ok: true, existing: null });
+      // Any createUser error = user likely exists already
+      return NextResponse.json({ ok: true, existing: true });
     }
 
-    // createUser succeeded. Check if this user has a player profile (completed onboarding).
-    if (created?.user?.id) {
+    // createUser succeeded — check if player profile exists
+    const userId = created?.user?.id;
+    if (userId) {
       const { data: player } = await supabase
         .from('players')
         .select('id')
-        .eq('auth_id', created.user.id)
+        .eq('auth_id', userId)
         .maybeSingle();
 
+      console.log(`[ensure-user] player lookup: userId=${userId}, found=${!!player}`);
       return NextResponse.json({ ok: true, existing: !!player });
     }
 
+    console.log(`[ensure-user] no user returned, defaulting to existing=false`);
     return NextResponse.json({ ok: true, existing: false });
   } catch (err) {
     console.error('[ensure-user] unexpected error:', err);
