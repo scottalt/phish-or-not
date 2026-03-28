@@ -105,7 +105,7 @@ export function NavBar() {
 
       {/* Mobile: bottom tab bar */}
       <nav className={`lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-[var(--c-bg)] border-t border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] font-mono ${navAnim}`} style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-        <div className="flex justify-around py-2.5">
+        <div className="flex justify-around pt-3 pb-2">
           {links.map((link) => {
             const active = link.match(pathname);
             const showDot = link.label === 'PROFILE' && pendingFriends > 0;
