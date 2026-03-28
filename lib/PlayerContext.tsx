@@ -76,18 +76,21 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
   async function signInWithEmail(email: string) {
     try {
-      // Pre-create the user via admin API so Supabase treats them as existing
-      // and sends a 6-digit OTP code instead of a confirmation link.
-      const ensureRes = await fetch('/api/auth/ensure-user', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-      const { existing } = ensureRes.ok ? await ensureRes.json() : { existing: false };
-
       const supabase = getSupabaseBrowserClient();
-      const { error } = await supabase.auth.signInWithOtp({ email });
-      return { error: error?.message ?? null, existing: !!existing };
+
+      // Fire ensure-user and OTP in parallel — OTP sends immediately while
+      // ensure-user checks if the user is new or returning (for terms UI).
+      const [ensureRes, otpResult] = await Promise.all([
+        fetch('/api/auth/ensure-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        }),
+        supabase.auth.signInWithOtp({ email }),
+      ]);
+
+      const { existing } = ensureRes.ok ? await ensureRes.json() : { existing: false };
+      return { error: otpResult.error?.message ?? null, existing: !!existing };
     } catch {
       return { error: 'Failed to send code' };
     }
