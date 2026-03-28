@@ -60,8 +60,9 @@ export function TerminalSounds() {
     musicRef.current.gain.gain.cancelScheduledValues(t);
     musicRef.current.gain.gain.setValueAtTime(musicRef.current.gain.gain.value, t);
     musicRef.current.gain.gain.linearRampToValueAtTime(0, t + FADE_MS / 1000);
-    const audio = musicRef.current.audio;
-    setTimeout(() => audio.pause(), FADE_MS + 20);
+    // Don't pause the audio element — keep it playing silently.
+    // Pausing can cause the shared AudioContext to go idle on some
+    // browsers, which kills SFX too.
     wantMusic.current = false;
   }
 
