@@ -36,7 +36,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     admin.from('h2h_player_stats').select('*').eq('player_id', id).eq('season', CURRENT_SEASON).maybeSingle(),
     admin.from('player_streaks').select('current_streak, longest_streak').eq('player_id', id).maybeSingle(),
     admin.from('player_friends').select('id', { count: 'exact', head: true })
-      .or(`sender_id.eq.${id},receiver_id.eq.${id}`)
+      .or(`player_id.eq.${id},friend_id.eq.${id}`)
       .eq('status', 'accepted'),
   ]);
 
