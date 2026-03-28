@@ -263,6 +263,11 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
 
   const prevAnswers = useRef<number | null>(null);
 
+  // Reset ref on sign-out so next sign-in is treated as first run
+  useEffect(() => {
+    if (!signedIn) { prevAnswers.current = null; }
+  }, [signedIn]);
+
   useEffect(() => {
     if (!showButton || !signedIn || !profile || !profile.displayName) return;
 
