@@ -1,11 +1,10 @@
 'use client';
 
 import { useEffect } from 'react';
-import { getMusicCtx, ensureUnlocked, playClick, playKeyPress } from '@/lib/sounds';
+import { playClick, playKeyPress } from '@/lib/sounds';
 
 const MUSIC_SRC = '/audio/joelfazhari-synthetic-deception-loopable-epic-cyberpunk-crime-music-157454.mp3';
-const MUSIC_GAIN = 0.04;
-const FADE_MS = 50;
+const MUSIC_VOLUME = 0.04;
 
 const SKIP_KEYS = new Set([
   'Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'NumLock', 'ScrollLock',
@@ -18,98 +17,74 @@ function musicWanted(): boolean {
   try { return localStorage.getItem('music_enabled') !== 'false'; } catch { return true; }
 }
 
-// ── Module-level music singleton — survives component remounts ──
-interface MusicState { audio: HTMLAudioElement; gain: GainNode; source: MediaElementAudioSourceNode }
-let _music: MusicState | null = null;
-let _musicStarted = false;
+// ── Music: plain HTMLAudioElement, NOT routed through AudioContext ──
+// This keeps music completely separate from SFX. No shared context issues.
+let _audio: HTMLAudioElement | null = null;
 
-function getMusic(): MusicState {
-  if (_music) return _music;
-  const ctx = getMusicCtx();
-  const audio = new Audio(MUSIC_SRC);
-  audio.loop = true;
-  audio.crossOrigin = 'anonymous';
-  const source = ctx.createMediaElementSource(audio);
-  const gain = ctx.createGain();
-  gain.gain.value = 0;
-  source.connect(gain);
-  gain.connect(ctx.destination);
-  _music = { audio, gain, source };
-  return _music;
+function getAudio(): HTMLAudioElement {
+  if (!_audio) {
+    _audio = new Audio(MUSIC_SRC);
+    _audio.loop = true;
+    _audio.volume = MUSIC_VOLUME;
+  }
+  return _audio;
 }
 
-function fadeIn() {
-  const m = getMusic();
-  const ctx = getMusicCtx();
-  const t = ctx.currentTime;
-  m.gain.gain.cancelScheduledValues(t);
-  m.gain.gain.setValueAtTime(0, t);
-  m.gain.gain.linearRampToValueAtTime(MUSIC_GAIN, t + FADE_MS / 1000);
-  m.audio.play().catch(() => {});
-  _musicStarted = true;
+function startMusic() {
+  const a = getAudio();
+  a.volume = MUSIC_VOLUME;
+  a.play().catch(() => {});
 }
 
-function fadeOut() {
-  if (!_music) return;
-  const ctx = getMusicCtx();
-  const t = ctx.currentTime;
-  _music.gain.gain.cancelScheduledValues(t);
-  _music.gain.gain.setValueAtTime(_music.gain.gain.value, t);
-  _music.gain.gain.linearRampToValueAtTime(0, t + FADE_MS / 1000);
-  _musicStarted = false;
+function stopMusic() {
+  if (!_audio) return;
+  _audio.volume = 0;
+  // Keep playing silently — some browsers need active audio to keep things alive
 }
 
 export function TerminalSounds() {
+  // ── Music ──
   useEffect(() => {
     function handleGesture() {
-      const wasRunning = ensureUnlocked();
-      if (!wasRunning && musicWanted()) {
-        const ctx = getMusicCtx();
-        const check = () => {
-          if (ctx.state === 'running') fadeIn();
-          else setTimeout(check, 50);
-        };
-        setTimeout(check, 50);
+      if (musicWanted() && _audio?.paused !== false) {
+        startMusic();
       }
     }
 
     function handleMusicChange(e: Event) {
       const enabled = (e as CustomEvent<boolean>).detail;
-      if (enabled) fadeIn(); else fadeOut();
+      if (enabled) startMusic(); else stopMusic();
     }
 
     function handleVisibility() {
-      if (document.visibilityState === 'visible') {
-        ensureUnlocked();
-        if (_musicStarted && _music?.audio.paused) {
-          const ctx = getMusicCtx();
-          const check = () => {
-            if (ctx.state === 'running') fadeIn();
-            else setTimeout(check, 50);
-          };
-          setTimeout(check, 50);
-        }
+      if (document.visibilityState === 'visible' && musicWanted()) {
+        const a = getAudio();
+        if (a.paused) a.play().catch(() => {});
+        else a.volume = MUSIC_VOLUME;
       }
     }
 
-    document.addEventListener('click', handleGesture, { capture: true });
-    document.addEventListener('touchstart', handleGesture, { capture: true });
+    // Try to start music immediately (works on desktop, blocked on mobile until gesture)
+    if (musicWanted()) {
+      getAudio().play().catch(() => {});
+    }
+
+    document.addEventListener('click', handleGesture);
+    document.addEventListener('touchstart', handleGesture);
     window.addEventListener('music-change', handleMusicChange);
     document.addEventListener('visibilitychange', handleVisibility);
 
     return () => {
-      document.removeEventListener('click', handleGesture, { capture: true });
-      document.removeEventListener('touchstart', handleGesture, { capture: true });
+      document.removeEventListener('click', handleGesture);
+      document.removeEventListener('touchstart', handleGesture);
       window.removeEventListener('music-change', handleMusicChange);
       document.removeEventListener('visibilitychange', handleVisibility);
-      // Don't pause or destroy music — it's a module singleton that survives remounts
     };
   }, []);
 
-  // ── Global SFX ──
+  // ── SFX: click and keypress ──
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      ensureUnlocked();
       const target = e.target as HTMLElement;
       if (target.closest('button') || target.closest('[role="button"]') || target.closest('a')) {
         playClick();
