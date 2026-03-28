@@ -907,7 +907,7 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
               </div>
               <div className="flex-1 text-left min-w-0">
                 <div className="text-[var(--c-primary)] font-black tracking-wide truncate">{myName}</div>
-                <div className={`text-[10px] tracking-widest ${myBadgeRarity ? RARITY_BADGE_CLASS[myBadgeRarity] : ''}`} style={{ color: myBadgeRarity ? RARITY_COLORS[myBadgeRarity] : 'var(--c-muted)' }}>{myBadgeName ?? 'NO BADGE'}</div>
+                {myBadgeName && <div className={`text-[10px] tracking-widest ${myBadgeRarity ? RARITY_BADGE_CLASS[myBadgeRarity] : ''}`} style={{ color: myBadgeRarity ? RARITY_COLORS[myBadgeRarity] : 'var(--c-muted)' }}>{myBadgeName}</div>}
               </div>
               <div className={`text-xs tracking-widest shrink-0 ${ready ? 'text-[var(--c-primary)]' : 'text-[var(--c-muted)]'}`}>
                 {ready ? '✓ READY' : 'NOT READY'}
@@ -928,7 +928,7 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
               </div>
               <div className="flex-1 text-left min-w-0">
                 <div className="font-black tracking-wide truncate" style={{ color: opponentThemeColor }}>{opponentName}</div>
-                <div className={`text-[10px] tracking-widest ${opponentBadgeRarity ? RARITY_BADGE_CLASS[opponentBadgeRarity] : ''}`} style={{ color: opponentBadgeRarity ? RARITY_COLORS[opponentBadgeRarity] : opponentThemeColor, opacity: opponentBadgeRarity ? 1 : 0.7 }}>{opponentBadgeName ?? 'NO BADGE'}</div>
+                {opponentBadgeName && <div className={`text-[10px] tracking-widest ${opponentBadgeRarity ? RARITY_BADGE_CLASS[opponentBadgeRarity] : ''}`} style={{ color: opponentBadgeRarity ? RARITY_COLORS[opponentBadgeRarity] : opponentThemeColor }}>{opponentBadgeName}</div>}
               </div>
               <div className={`text-xs tracking-widest shrink-0 ${opponentReady ? 'text-[var(--c-primary)]' : 'text-[var(--c-muted)] animate-pulse'}`}>
                 {opponentReady ? '✓ READY' : 'WAITING...'}
