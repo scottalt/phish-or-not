@@ -176,19 +176,24 @@ export function TutorialCard({ onComplete }: Props) {
 
       {/* Result panel */}
       {answer && (
-        <div className={`term-border px-3 py-3 space-y-2 ${
+        <div className={`term-border px-4 py-4 space-y-3 anim-fade-in-up ${
           answer === 'PHISHING'
-            ? 'border-[color-mix(in_srgb,var(--c-primary)_50%,transparent)]'
-            : 'border-[rgba(255,51,51,0.5)]'
+            ? 'border-2 border-[color-mix(in_srgb,var(--c-primary)_60%,transparent)]'
+            : 'border-2 border-[rgba(255,51,51,0.6)]'
         } bg-[var(--c-bg)]`}>
-          <div className={`text-sm font-mono font-bold tracking-widest ${
+          <div className={`text-lg font-mono font-bold tracking-widest text-center ${
             answer === 'PHISHING' ? 'text-[var(--c-primary)]' : 'text-[#ff3333]'
-          }`}>
-            {answer === 'PHISHING' ? '✓ PHISHING — CORRECT' : '✗ LEGIT — INCORRECT'}
+          }`}
+            style={answer === 'PHISHING' ? { textShadow: '0 0 10px var(--c-primary), 0 0 25px rgba(0,255,65,0.3)' } : { textShadow: '0 0 10px #ff3333, 0 0 25px rgba(255,51,51,0.3)' }}
+          >
+            {answer === 'PHISHING' ? '✓ CORRECT — PHISHING' : '✗ WRONG — IT WAS PHISHING'}
           </div>
-          <div className="text-[var(--c-secondary)] text-sm font-mono space-y-0.5">
-            <div>• <span className="text-[var(--c-accent)]">FROM:</span> paypa1.com — typosquatted domain</div>
-            <div>• <span className="text-[var(--c-accent)]">URL:</span> paypa1-secure.com — typosquatted</div>
+          <div className="text-[var(--c-secondary)] text-sm font-mono space-y-1 border-t border-[color-mix(in_srgb,var(--c-primary)_15%,transparent)] pt-2">
+            <div className="text-[var(--c-muted)] text-xs tracking-widest mb-1">RED FLAGS:</div>
+            <div>• <span className="text-[var(--c-accent)]">FROM:</span> paypa1.com — typosquatted domain (1 not l)</div>
+            <div>• <span className="text-[var(--c-accent)]">URL:</span> paypa1-secure.com — not the real PayPal</div>
+            <div>• <span className="text-[var(--c-accent)]">ATCH:</span> .zip attachment — unusual for account alerts</div>
+            <div>• <span className="text-[var(--c-accent)]">TONE:</span> urgency + threat of closure — pressure tactic</div>
           </div>
         </div>
       )}
