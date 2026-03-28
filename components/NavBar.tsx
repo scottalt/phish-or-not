@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { usePlayer } from '@/lib/usePlayer';
 import { useNavVisibility } from '@/lib/NavVisibilityContext';
-import { useMusicEnabled } from '@/lib/useSoundEnabled';
 import { version } from '@/package.json';
 import { playerGet, playerSet } from '@/lib/player-storage';
 
@@ -27,7 +26,6 @@ export function NavBar() {
   const pathname = usePathname();
   const { signedIn } = usePlayer();
   const { navHidden } = useNavVisibility();
-  const { musicEnabled, toggleMusic } = useMusicEnabled();
 
   const [hasUnread, setHasUnread] = useState(false);
   const [pendingFriends, setPendingFriends] = useState(0);
@@ -89,22 +87,11 @@ export function NavBar() {
               <span className="absolute -top-0.5 -right-2 w-2 h-2 rounded-full bg-[var(--c-accent)] animate-pulse" />
             )}
           </Link>
-          <button
-            onClick={toggleMusic}
-            aria-label={musicEnabled ? 'Mute music' : 'Enable music'}
-            className="text-[17px] tracking-wider transition-colors hover:text-[var(--c-primary)]"
-          >
-            <span className="text-[var(--c-secondary)]">MUSIC </span>
-            {musicEnabled
-              ? <span className="text-[var(--c-primary)]">[ON]</span>
-              : <span className="text-[var(--c-muted)]">[OFF]</span>
-            }
-          </button>
           <Link
             href="/settings"
             className="text-[var(--c-secondary)] text-[17px] tracking-wider hover:text-[var(--c-primary)] transition-colors"
           >
-            [SET]
+            SETTINGS
           </Link>
         </div>
       </nav>
