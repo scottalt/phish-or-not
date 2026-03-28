@@ -620,13 +620,12 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
 
   // Handler: research brief → tutorial intro → tutorial → tutorial complete → first research → playing
   if (phase === 'handler_research_brief') {
-    const d = HANDLER_DIALOGUES.research_brief;
+    const d = HANDLER_DIALOGUES.research_brief ?? { lines: ['Research mode. Let\'s go.'], buttonText: 'GO' };
     return (
       <div className="min-h-screen bg-[var(--c-bg)] flex flex-col items-center justify-center p-4 pb-safe">
         <Handler lines={d.lines} buttonText={d.buttonText} onDismiss={() => {
-          markMomentSeen('research_brief');
-          // tutorial_intro fires as SIGINT overlay on top of the tutorial card
-          triggerSigint('tutorial_intro');
+          try { markMomentSeen('research_brief'); } catch {}
+          try { triggerSigint('tutorial_intro'); } catch {}
           setPhase('tutorial');
         }} />
       </div>
@@ -634,7 +633,7 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
   }
 
   if (phase === 'handler_tutorial_intro') {
-    const d = HANDLER_DIALOGUES.tutorial_intro;
+    const d = HANDLER_DIALOGUES.tutorial_intro ?? { lines: ['Training sim loaded.'], buttonText: 'GOT IT' };
     return (
       <div className="min-h-screen bg-[var(--c-bg)] flex flex-col items-center justify-center p-4 pb-safe">
         <Handler lines={d.lines} buttonText={d.buttonText} onDismiss={() => {
@@ -673,7 +672,7 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
   }
 
   if (phase === 'handler_first_research') {
-    const d = HANDLER_DIALOGUES.first_research_start;
+    const d = HANDLER_DIALOGUES.first_research_start ?? { lines: ['Good luck.'], buttonText: 'BEGIN' };
     return (
       <div className="min-h-screen bg-[var(--c-bg)] flex flex-col items-center justify-center p-4 pb-safe">
         <Handler lines={d.lines} buttonText={d.buttonText} onDismiss={() => {
