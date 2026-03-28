@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { getMusicCtx, ensureUnlocked, playClick, playKeyPress } from '@/lib/sounds';
 
 const MUSIC_SRC = '/audio/joelfazhari-synthetic-deception-loopable-epic-cyberpunk-crime-music-157454.mp3';
@@ -18,61 +18,52 @@ function musicWanted(): boolean {
   try { return localStorage.getItem('music_enabled') !== 'false'; } catch { return true; }
 }
 
-interface MusicState {
-  audio: HTMLAudioElement;
-  gain: GainNode;
+// ── Module-level music singleton — survives component remounts ──
+interface MusicState { audio: HTMLAudioElement; gain: GainNode; source: MediaElementAudioSourceNode }
+let _music: MusicState | null = null;
+let _musicStarted = false;
+
+function getMusic(): MusicState {
+  if (_music) return _music;
+  const ctx = getMusicCtx();
+  const audio = new Audio(MUSIC_SRC);
+  audio.loop = true;
+  audio.crossOrigin = 'anonymous';
+  const source = ctx.createMediaElementSource(audio);
+  const gain = ctx.createGain();
+  gain.gain.value = 0;
+  source.connect(gain);
+  gain.connect(ctx.destination);
+  _music = { audio, gain, source };
+  return _music;
+}
+
+function fadeIn() {
+  const m = getMusic();
+  const ctx = getMusicCtx();
+  const t = ctx.currentTime;
+  m.gain.gain.cancelScheduledValues(t);
+  m.gain.gain.setValueAtTime(0, t);
+  m.gain.gain.linearRampToValueAtTime(MUSIC_GAIN, t + FADE_MS / 1000);
+  m.audio.play().catch(() => {});
+  _musicStarted = true;
+}
+
+function fadeOut() {
+  if (!_music) return;
+  const ctx = getMusicCtx();
+  const t = ctx.currentTime;
+  _music.gain.gain.cancelScheduledValues(t);
+  _music.gain.gain.setValueAtTime(_music.gain.gain.value, t);
+  _music.gain.gain.linearRampToValueAtTime(0, t + FADE_MS / 1000);
+  _musicStarted = false;
 }
 
 export function TerminalSounds() {
-  const musicRef = useRef<MusicState | null>(null);
-  const wantMusic = useRef(musicWanted());
-
-  function getMusic(): MusicState {
-    if (musicRef.current) return musicRef.current;
-    const ctx = getMusicCtx();
-    const audio = new Audio(MUSIC_SRC);
-    audio.loop = true;
-    audio.crossOrigin = 'anonymous';
-    const source = ctx.createMediaElementSource(audio);
-    const gain = ctx.createGain();
-    gain.gain.value = 0;
-    source.connect(gain);
-    gain.connect(ctx.destination);
-    musicRef.current = { audio, gain };
-    return musicRef.current;
-  }
-
-  function fadeIn() {
-    const m = getMusic();
-    const ctx = getMusicCtx();
-    const t = ctx.currentTime;
-    m.gain.gain.cancelScheduledValues(t);
-    m.gain.gain.setValueAtTime(0, t);
-    m.gain.gain.linearRampToValueAtTime(MUSIC_GAIN, t + FADE_MS / 1000);
-    m.audio.play().catch(() => {});
-    wantMusic.current = true;
-  }
-
-  function fadeOut() {
-    if (!musicRef.current) return;
-    const ctx = getMusicCtx();
-    const t = ctx.currentTime;
-    musicRef.current.gain.gain.cancelScheduledValues(t);
-    musicRef.current.gain.gain.setValueAtTime(musicRef.current.gain.gain.value, t);
-    musicRef.current.gain.gain.linearRampToValueAtTime(0, t + FADE_MS / 1000);
-    // Don't pause the audio element — keep it playing silently.
-    // Pausing can cause the shared AudioContext to go idle on some
-    // browsers, which kills SFX too.
-    wantMusic.current = false;
-  }
-
   useEffect(() => {
-    // ── First user gesture: unlock AudioContext, then start music if wanted ──
     function handleGesture() {
       const wasRunning = ensureUnlocked();
-      // If context just transitioned to running AND music is wanted, start it
       if (!wasRunning && musicWanted()) {
-        // Wait for resume to actually complete
         const ctx = getMusicCtx();
         const check = () => {
           if (ctx.state === 'running') fadeIn();
@@ -90,7 +81,7 @@ export function TerminalSounds() {
     function handleVisibility() {
       if (document.visibilityState === 'visible') {
         ensureUnlocked();
-        if (wantMusic.current && musicRef.current?.audio.paused) {
+        if (_musicStarted && _music?.audio.paused) {
           const ctx = getMusicCtx();
           const check = () => {
             if (ctx.state === 'running') fadeIn();
@@ -111,7 +102,7 @@ export function TerminalSounds() {
       document.removeEventListener('touchstart', handleGesture, { capture: true });
       window.removeEventListener('music-change', handleMusicChange);
       document.removeEventListener('visibilitychange', handleVisibility);
-      musicRef.current?.audio.pause();
+      // Don't pause or destroy music — it's a module singleton that survives remounts
     };
   }, []);
 
