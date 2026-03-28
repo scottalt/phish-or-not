@@ -248,10 +248,16 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
   // SIGINT milestone unlocks — fire when player crosses answer thresholds
   const { triggerSigint } = useSigint();
 
-  // Milestone check — runs independently of greeting cooldown so unlock
-  // moments fire even if the player was already greeted this session.
+  // Milestone check — fires ONCE when profile first loads on home screen.
+  // Uses a ref + sessionStorage key based on answer count + level to detect changes.
+  const lastMilestoneKey = useRef<string | null>(null);
   useEffect(() => {
     if (!showButton || !signedIn || !profile) return;
+    // Only fire when the player's progression state actually changes
+    const key = `${profile.researchAnswersSubmitted}:${profile.level}:${profile.totalSessions}`;
+    if (lastMilestoneKey.current === key) return;
+    lastMilestoneKey.current = key;
+
     const answers = profile.researchAnswersSubmitted ?? 0;
     const graduated = profile.researchGraduated ?? false;
 
