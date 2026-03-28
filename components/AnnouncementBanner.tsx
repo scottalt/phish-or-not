@@ -102,8 +102,8 @@ export function AnnouncementBanner() {
 
   return (
     <>
-      {/* Desktop: full banner with all lines visible */}
-      <div className="hidden lg:block fixed top-0 left-0 right-0 z-50 anim-fade-in">
+      {/* Desktop: full banner below nav bar */}
+      <div className="hidden lg:block fixed top-[45px] left-0 right-0 z-[60] anim-fade-in">
         <div className="bg-[var(--c-bg)] border-b-2 border-[var(--c-accent)] shadow-[0_4px_30px_rgba(255,170,0,0.1)]">
           <div className="max-w-4xl mx-auto px-6 py-4">
             <div className="flex items-start gap-4">
