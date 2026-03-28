@@ -1437,18 +1437,6 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* Data deletion request — compact inline style */}
-        {signedIn && profile && (
-          <div className="text-center space-y-1 px-2">
-            <a
-              href={`mailto:scott@scottaltiparmak.com?subject=${encodeURIComponent(`[Data Deletion Request] ${profile.displayName}`)}&body=${encodeURIComponent(`I would like to request deletion of my Threat Terminal account.\n\nCallsign: ${profile.displayName}\nPlayer ID: ${profile.id}\n\nPlease delete:\n- [ ] My account and profile only (keep anonymized research answers)\n- [ ] Everything (account + all answers including research)\n`)}`}
-              className="text-[var(--c-secondary)] text-xs font-mono opacity-70 hover:opacity-100 hover:text-[#ff3333] underline transition-all"
-            >
-              Request data deletion
-            </a>
-          </div>
-        )}
-
         {/* Admin override panel — only visible to admin */}
         {isAdmin && (
           <div className="border border-[rgba(255,170,0,0.3)] bg-[var(--c-bg)]">
