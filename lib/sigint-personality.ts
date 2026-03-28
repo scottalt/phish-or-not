@@ -1,3 +1,5 @@
+import { playerGet, playerSet } from './player-storage';
+
 // ═══════════════════════════════════════════════════════════════
 // SIGINT — Terminal AI Personality Definition
 // ═══════════════════════════════════════════════════════════════
@@ -85,7 +87,7 @@ export function dynamicDialogue(id: string, callsign: string): SigintDialogue | 
       ];
       // Cycle through all greetings before repeating (shuffle bag pattern)
       try {
-        let bag: number[] = JSON.parse(localStorage.getItem('sigint_greeting_bag') ?? '[]');
+        let bag: number[] = JSON.parse(playerGet('sigint_greeting_bag') ?? '[]');
         if (!bag.length) {
           // Refill: all indices shuffled
           bag = Array.from({ length: greetings.length }, (_, i) => i);
@@ -95,7 +97,7 @@ export function dynamicDialogue(id: string, callsign: string): SigintDialogue | 
           }
         }
         const idx = bag.shift()!;
-        localStorage.setItem('sigint_greeting_bag', JSON.stringify(bag));
+        playerSet('sigint_greeting_bag', JSON.stringify(bag));
         return greetings[idx];
       } catch {
         return greetings[Math.floor(Math.random() * greetings.length)];

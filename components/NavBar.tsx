@@ -7,6 +7,7 @@ import { usePlayer } from '@/lib/usePlayer';
 import { useNavVisibility } from '@/lib/NavVisibilityContext';
 import { useMusicEnabled } from '@/lib/useSoundEnabled';
 import { version } from '@/package.json';
+import { playerGet, playerSet, sessionGet } from '@/lib/player-storage';
 
 const NAV_LINKS = [
   { label: 'HOME', path: '/play', match: (p: string) => p === '/play' },
@@ -32,10 +33,8 @@ export function NavBar() {
   const [pendingFriends, setPendingFriends] = useState(0);
   const [bootSeen, setBootSeen] = useState(true); // default to true (no delay)
   useEffect(() => {
-    try {
-      setHasUnread(localStorage.getItem('lastSeenVersion') !== version);
-      setBootSeen(sessionStorage.getItem('bootSeen') === '1');
-    } catch {}
+    setHasUnread(playerGet('lastSeenVersion') !== version);
+    setBootSeen(sessionGet('bootSeen') === '1');
     // Fetch pending friend request count for notification badge (only if signed in)
     if (signedIn) {
       fetch('/api/friends').then(r => r.ok ? r.json() : null).then(data => {
@@ -80,7 +79,7 @@ export function NavBar() {
           })}
           <Link
             href="/changelog"
-            onClick={() => { try { localStorage.setItem('lastSeenVersion', version); setHasUnread(false); } catch {} }}
+            onClick={() => { playerSet('lastSeenVersion', version); setHasUnread(false); }}
             className={`relative text-[17px] tracking-wider transition-colors ${
               pathname.startsWith('/changelog') ? 'text-[var(--c-primary)]' : 'text-[var(--c-secondary)] hover:text-[var(--c-primary)]'
             }`}

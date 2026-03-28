@@ -1,3 +1,5 @@
+import { playerGet, playerSet } from './player-storage';
+
 const STORAGE_KEY = 'weakness_history';
 
 export interface WeaknessHistory {
@@ -7,7 +9,7 @@ export interface WeaknessHistory {
 export function getWeaknessHistory(): WeaknessHistory {
   if (typeof window === 'undefined') return {};
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}');
+    return JSON.parse(playerGet(STORAGE_KEY) ?? '{}');
   } catch {
     return {};
   }
@@ -22,7 +24,7 @@ export function updateWeaknessHistory(results: { technique: string | null; corre
     if (!correct) history[technique].missed++;
   }
   if (typeof window !== 'undefined') {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+    playerSet(STORAGE_KEY, JSON.stringify(history));
   }
   return history;
 }

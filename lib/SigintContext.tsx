@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useCallback, useRef, type ReactNod
 import { Handler } from '@/components/Handler';
 import { ALL_DIALOGUES } from '@/lib/sigint-personality';
 import { usePlayer } from '@/lib/usePlayer';
+import { playerGet, playerSet } from '@/lib/player-storage';
 
 interface SigintContextValue {
   /** Trigger a SIGINT dialogue by moment ID. Only shows once per player (tracked in DB). */
@@ -33,9 +34,9 @@ export function SigintProvider({ children }: { children: ReactNode }) {
   const triggerSigint = useCallback((momentId: string) => {
     // Check DB-backed seen list from profile
     if (profile?.seenMoments?.includes(momentId)) return;
-    // Also check localStorage cache (written immediately on dismiss, survives refresh race)
+    // Also check player-scoped localStorage cache (written immediately on dismiss, survives refresh race)
     try {
-      const cached = JSON.parse(localStorage.getItem('handler_moments_seen') ?? '[]');
+      const cached = JSON.parse(playerGet('handler_moments_seen') ?? '[]');
       if (cached.includes(momentId)) return;
     } catch {}
     // Prevent duplicates in queue or active
@@ -74,12 +75,12 @@ export function SigintProvider({ children }: { children: ReactNode }) {
 
   const handleDismiss = useCallback(() => {
     if (activeRef.current) {
-      // Write to localStorage immediately (prevents re-fire on refresh before DB roundtrip)
+      // Write to player-scoped localStorage immediately (prevents re-fire on refresh before DB roundtrip)
       try {
-        const cached = JSON.parse(localStorage.getItem('handler_moments_seen') ?? '[]');
+        const cached = JSON.parse(playerGet('handler_moments_seen') ?? '[]');
         if (!cached.includes(activeRef.current)) {
           cached.push(activeRef.current);
-          localStorage.setItem('handler_moments_seen', JSON.stringify(cached));
+          playerSet('handler_moments_seen', JSON.stringify(cached));
         }
       } catch {}
       // Persist to DB (fire and forget)

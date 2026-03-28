@@ -3,25 +3,26 @@
 
 export type { SigintDialogue as HandlerDialogue } from './sigint-personality';
 import { ALL_DIALOGUES } from './sigint-personality';
+import { playerGet, playerSet } from './player-storage';
 
 export const HANDLER_DIALOGUES = ALL_DIALOGUES;
 
-/** Check if a handler moment has been seen (localStorage cache for fast sync checks) */
+/** Check if a handler moment has been seen (player-scoped localStorage cache for fast sync checks) */
 export function hasSeenMoment(momentId: string): boolean {
   try {
-    const seen = JSON.parse(localStorage.getItem('handler_moments_seen') ?? '[]');
+    const seen = JSON.parse(playerGet('handler_moments_seen') ?? '[]');
     return seen.includes(momentId);
   } catch { return false; }
 }
 
-/** Mark a handler moment as seen — writes to localStorage cache AND persists to DB */
+/** Mark a handler moment as seen — writes to player-scoped localStorage cache AND persists to DB */
 export function markMomentSeen(momentId: string): void {
-  // Local cache (sync, immediate)
+  // Local cache (sync, immediate, player-scoped)
   try {
-    const seen = JSON.parse(localStorage.getItem('handler_moments_seen') ?? '[]');
+    const seen = JSON.parse(playerGet('handler_moments_seen') ?? '[]');
     if (!seen.includes(momentId)) {
       seen.push(momentId);
-      localStorage.setItem('handler_moments_seen', JSON.stringify(seen));
+      playerSet('handler_moments_seen', JSON.stringify(seen));
     }
   } catch { /* ignore */ }
 

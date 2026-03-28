@@ -16,6 +16,7 @@ import { Handler } from './Handler';
 import { HANDLER_DIALOGUES, hasSeenMoment, markMomentSeen } from '@/lib/handler-dialogues';
 import { bootGreetingNamed } from '@/lib/sigint-personality';
 import { dynamicDialogue } from '@/lib/sigint-personality';
+import { playerGet, playerSet, sessionGet, sessionSet } from '@/lib/player-storage';
 import { useSigint } from '@/lib/SigintContext';
 
 interface LeaderboardEntry {
@@ -53,7 +54,7 @@ const BOOT_LINES: { text: string; bright: boolean }[] = [
 ];
 
 export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic }: Props) {
-  const bootSeen = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('bootSeen') === '1';
+  const bootSeen = typeof sessionStorage !== 'undefined' && sessionGet('bootSeen') === '1';
   const [visibleCount, setVisibleCount] = useState(bootSeen ? BOOT_LINES.length : 0);
   // Handler greeting — different dialogue depending on player state
   const [showButton, setShowButton] = useState(bootSeen);
@@ -82,7 +83,7 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
   const [hasUnreadChangelog, setHasUnreadChangelog] = useState(false);
   useEffect(() => {
     try {
-      const seen = localStorage.getItem('lastSeenVersion');
+      const seen = playerGet('lastSeenVersion');
       setHasUnreadChangelog(seen !== version);
     } catch {}
   }, []);
@@ -221,7 +222,7 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
     if (visibleCount === BOOT_LINES.length) {
       const t = setTimeout(() => {
         setBootDone(true);
-        try { sessionStorage.setItem('bootSeen', '1'); } catch {}
+        sessionSet('bootSeen', '1');
       }, 300);
       return () => clearTimeout(t);
     }
@@ -289,10 +290,10 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
     if (!isFirstRun) return; // navigate back → silent
 
     // Check if we already spoke this session (refresh guard)
-    try { if (sessionStorage.getItem('sigint_spoke') === '1') return; } catch {}
+    if (sessionGet('sigint_spoke') === '1') return;
 
     // We're going to speak — set the flag
-    try { sessionStorage.setItem('sigint_spoke', '1'); } catch {}
+    sessionSet('sigint_spoke', '1');
 
     // v2_intro for v1 veterans — takes precedence over milestones (shows once)
     if (answers > 0 && !hasSeenMoment('v2_intro')) {
@@ -480,7 +481,7 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
             const answers = profile?.researchAnswersSubmitted ?? 0;
             const graduated = profile?.researchGraduated ?? false;
             // Mark greeted with timestamp (2hr cooldown for recurring greetings)
-            try { sessionStorage.setItem('sigint_greeted', String(Date.now())); } catch {}
+            sessionSet('sigint_greeted', String(Date.now()));
             // v2_intro: mark seen + pre-mark all milestones the player already earned
             // so v1 veterans don't get milestone dialogues for things they already had
             if (answers > 0 && !hasSeenMoment('v2_intro')) {
@@ -711,7 +712,7 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
               <div className="flex items-center justify-center font-mono">
                 <Link
                   href="/changelog"
-                  onClick={() => { try { localStorage.setItem('lastSeenVersion', version); setHasUnreadChangelog(false); } catch {} }}
+                  onClick={() => { playerSet('lastSeenVersion', version); setHasUnreadChangelog(false); }}
                   className="relative text-[var(--c-secondary)] hover:text-[var(--c-primary)] transition-colors tracking-wider text-sm border border-[color-mix(in_srgb,var(--c-primary)_20%,transparent)] px-2 py-0.5 hover:border-[color-mix(in_srgb,var(--c-primary)_40%,transparent)] hover:bg-[color-mix(in_srgb,var(--c-primary)_3%,transparent)]"
                 >
                   v{version}
@@ -1017,7 +1018,7 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
             <div className="flex items-center justify-center font-mono">
               <Link
                 href="/changelog"
-                onClick={() => { try { localStorage.setItem('lastSeenVersion', version); setHasUnreadChangelog(false); } catch {} }}
+                onClick={() => { playerSet('lastSeenVersion', version); setHasUnreadChangelog(false); }}
                 className="relative text-[var(--c-secondary)] hover:text-[var(--c-primary)] transition-colors tracking-wider text-sm border border-[color-mix(in_srgb,var(--c-primary)_20%,transparent)] px-2 py-0.5 hover:border-[color-mix(in_srgb,var(--c-primary)_40%,transparent)] hover:bg-[color-mix(in_srgb,var(--c-primary)_3%,transparent)]"
               >
                 v{version}

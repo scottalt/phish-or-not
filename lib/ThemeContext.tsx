@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { getThemeById, type ThemeDef } from './themes';
+import { playerGet, playerSet, playerRemove } from './player-storage';
 
 interface ThemeContextValue {
   theme: ThemeDef;
@@ -37,7 +38,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   // On mount: load from localStorage as initial fast paint
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('terminal_theme');
+      const saved = playerGet('terminal_theme');
       if (saved) {
         const t = getThemeById(saved);
         setTheme(t);
@@ -52,7 +53,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const t = getThemeById(themeId);
     setTheme(t);
     applyThemeVars(t);
-    try { localStorage.setItem('terminal_theme', themeId); } catch {}
+    playerSet('terminal_theme', themeId);
     setServerLoaded(true);
   }, [serverLoaded]);
 
@@ -61,7 +62,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const t = getThemeById(id);
     setTheme(t);
     applyThemeVars(t);
-    try { localStorage.setItem('terminal_theme', id); } catch {}
+    playerSet('terminal_theme', id);
     // Fire-and-forget save to server
     fetch('/api/player/theme', {
       method: 'PATCH',
@@ -75,7 +76,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setTheme(t);
     applyThemeVars(t);
     setServerLoaded(false);
-    try { localStorage.removeItem('terminal_theme'); } catch {}
+    playerRemove('terminal_theme');
   }, []);
 
   return (

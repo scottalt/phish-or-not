@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { getSupabaseBrowserClient } from './supabase-browser';
 import type { PlayerProfile } from './types';
+import { setStoragePlayerId, clearAllPlayerStorage, playerSet, playerGet } from './player-storage';
 
 interface PlayerContextValue {
   profile: PlayerProfile | null;
@@ -26,17 +27,18 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       const res = await fetch('/api/player', { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
-        // Cooldown is now read directly from profile.cooldown by StartScreen
-        // Seen moments: merge server state with any locally-cached moments not yet persisted
+        // Set the player ID for scoped storage BEFORE any reads/writes
+        setStoragePlayerId(data.id);
+        // Merge server seen moments with locally-cached moments not yet persisted
         try {
-          const local = JSON.parse(localStorage.getItem('handler_moments_seen') ?? '[]') as string[];
+          const local = JSON.parse(playerGet('handler_moments_seen') ?? '[]') as string[];
           const server = (data.seenMoments ?? []) as string[];
           const merged = [...new Set([...local, ...server])];
-          localStorage.setItem('handler_moments_seen', JSON.stringify(merged));
+          playerSet('handler_moments_seen', JSON.stringify(merged));
           data.seenMoments = merged;
         } catch {
           if (data.seenMoments) {
-            try { localStorage.setItem('handler_moments_seen', JSON.stringify(data.seenMoments)); } catch {}
+            playerSet('handler_moments_seen', JSON.stringify(data.seenMoments));
           }
         }
         setProfile(data);
@@ -110,20 +112,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
     setProfile(null);
     try {
-      // Clear all player-scoped state to prevent cross-account leakage
-      localStorage.removeItem('xp_cooldown');
-      localStorage.removeItem('handler_moments_seen');
-      localStorage.removeItem('terminal_theme');
-      localStorage.removeItem('sigint_greeting_bag');
-      localStorage.removeItem('weakness_history');
-      localStorage.removeItem('lastSeenVersion');
-      sessionStorage.removeItem('sigint_spoke');
-      sessionStorage.removeItem('sigint_greeted');
-      sessionStorage.removeItem('bootSeen');
-      // Clear any leftover daily_YYYY-MM-DD keys (legacy)
-      try {
-        Object.keys(localStorage).filter(k => k.startsWith('daily_')).forEach(k => localStorage.removeItem(k));
-      } catch {}
+      // Clear all player-scoped storage (both scoped and legacy unscoped keys)
+      clearAllPlayerStorage();
+      setStoragePlayerId(null);
       // Reset theme CSS vars immediately (don't wait for React effect cycle)
       const root = document.documentElement;
       root.style.setProperty('--c-primary', '#00ff41');
