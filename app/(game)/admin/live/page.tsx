@@ -38,11 +38,13 @@ function pageColor(label: string): string {
   return 'var(--c-muted)';
 }
 
-function timeAgo(ts: number): string {
+function timeAgo(ts: number | undefined): string {
+  if (!ts) return '—';
   const diff = Math.floor((Date.now() - ts) / 1000);
-  if (diff < 60) return `${diff}s ago`;
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 0 || isNaN(diff)) return '—';
+  if (diff < 60) return `${diff}s`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m`;
+  return `${Math.floor(diff / 3600)}h`;
 }
 
 export default function AdminLivePage() {
@@ -166,8 +168,8 @@ export default function AdminLivePage() {
                           {p.callsign}
                         </Link>
                       </td>
-                      <td className="px-3 py-2 text-[var(--c-secondary)]">{p.level}</td>
-                      <td className="px-3 py-2 text-[var(--c-secondary)] text-xs">{p.rank}</td>
+                      <td className="px-3 py-2 text-[var(--c-secondary)]">{p.level ?? '—'}</td>
+                      <td className="px-3 py-2 text-[var(--c-secondary)] text-xs">{p.rank ?? '—'}</td>
                       <td className="px-3 py-2">
                         <span className="text-xs" style={{ color: theme?.colors.primary ?? 'var(--c-muted)' }}>
                           {theme?.name ?? 'PHOSPHOR'}
