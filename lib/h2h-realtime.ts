@@ -28,35 +28,42 @@ export function subscribeToMatch(
   onOpponentProgress: (event: MatchProgressEvent) => void,
   onMatchResult: (event: MatchResultEvent) => void,
   onOpponentReady?: () => void,
-): RealtimeChannel {
+): { channel: RealtimeChannel; ready: Promise<void> } {
   const supabase = getSupabaseBrowserClient();
 
   const ch = supabase.channel(`match:${matchId}`, {
     config: { broadcast: { self: false } },
   });
 
-  ch
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .on('broadcast', { event: 'progress' }, (payload: any) => {
-      const data = payload.payload as MatchProgressEvent;
-      if (data.playerId !== playerId) {
-        onOpponentProgress(data);
-      }
-    })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .on('broadcast', { event: 'result' }, (payload: any) => {
-      const data = payload.payload as MatchResultEvent;
-      onMatchResult(data);
-    })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .on('broadcast', { event: 'ready' }, (payload: any) => {
-      if (payload.payload?.playerId !== playerId && onOpponentReady) {
-        onOpponentReady();
-      }
-    })
-    .subscribe();
+  const ready = new Promise<void>((resolve) => {
+    ch
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .on('broadcast', { event: 'progress' }, (payload: any) => {
+        const data = payload.payload as MatchProgressEvent;
+        if (data.playerId !== playerId) {
+          onOpponentProgress(data);
+        }
+      })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .on('broadcast', { event: 'result' }, (payload: any) => {
+        const data = payload.payload as MatchResultEvent;
+        onMatchResult(data);
+      })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .on('broadcast', { event: 'ready' }, (payload: any) => {
+        if (payload.payload?.playerId !== playerId && onOpponentReady) {
+          onOpponentReady();
+        }
+      })
+      .subscribe((status: string) => {
+        if (status === 'SUBSCRIBED') resolve();
+      });
 
-  return ch;
+    // Resolve after 5s regardless — don't block the UI forever on Realtime failure
+    setTimeout(resolve, 5000);
+  });
+
+  return { channel: ch, ready };
 }
 
 // ---------------------------------------------------------------------------

@@ -399,7 +399,7 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
         // Subscribe to realtime (skip for bot matches — no opponent to listen to)
         if (!isBot) {
           try {
-            channelRef.current = subscribeToMatch(
+            const { channel, ready: channelReady } = subscribeToMatch(
               matchId,
               playerId,
               (event: MatchProgressEvent) => {
@@ -410,6 +410,9 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
               handleMatchResult,
               () => setOpponentReady(true), // opponent ready callback
             );
+            channelRef.current = channel;
+            // Wait for Realtime subscription to be confirmed before enabling UI
+            await channelReady;
           } catch (rtErr) {
             // Realtime failure is non-fatal — match still works, just no live opponent updates
             console.warn('[H2H] Realtime subscription failed:', rtErr);
