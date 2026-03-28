@@ -360,16 +360,45 @@ const TOXIC_LOSS_LINES: string[][] = [
   ],
 ];
 
+const TOXIC_BUTTONS = [
+  'I DESERVE THAT',
+  'F@%K OFF SIGINT',
+  'OK DAMN',
+  'THAT HURT',
+  'SHUT UP',
+  'I HATE IT HERE',
+  'WHY ARE YOU LIKE THIS',
+  'LEAVE ME ALONE',
+  'NOTED. A@SHOLE.',
+  'I DIDN\'T ASK',
+  'YOU\'RE SO MEAN',
+  'I\'M GOING TO CRY',
+  'BLOCK SIGINT',
+  'REPORT ABUSE',
+  'WHATEVER',
+  'FINE. FINE. FINE.',
+  'DELETE MY ACCOUNT',
+  'I QUIT',
+  'PLEASE STOP',
+  'OK MOM',
+  'SAY LESS',
+  'BRO CHILL',
+  'WHO ASKED',
+  'RATIO',
+  'I\'M UNINSTALLING',
+];
+
 /**
- * Pick a random toxic loss response, substituting variables.
+ * Pick a random toxic loss response + button, substituting variables.
  */
-export function getRandomToxicLoss(callsign: string, opponent: string, eliminatedOnCard?: number): string[] {
+export function getRandomToxicLoss(callsign: string, opponent: string, eliminatedOnCard?: number): { lines: string[]; button: string } {
   const pool = TOXIC_LOSS_LINES;
-  const lines = pool[Math.floor(Math.random() * pool.length)];
-  return lines.map((line) =>
+  const lines = pool[Math.floor(Math.random() * pool.length)].map((line) =>
     line
       .replace(/\{callsign\}/g, callsign)
       .replace(/\{opponent\}/g, opponent)
       .replace(/\{card\}/g, String(eliminatedOnCard ?? '???'))
   );
+  const button = TOXIC_BUTTONS[Math.floor(Math.random() * TOXIC_BUTTONS.length)];
+  return { lines, button };
 }

@@ -125,12 +125,12 @@ export function H2HResult({
 
     // TOXIC MODE — fires on ALL losses including bot matches
     if (isLoss && profile?.toxicMode) {
-      const toxicLines = getRandomToxicLoss(
+      const toxic = getRandomToxicLoss(
         profile.displayName ?? 'operative',
         matchData.oppName ?? (isBot ? 'a f@%king BOT' : 'unknown'),
         reason === 'eliminated' ? matchData.myCards : undefined,
       );
-      triggerCustom(toxicLines, 'I DESERVE THAT', undefined, null);
+      triggerCustom(toxic.lines, toxic.button, undefined, null);
     }
     // Rated match cap warnings
     if (stats && stats.ratedMatchesToday >= 20) triggerSigint('h2h_daily_cap');
