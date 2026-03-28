@@ -21,11 +21,23 @@ export function useSoundEnabled() {
     setSoundEnabled(initial);
   }, []);
 
+  // Listen for cross-component SFX toggle events
+  useEffect(() => {
+    function handleSfxChange(e: Event) {
+      const next = (e as CustomEvent<boolean>).detail;
+      soundEnabledRef.current = next;
+      setSoundEnabled(next);
+    }
+    window.addEventListener('sfx-change', handleSfxChange);
+    return () => window.removeEventListener('sfx-change', handleSfxChange);
+  }, []);
+
   const toggleSound = useCallback(() => {
     const next = !soundEnabledRef.current;
     soundEnabledRef.current = next;
     setSoundEnabled(next);
-    try { localStorage.setItem(SFX_KEY, String(next)); } catch {};
+    try { localStorage.setItem(SFX_KEY, String(next)); } catch {}
+    window.dispatchEvent(new CustomEvent('sfx-change', { detail: next }));
   }, []);
 
   return { soundEnabled, toggleSound };
