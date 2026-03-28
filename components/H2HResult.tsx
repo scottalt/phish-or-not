@@ -96,42 +96,43 @@ export function H2HResult({
   // Multiple can fire — SigintContext queue shows them one at a time.
   const sigintFired = useRef(false);
   useEffect(() => {
-    if (!matchData || !stats || isBot || sigintFired.current) return;
+    if (!matchData || sigintFired.current) return;
     sigintFired.current = true;
 
-    if (isWin) {
-      if (matchData.myCards === H2H_CARDS_PER_MATCH) triggerSigint('perfect_match');
-      triggerSigint('first_pvp_win');
-      if (stats.winStreak >= 10) triggerSigint('win_streak_10');
-      else if (stats.winStreak >= 5) triggerSigint('win_streak_5');
-      else if (stats.winStreak >= 3) triggerSigint('win_streak_3');
-      // Comeback: won this one with winStreak === 1 (just broke a losing run)
-      if (stats.winStreak === 1 && stats.losses > 0) triggerSigint('comeback_win');
-      // Rank milestones (highest first — SIGINT shows each only once)
-      if (stats.rankPoints >= 1400) triggerSigint('rank_up_elite');
-      else if (stats.rankPoints >= 1000) triggerSigint('rank_up_master');
-      else if (stats.rankPoints >= 700) triggerSigint('rank_up_diamond');
-      else if (stats.rankPoints >= 450) triggerSigint('rank_up_platinum');
-      else if (stats.rankPoints >= 250) triggerSigint('rank_up_gold');
-      else if (stats.rankPoints >= 100) triggerSigint('rank_up_silver');
-    } else if (isLoss) {
-      if (reason === 'eliminated') triggerSigint('first_elimination');
-      triggerSigint('first_pvp_loss');
-      // Loss streak empathy
-      if (stats.winStreak === 0 && stats.losses >= 3) triggerSigint('loss_streak_3');
-      // TOXIC MODE — unhinged SIGINT roast on every loss
-      if (profile?.toxicMode) {
-        const toxicLines = getRandomToxicLoss(
-          profile.displayName ?? 'operative',
-          matchData.oppName ?? 'unknown',
-          reason === 'eliminated' ? matchData.myCards : undefined,
-        );
-        triggerCustom(toxicLines, 'I DESERVE THAT', undefined, null);
+    // Standard SIGINT moments — non-bot only
+    if (!isBot && stats) {
+      if (isWin) {
+        if (matchData.myCards === H2H_CARDS_PER_MATCH) triggerSigint('perfect_match');
+        triggerSigint('first_pvp_win');
+        if (stats.winStreak >= 10) triggerSigint('win_streak_10');
+        else if (stats.winStreak >= 5) triggerSigint('win_streak_5');
+        else if (stats.winStreak >= 3) triggerSigint('win_streak_3');
+        if (stats.winStreak === 1 && stats.losses > 0) triggerSigint('comeback_win');
+        if (stats.rankPoints >= 1400) triggerSigint('rank_up_elite');
+        else if (stats.rankPoints >= 1000) triggerSigint('rank_up_master');
+        else if (stats.rankPoints >= 700) triggerSigint('rank_up_diamond');
+        else if (stats.rankPoints >= 450) triggerSigint('rank_up_platinum');
+        else if (stats.rankPoints >= 250) triggerSigint('rank_up_gold');
+        else if (stats.rankPoints >= 100) triggerSigint('rank_up_silver');
+      } else if (isLoss) {
+        if (reason === 'eliminated') triggerSigint('first_elimination');
+        triggerSigint('first_pvp_loss');
+        if (stats.winStreak === 0 && stats.losses >= 3) triggerSigint('loss_streak_3');
       }
     }
+
+    // TOXIC MODE — fires on ALL losses including bot matches
+    if (isLoss && profile?.toxicMode) {
+      const toxicLines = getRandomToxicLoss(
+        profile.displayName ?? 'operative',
+        matchData.oppName ?? (isBot ? 'a f@%king BOT' : 'unknown'),
+        reason === 'eliminated' ? matchData.myCards : undefined,
+      );
+      triggerCustom(toxicLines, 'I DESERVE THAT', undefined, null);
+    }
     // Rated match cap warnings
-    if (stats.ratedMatchesToday >= 20) triggerSigint('h2h_daily_cap');
-    else if (stats.ratedMatchesToday >= 10) triggerSigint('h2h_half_rate');
+    if (stats && stats.ratedMatchesToday >= 20) triggerSigint('h2h_daily_cap');
+    else if (stats && stats.ratedMatchesToday >= 10) triggerSigint('h2h_half_rate');
   }, [matchData, stats, isWin, isLoss, isBot, reason, triggerSigint]);
 
   // Play victory/defeat sound when server data resolves the winner
