@@ -638,12 +638,74 @@ body {
   75% { filter: brightness(1.1); }
 }
 
+/* Unique — prismatic color cycle + intense glow + star sparkle */
+.badge-unique {
+  color: #ff00ff;
+  text-shadow:
+    0 0 8px rgba(255, 0, 255, 0.8),
+    0 0 20px rgba(255, 0, 255, 0.4),
+    0 0 40px rgba(255, 0, 255, 0.2),
+    0 0 80px rgba(0, 255, 255, 0.1);
+  animation: badge-unique-prismatic 3s ease-in-out infinite;
+  position: relative;
+}
+
+@keyframes badge-unique-prismatic {
+  0%   { color: #ff00ff; text-shadow: 0 0 8px rgba(255,0,255,0.8), 0 0 25px rgba(255,0,255,0.4), 0 0 60px rgba(255,0,255,0.2); filter: brightness(1); }
+  16%  { color: #ff4488; text-shadow: 0 0 8px rgba(255,68,136,0.8), 0 0 25px rgba(255,68,136,0.4), 0 0 60px rgba(255,68,136,0.2); }
+  33%  { color: #ffaa00; text-shadow: 0 0 12px rgba(255,170,0,0.9), 0 0 30px rgba(255,170,0,0.5), 0 0 60px rgba(255,170,0,0.2); filter: brightness(1.3); transform: scale(1.08); }
+  50%  { color: #00ffcc; text-shadow: 0 0 8px rgba(0,255,204,0.8), 0 0 25px rgba(0,255,204,0.4), 0 0 60px rgba(0,255,204,0.2); }
+  66%  { color: #4488ff; text-shadow: 0 0 12px rgba(68,136,255,0.9), 0 0 30px rgba(68,136,255,0.5), 0 0 60px rgba(68,136,255,0.2); filter: brightness(1.3); transform: scale(1.08); }
+  83%  { color: #cc44ff; text-shadow: 0 0 8px rgba(204,68,255,0.8), 0 0 25px rgba(204,68,255,0.4), 0 0 60px rgba(204,68,255,0.2); }
+  100% { color: #ff00ff; text-shadow: 0 0 8px rgba(255,0,255,0.8), 0 0 25px rgba(255,0,255,0.4), 0 0 60px rgba(255,0,255,0.2); filter: brightness(1); }
+}
+
+/* Unique badge container — star sparkle overlay */
+.badge-unique-container {
+  position: relative;
+  display: inline-block;
+}
+
+.badge-unique-container::before,
+.badge-unique-container::after {
+  content: '✦';
+  position: absolute;
+  font-size: 8px;
+  animation: badge-unique-stars 2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.badge-unique-container::before {
+  top: -4px;
+  right: -6px;
+  color: #ffaa00;
+  animation-delay: 0s;
+}
+
+.badge-unique-container::after {
+  bottom: -4px;
+  left: -6px;
+  color: #00ffcc;
+  animation-delay: 1s;
+}
+
+@keyframes badge-unique-stars {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.3); }
+}
+
 /* Reduced motion — disable badge animations */
 @media (prefers-reduced-motion: reduce) {
   .badge-rare,
   .badge-legendary,
-  .badge-mythic {
+  .badge-mythic,
+  .badge-unique {
     animation: none !important;
+  }
+  .badge-unique-container::before,
+  .badge-unique-container::after {
+    animation: none !important;
+    opacity: 0.5;
   }
   .ticker-scroll {
     animation: none !important;
