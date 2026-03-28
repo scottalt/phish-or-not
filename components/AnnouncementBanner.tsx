@@ -80,13 +80,6 @@ export function AnnouncementBanner() {
         <div className="fixed bottom-16 lg:bottom-0 left-0 right-0 z-50 pointer-events-none">
           <div className="bg-[color-mix(in_srgb,var(--c-bg)_92%,transparent)] border-t border-[color-mix(in_srgb,var(--c-accent)_40%,transparent)] backdrop-blur-sm">
             <div className="flex items-center">
-              {/* Dismiss button — pointer events enabled */}
-              <button
-                onClick={handleBannerDismiss}
-                className="pointer-events-auto px-3 py-1.5 text-[var(--c-muted)] text-[10px] font-mono hover:text-[var(--c-accent)] transition-colors shrink-0 border-r border-[color-mix(in_srgb,var(--c-accent)_20%,transparent)]"
-              >
-                ✕
-              </button>
               {/* Scrolling ticker */}
               <div className="flex-1 overflow-hidden py-1.5">
                 <div className="ticker-scroll whitespace-nowrap text-[var(--c-accent)] text-xs font-mono tracking-wider">
@@ -94,6 +87,13 @@ export function AnnouncementBanner() {
                   <span className="inline-block pr-[50vw]">{tickerText}</span>
                 </div>
               </div>
+              {/* Dismiss button */}
+              <button
+                onClick={handleBannerDismiss}
+                className="pointer-events-auto px-3 py-1.5 text-[var(--c-muted)] text-[10px] font-mono hover:text-[var(--c-accent)] transition-colors shrink-0 border-l border-[color-mix(in_srgb,var(--c-accent)_20%,transparent)]"
+              >
+                ✕
+              </button>
             </div>
           </div>
         </div>
