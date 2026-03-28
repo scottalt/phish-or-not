@@ -49,10 +49,12 @@ export function Handler({ lines: rawLines, buttonText = 'CONTINUE', onDismiss, a
   const isLastLine = currentLine >= lines.length - 1;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center lg:items-start justify-center px-4 lg:pt-32 anim-fade-in">
+    <div className="fixed inset-0 z-[100] overflow-y-auto anim-fade-in">
       {/* Subtle vignette — darkens edges, keeps center visible, feels layered */}
-      <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.45) 100%)' }} aria-hidden="true" />
+      <div className="fixed inset-0" style={{ background: 'radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.45) 100%)' }} aria-hidden="true" />
 
+      {/* Scroll container — centers dialog, ensures it's always reachable */}
+      <div className="min-h-full flex items-center lg:items-start justify-center px-4 py-8 lg:pt-32">
       {/* Dialog box */}
       <div
         className="w-full max-w-sm relative anim-fade-in-up sigint-box term-border bg-[var(--c-bg)] border-[color-mix(in_srgb,var(--c-accent)_60%,transparent)]"
@@ -137,6 +139,7 @@ export function Handler({ lines: rawLines, buttonText = 'CONTINUE', onDismiss, a
             </button>
           </div>
         )}
+      </div>
       </div>
     </div>
   );
