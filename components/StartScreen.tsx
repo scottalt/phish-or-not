@@ -248,16 +248,30 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
   // SIGINT milestone unlocks — fire when player crosses answer thresholds
   const { triggerSigint } = useSigint();
 
-  const fireMilestones = useCallback(() => {
-    if (!signedIn || !profile) return;
+  // Milestone check — runs independently of greeting cooldown so unlock
+  // moments fire even if the player was already greeted this session.
+  useEffect(() => {
+    if (!showButton || !signedIn || !profile) return;
     const answers = profile.researchAnswersSubmitted ?? 0;
     const graduated = profile.researchGraduated ?? false;
 
-    // Check milestones in reverse order (highest first) — only one fires per visit
+    // Unlock milestones (highest first — triggerSigint dedup prevents repeats)
     if (answers >= 30) triggerSigint('freeplay_unlock');
     else if (answers >= 20) triggerSigint('daily_unlock');
+    else if (answers >= 15) triggerSigint('research_halfway');
     else if (graduated || answers >= 10) triggerSigint('pvp_unlock');
-  }, [signedIn, profile, triggerSigint]);
+
+    // Level moments (exact match only)
+    const levelMoments: Record<number, string> = {
+      3: 'level_3', 5: 'level_5', 7: 'level_7', 10: 'level_10',
+      13: 'level_13', 15: 'level_15', 18: 'level_18', 20: 'level_20',
+      22: 'level_22', 25: 'level_25', 28: 'level_28', 30: 'max_level',
+    };
+    const levelMoment = levelMoments[profile.level];
+    if (levelMoment) triggerSigint(levelMoment);
+
+    if (profile.totalSessions >= 7) triggerSigint('played_7_days');
+  }, [showButton, signedIn, profile, triggerSigint]);
 
   // Show SIGINT greeting OR milestone on home page.
   // Milestones take priority — if one is pending, skip greeting and show milestone.
@@ -285,44 +299,12 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
       return;
     }
 
-    // Check for pending milestones — they take priority over recurring greetings
-    const pendingMilestone =
-      (answers >= 30 && !seen.includes('freeplay_unlock')) ? 'freeplay_unlock' :
-      (answers >= 20 && !seen.includes('daily_unlock')) ? 'daily_unlock' :
-      (answers >= 15 && answers < 20 && !seen.includes('research_halfway')) ? 'research_halfway' :
-      ((graduated || answers >= 10) && !seen.includes('pvp_unlock')) ? 'pvp_unlock' :
-      null;
+    // Milestones (unlock, level, sessions) are handled by the separate effect above.
+    // This effect only handles greetings.
 
-    if (pendingMilestone) {
-      // Show milestone via SigintContext (renders from layout, not StartScreen)
-      triggerSigint(pendingMilestone);
-      // Queue bonus milestones behind it (level, sessions)
-      // Level moments: only fire for exact milestone levels (not >=)
-      const levelMoments: Record<number, string> = {
-        3: 'level_3', 5: 'level_5', 7: 'level_7', 10: 'level_10',
-        13: 'level_13', 15: 'level_15', 18: 'level_18', 20: 'level_20',
-        22: 'level_22', 25: 'level_25', 28: 'level_28', 30: 'max_level',
-      };
-      const levelMoment = levelMoments[profile.level];
-      if (levelMoment) triggerSigint(levelMoment);
-      if (profile.totalSessions >= 7) triggerSigint('played_7_days');
-      return;
-    }
-
-    // No pending milestone — show greeting
     // Skip if already greeted recently (within 2 hours) — but never skip for brand new players
     const lastGreeted = Number(sessionStorage.getItem('sigint_greeted') ?? '0');
     if (answers > 0 && lastGreeted && Date.now() - lastGreeted < 2 * 60 * 60 * 1000) {
-      // Even without greeting, check bonus milestones
-      // Level moments: only fire for exact milestone levels (not >=)
-      const levelMoments: Record<number, string> = {
-        3: 'level_3', 5: 'level_5', 7: 'level_7', 10: 'level_10',
-        13: 'level_13', 15: 'level_15', 18: 'level_18', 20: 'level_20',
-        22: 'level_22', 25: 'level_25', 28: 'level_28', 30: 'max_level',
-      };
-      const levelMoment = levelMoments[profile.level];
-      if (levelMoment) triggerSigint(levelMoment);
-      if (profile.totalSessions >= 7) triggerSigint('played_7_days');
       return;
     }
 
@@ -520,18 +502,7 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
               refreshProfile();
             }
             setShowHandlerGreeting(false);
-            // After greeting, fire bonus milestones (level, sessions) via SigintContext queue
-            setTimeout(() => {
-              // Level moments: only fire for exact milestone levels
-              const lvlMoments: Record<number, string> = {
-                3: 'level_3', 5: 'level_5', 7: 'level_7', 10: 'level_10',
-                13: 'level_13', 15: 'level_15', 18: 'level_18', 20: 'level_20',
-                22: 'level_22', 25: 'level_25', 28: 'level_28', 30: 'max_level',
-              };
-              const lvlMoment = profile ? lvlMoments[profile.level] : undefined;
-              if (lvlMoment) triggerSigint(lvlMoment);
-              if (profile && profile.totalSessions >= 7) triggerSigint('played_7_days');
-            }, 300);
+            // Milestones are handled by the separate milestone effect — no need to fire here
           }}
         />
       )}
