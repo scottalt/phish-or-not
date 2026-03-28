@@ -195,9 +195,13 @@ export async function POST() {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
 
-  // Clean up stale state
-  await redis.del(`h2h:matched:${playerId}`);
-  await removeFromQueue(playerId);
+  // Clean up ALL stale state — prevents ghost matches from rapid join/leave cycles
+  await Promise.all([
+    redis.del(`h2h:matched:${playerId}`),
+    redis.del(`h2h:player-lock:${playerId}`),
+    redis.del(`h2h:queue-joined:${playerId}`),
+    removeFromQueue(playerId),
+  ]);
 
   // Check for active matches — cancel stale ones, block if recent one exists
   const admin0 = getSupabaseAdminClient();
