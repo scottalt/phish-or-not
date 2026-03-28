@@ -7,7 +7,7 @@ import { usePlayer } from '@/lib/usePlayer';
 import { useNavVisibility } from '@/lib/NavVisibilityContext';
 import { useMusicEnabled } from '@/lib/useSoundEnabled';
 import { version } from '@/package.json';
-import { playerGet, playerSet, sessionGet } from '@/lib/player-storage';
+import { playerGet, playerSet } from '@/lib/player-storage';
 
 const NAV_LINKS = [
   { label: 'HOME', path: '/play', match: (p: string) => p === '/play' },
@@ -34,7 +34,7 @@ export function NavBar() {
   const [bootSeen, setBootSeen] = useState(true); // default to true (no delay)
   useEffect(() => {
     setHasUnread(playerGet('lastSeenVersion') !== version);
-    setBootSeen(sessionGet('bootSeen') === '1');
+    setBootSeen(sessionStorage.getItem('bootSeen') === '1');
     // Fetch pending friend request count for notification badge (only if signed in)
     if (signedIn) {
       fetch('/api/friends').then(r => r.ok ? r.json() : null).then(data => {

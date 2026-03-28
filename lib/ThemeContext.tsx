@@ -35,10 +35,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<ThemeDef>(getThemeById('phosphor'));
   const [serverLoaded, setServerLoaded] = useState(false);
 
-  // On mount: load from localStorage as initial fast paint
+  // On mount: try player-scoped key first, fall back to legacy key for fast paint.
+  // The player ID may not be set yet on first mount, so we also check the unscoped key.
   useEffect(() => {
     try {
-      const saved = playerGet('terminal_theme');
+      const saved = playerGet('terminal_theme') ?? localStorage.getItem('terminal_theme');
       if (saved) {
         const t = getThemeById(saved);
         setTheme(t);

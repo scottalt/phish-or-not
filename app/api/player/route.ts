@@ -87,9 +87,9 @@ export async function GET(req: NextRequest) {
       .eq('player_id', row.id as string),
     redis.get<number>(`ratelimit:xp:${authId}:h:${nowHour}`),
     redis.get<number>(`ratelimit:xp:${authId}:d:${todayStr}`),
-    // Check if player completed today's daily challenge (via answers table which has player_id)
+    // Check if player completed today's daily challenge (via answers → session for final_score)
     admin.from('answers')
-      .select('correct, confidence_score')
+      .select('correct, session_id')
       .eq('player_id', row.id as string)
       .eq('game_mode', 'daily')
       .gte('created_at', todayStr + 'T00:00:00.000Z'),
@@ -114,10 +114,19 @@ export async function GET(req: NextRequest) {
   const nextDay = new Date(todayStr + 'T00:00:00.000Z');
   nextDay.setUTCDate(nextDay.getUTCDate() + 1);
 
-  // Compute today's daily result from answer records
-  const dailyResult = dailyAnswers && dailyAnswers.length > 0
-    ? { score: dailyAnswers.filter((a: { correct: boolean }) => a.correct).length, totalScore: dailyAnswers.reduce((sum: number, a: { confidence_score: number | null }) => sum + (a.confidence_score ?? 0), 0) }
-    : null;
+  // Compute today's daily result from answer records + session final_score
+  let dailyResult: { score: number; totalScore: number } | null = null;
+  if (dailyAnswers && dailyAnswers.length > 0) {
+    const score = dailyAnswers.filter((a: { correct: boolean }) => a.correct).length;
+    // Get final_score from the session row (written by PATCH /api/sessions on round end)
+    const sessionId = (dailyAnswers[0] as { session_id: string }).session_id;
+    let totalScore = 0;
+    if (sessionId) {
+      const { data: sess } = await admin.from('sessions').select('final_score').eq('session_id', sessionId).maybeSingle();
+      totalScore = (sess?.final_score as number) ?? 0;
+    }
+    dailyResult = { score, totalScore };
+  }
 
   const profile = toProfile(row, researchAnswersSubmitted ?? 0, achievements, streakData, seenMoments);
 

@@ -54,7 +54,8 @@ const BOOT_LINES: { text: string; bright: boolean }[] = [
 ];
 
 export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic }: Props) {
-  const bootSeen = typeof sessionStorage !== 'undefined' && sessionGet('bootSeen') === '1';
+  // bootSeen is per-tab, not per-player — use raw sessionStorage (no player scoping needed)
+  const bootSeen = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('bootSeen') === '1';
   const [visibleCount, setVisibleCount] = useState(bootSeen ? BOOT_LINES.length : 0);
   // Handler greeting — different dialogue depending on player state
   const [showButton, setShowButton] = useState(bootSeen);
@@ -222,7 +223,7 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
     if (visibleCount === BOOT_LINES.length) {
       const t = setTimeout(() => {
         setBootDone(true);
-        sessionSet('bootSeen', '1');
+        try { sessionStorage.setItem('bootSeen', '1'); } catch {}
       }, 300);
       return () => clearTimeout(t);
     }
