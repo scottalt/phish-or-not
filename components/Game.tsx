@@ -479,11 +479,13 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
           }),
         }).then((r) => { if (!r.ok) console.error('[sessions] finalize failed:', r.status); }).catch((err) => { console.error('[sessions] finalize failed:', err); });
       }
-      // SIGINT: round completion moments (deferred to summary, not mid-card)
-      if (correctCount > 0) triggerSigint('first_correct');
-      triggerSigint('first_session_complete');
-
       setPhase('summary');
+
+      // SIGINT: round completion moments — delayed so player sees summary first
+      setTimeout(() => {
+        if (correctCount > 0) triggerSigint('first_correct');
+        triggerSigint('first_session_complete');
+      }, 2000);
     } else {
       setCurrentIndex(nextIndex);
       setPhase('playing');
