@@ -13,7 +13,7 @@ import {
   unsubscribeFromMatch,
 } from '@/lib/h2h-realtime';
 import type { MatchProgressEvent, MatchResultEvent } from '@/lib/h2h-realtime';
-import { ACHIEVEMENTS, RARITY_BADGE_CLASS, type AchievementRarity } from '@/lib/achievements';
+import { ACHIEVEMENTS, RARITY_BADGE_CLASS, RARITY_COLORS, type AchievementRarity } from '@/lib/achievements';
 import { playOpponentDown, playCountdownBeep, playCountdownGo } from '@/lib/sounds';
 import { useSoundEnabled } from '@/lib/useSoundEnabled';
 
@@ -907,7 +907,7 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
               </div>
               <div className="flex-1 text-left min-w-0">
                 <div className="text-[var(--c-primary)] font-black tracking-wide truncate">{myName}</div>
-                <div className="text-[var(--c-accent)] text-[10px] tracking-widest">{myBadgeName ?? 'NO BADGE'}</div>
+                <div className={`text-[10px] tracking-widest ${myBadgeRarity ? RARITY_BADGE_CLASS[myBadgeRarity] : ''}`} style={{ color: myBadgeRarity ? RARITY_COLORS[myBadgeRarity] : 'var(--c-muted)' }}>{myBadgeName ?? 'NO BADGE'}</div>
               </div>
               <div className={`text-xs tracking-widest shrink-0 ${ready ? 'text-[var(--c-primary)]' : 'text-[var(--c-muted)]'}`}>
                 {ready ? '✓ READY' : 'NOT READY'}
@@ -928,7 +928,7 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
               </div>
               <div className="flex-1 text-left min-w-0">
                 <div className="font-black tracking-wide truncate" style={{ color: opponentThemeColor }}>{opponentName}</div>
-                <div className="text-[10px] tracking-widest" style={{ color: opponentThemeColor, opacity: 0.7 }}>{opponentBadgeName ?? 'NO BADGE'}</div>
+                <div className={`text-[10px] tracking-widest ${opponentBadgeRarity ? RARITY_BADGE_CLASS[opponentBadgeRarity] : ''}`} style={{ color: opponentBadgeRarity ? RARITY_COLORS[opponentBadgeRarity] : opponentThemeColor, opacity: opponentBadgeRarity ? 1 : 0.7 }}>{opponentBadgeName ?? 'NO BADGE'}</div>
               </div>
               <div className={`text-xs tracking-widest shrink-0 ${opponentReady ? 'text-[var(--c-primary)]' : 'text-[var(--c-muted)] animate-pulse'}`}>
                 {opponentReady ? '✓ READY' : 'WAITING...'}
@@ -1002,6 +1002,7 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
           <div className="flex items-center justify-between text-sm font-mono">
             <span className="text-[var(--c-secondary)]">
               <span style={{ color: opponentThemeColor }}>OPP:</span> {opponentBadgeIcon && <span className={opponentBadgeRarity ? RARITY_BADGE_CLASS[opponentBadgeRarity] : ''} style={{ color: opponentThemeColor }}>{opponentBadgeIcon} </span>}<span style={{ color: opponentThemeColor }}>{opponentName}</span>
+              {opponentBadgeName && <span className={`ml-1.5 text-xs ${opponentBadgeRarity ? RARITY_BADGE_CLASS[opponentBadgeRarity] : ''}`} style={{ color: opponentBadgeRarity ? RARITY_COLORS[opponentBadgeRarity] : opponentThemeColor }}>[{opponentBadgeName}]</span>}
             </span>
             <div className="flex items-center gap-2">
               <ProgressSquares completed={opponentIndex} total={H2H_CARDS_PER_MATCH} />
@@ -1079,7 +1080,8 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
         </div>
         <div className="flex items-center gap-2">
           {myBadgeIcon && <span className={`text-[var(--c-primary)] ${myBadgeRarity ? RARITY_BADGE_CLASS[myBadgeRarity] : ''}`}>{myBadgeIcon}</span>}
-          <span className="text-[var(--c-primary)] font-bold text-base">YOU</span>
+          <span className="text-[var(--c-primary)] font-bold text-base">{myName}</span>
+          {myBadgeName && <span className={`text-xs ${myBadgeRarity ? RARITY_BADGE_CLASS[myBadgeRarity] : ''}`} style={{ color: myBadgeRarity ? RARITY_COLORS[myBadgeRarity] : 'var(--c-primary)' }}>[{myBadgeName}]</span>}
           <ProgressSquares completed={myProgress} total={H2H_CARDS_PER_MATCH} />
           <span className="text-[var(--c-primary)] text-sm">{myProgress}/{H2H_CARDS_PER_MATCH}</span>
         </div>
@@ -1091,6 +1093,7 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
           <div className="flex items-center gap-2">
             {opponentBadgeIcon && <span className={opponentBadgeRarity ? RARITY_BADGE_CLASS[opponentBadgeRarity] : ''} style={{ color: opponentThemeColor }}>{opponentBadgeIcon}</span>}
             <span className="font-bold text-base" style={{ color: opponentThemeColor }}>{opponentName}</span>
+            {opponentBadgeName && <span className={`text-xs ${opponentBadgeRarity ? RARITY_BADGE_CLASS[opponentBadgeRarity] : ''}`} style={{ color: opponentBadgeRarity ? RARITY_COLORS[opponentBadgeRarity] : opponentThemeColor }}>[{opponentBadgeName}]</span>}
           </div>
           <div className="flex items-center gap-2">
             <ProgressSquares completed={opponentIndex} total={H2H_CARDS_PER_MATCH} />
