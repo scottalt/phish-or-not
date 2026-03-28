@@ -17,6 +17,7 @@ import { HANDLER_DIALOGUES, hasSeenMoment, markMomentSeen } from '@/lib/handler-
 import { bootGreetingNamed } from '@/lib/sigint-personality';
 import { dynamicDialogue } from '@/lib/sigint-personality';
 import { playerGet, playerSet, sessionGet, sessionSet } from '@/lib/player-storage';
+import { RainbowName } from './RainbowName';
 import { useSigint } from '@/lib/SigintContext';
 
 interface LeaderboardEntry {
@@ -525,7 +526,7 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
               <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_35%,transparent)] px-4 py-2">
                 <div className="flex items-center justify-between mb-1">
                   <Link href="/profile" className="text-[var(--c-primary)] text-base font-mono font-bold tracking-widest hover:bg-[color-mix(in_srgb,var(--c-primary)_6%,transparent)] transition-colors truncate max-w-[60%]">
-                    {profile.displayName}
+                    <RainbowName name={profile.displayName} />
                   </Link>
                   <div className="flex items-center gap-2 shrink-0">
                     {profile.featuredBadge && (() => {

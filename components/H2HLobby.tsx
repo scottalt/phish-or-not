@@ -5,6 +5,7 @@ import { ACHIEVEMENTS, RARITY_COLORS } from '@/lib/achievements';
 import { getRankFromPoints, H2H_RANKS, H2H_DAILY_RATED_CAP, H2H_DAILY_HALF_RATE_AFTER } from '@/lib/h2h';
 import { useSigint } from '@/lib/SigintContext';
 import type { PlayerProfile } from '@/lib/types';
+import { RainbowName } from './RainbowName';
 
 interface Props {
   profile: PlayerProfile;
@@ -67,7 +68,7 @@ export function H2HLobby({ profile, onSearch, onBack }: Props) {
 
             {/* Callsign */}
             <div className="text-[var(--c-primary)] text-lg font-mono font-bold">
-              {profile.displayName ?? 'ANON'}
+              <RainbowName name={profile.displayName ?? 'ANON'} />
             </div>
 
             {/* Rank */}

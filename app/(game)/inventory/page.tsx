@@ -21,6 +21,9 @@ export default function InventoryPage() {
   const { theme: activeTheme, setThemeId } = useTheme();
   const { triggerSigint } = useSigint();
 
+  // Refresh profile on mount so newly gifted items appear immediately
+  useEffect(() => { refreshProfile(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // SIGINT: first inventory visit (fire once per mount)
   const sigintFired = useRef(false);
   useEffect(() => {

@@ -10,6 +10,7 @@ import { getRankFromPoints, H2H_DAILY_RATED_CAP } from '@/lib/h2h';
 import { QUESTS } from '@/lib/quests';
 import Link from 'next/link';
 import type { PlayerBackground } from '@/lib/types';
+import { RainbowName } from '@/components/RainbowName';
 
 interface SoloStats {
   totalAnswers: number;
@@ -408,7 +409,7 @@ export default function ProfilePage() {
                 <span className="text-[var(--c-secondary)] text-sm font-mono tracking-wider">CALLSIGN</span>
                 {!editingCallsign ? (
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-mono font-bold text-[var(--c-primary)]">{profile.displayName ?? '—'}</span>
+                    <span className="text-sm font-mono font-bold"><RainbowName name={profile.displayName ?? '—'} /></span>
                     <button
                       type="button"
                       onClick={() => { setCallsignValue(profile.displayName ?? ''); setCallsignError(''); setEditingCallsign(true); }}

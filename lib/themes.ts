@@ -127,7 +127,7 @@ export const THEMES: ThemeDef[] = [
     id: 'singularity',
     name: 'SINGULARITY',
     subtitle: 'Beyond the event horizon',
-    unlockLevel: 99, // unreachable — admin-granted only
+    unlockLevel: 0, // no level unlocks this — admin-gifted only
     unlockLabel: '???',
     nameEffect: 'rainbow',
     hidden: true,
