@@ -23,7 +23,7 @@ BEGIN
     CASE WHEN p_is_winner THEN 1 ELSE 0 END,
     CASE WHEN p_is_winner THEN 1 ELSE 0 END,
     GREATEST(0, p_points_delta),
-    1, p_today
+    1, p_today::date
   )
   ON CONFLICT (player_id, season) DO UPDATE SET
     rank_points = GREATEST(0, h2h_player_stats.rank_points + p_points_delta),
@@ -39,10 +39,10 @@ BEGIN
       GREATEST(0, h2h_player_stats.rank_points + p_points_delta)
     ),
     rated_matches_today = CASE
-      WHEN h2h_player_stats.last_match_date = p_today
+      WHEN h2h_player_stats.last_match_date = p_today::date
       THEN h2h_player_stats.rated_matches_today + 1
       ELSE 1
     END,
-    last_match_date = p_today;
+    last_match_date = p_today::date;
 END;
 $$;
