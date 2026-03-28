@@ -248,29 +248,55 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
   // SIGINT milestone unlocks — fire when player crosses answer thresholds
   const { triggerSigint } = useSigint();
 
-  // ── Helper: find the highest unseen unlock milestone ──
-  function findPendingMilestone(): string | null {
-    if (!profile) return null;
-    const answers = profile.researchAnswersSubmitted ?? 0;
-    const graduated = profile.researchGraduated ?? false;
-    if (answers >= 30 && !hasSeenMoment('freeplay_unlock')) return 'freeplay_unlock';
-    if (answers >= 20 && !hasSeenMoment('daily_unlock')) return 'daily_unlock';
-    if (answers >= 15 && !hasSeenMoment('research_halfway')) return 'research_halfway';
-    if ((graduated || answers >= 10) && !hasSeenMoment('pvp_unlock')) return 'pvp_unlock';
-    return null;
-  }
+  // ── SIGINT home screen logic ──
+  //
+  // Rules:
+  // 1. Sign in → ONE message (milestone OR greeting, never both)
+  // 2. Refresh → silent
+  // 3. Navigate away and back → silent
+  // 4. Return after playing research (answer count changed) → milestone only
+  // 5. Never stack
+  //
+  // Implementation: ONE effect, ONE ref tracking answer count.
+  // sessionStorage('sigint_spoke') prevents greeting on refresh/navigate.
+  // Answer count change detection triggers milestones independently.
 
-  // ── SIGINT on sign-in: milestone OR greeting (never both) ──
+  const prevAnswers = useRef<number | null>(null);
+
   useEffect(() => {
     if (!showButton || !signedIn || !profile || !profile.displayName) return;
-    try { if (sessionStorage.getItem('sigint_spoke') === '1') return; } catch {}
-    try { sessionStorage.setItem('sigint_spoke', '1'); } catch {}
 
     const answers = profile.researchAnswersSubmitted ?? 0;
+    const graduated = profile.researchGraduated ?? false;
     const callsign = profile.displayName ?? 'operative';
+    const isFirstRun = prevAnswers.current === null;
+    const answersChanged = prevAnswers.current !== null && prevAnswers.current !== answers;
+    prevAnswers.current = answers;
 
-    // If a milestone is pending, show that instead of a greeting
-    const milestone = findPendingMilestone();
+    // ── Find highest unseen milestone ──
+    const milestone =
+      (answers >= 30 && !hasSeenMoment('freeplay_unlock')) ? 'freeplay_unlock' :
+      (answers >= 20 && !hasSeenMoment('daily_unlock')) ? 'daily_unlock' :
+      (answers >= 15 && !hasSeenMoment('research_halfway')) ? 'research_halfway' :
+      ((graduated || answers >= 10) && !hasSeenMoment('pvp_unlock')) ? 'pvp_unlock' :
+      null;
+
+    // ── Case A: Answer count changed (returned from playing) → milestone only ──
+    if (answersChanged && milestone) {
+      triggerSigint(milestone);
+      return;
+    }
+
+    // ── Case B: First run (sign-in or page load) ──
+    if (!isFirstRun) return; // navigate back → silent
+
+    // Check if we already spoke this session (refresh guard)
+    try { if (sessionStorage.getItem('sigint_spoke') === '1') return; } catch {}
+
+    // We're going to speak — set the flag
+    try { sessionStorage.setItem('sigint_spoke', '1'); } catch {}
+
+    // Milestone takes priority over greeting
     if (milestone) { triggerSigint(milestone); return; }
 
     // v2_intro for v1 veterans
@@ -284,7 +310,7 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
       return;
     }
 
-    // Boot greeting (new players) or welcome back (returning)
+    // Boot greeting (new) or welcome back (returning)
     if (answers === 0) {
       const d = bootGreetingNamed(callsign);
       setHandlerLines(d.lines);
@@ -299,26 +325,7 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
         setShowHandlerGreeting(true);
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showButton, signedIn, !!profile?.displayName]);
-
-  // ── SIGINT milestones: fire when answer count changes (after playing) ──
-  const lastAnswerCount = useRef<number>(-1);
-  useEffect(() => {
-    if (!showButton || !signedIn || !profile) return;
-    const answers = profile.researchAnswersSubmitted ?? 0;
-
-    if (lastAnswerCount.current === answers) return;
-    const isFirstCheck = lastAnswerCount.current === -1;
-    lastAnswerCount.current = answers;
-
-    // Skip first load — handled by the sign-in effect above
-    if (isFirstCheck) return;
-
-    const milestone = findPendingMilestone();
-    if (milestone) triggerSigint(milestone);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showButton, signedIn, profile?.researchAnswersSubmitted]);
+  }, [showButton, signedIn, profile, triggerSigint]);
 
   // Hide nav bar during boot and until player profile is fully set up
   useLayoutEffect(() => {
