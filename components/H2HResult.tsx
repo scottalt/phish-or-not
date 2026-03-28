@@ -49,6 +49,7 @@ interface StatsData {
   winStreak: number;
   wins: number;
   losses: number;
+  ratedMatchesToday: number;
 }
 
 function formatTime(ms: number): string {
@@ -118,6 +119,9 @@ export function H2HResult({
       // Loss streak empathy
       if (stats.winStreak === 0 && stats.losses >= 3) triggerSigint('loss_streak_3');
     }
+    // Rated match cap warnings
+    if (stats.ratedMatchesToday >= 20) triggerSigint('h2h_daily_cap');
+    else if (stats.ratedMatchesToday >= 10) triggerSigint('h2h_half_rate');
   }, [matchData, stats, isWin, isLoss, isBot, reason, triggerSigint]);
 
   // Play victory/defeat sound when server data resolves the winner
@@ -208,6 +212,7 @@ export function H2HResult({
             winStreak: s.winStreak ?? 0,
             wins: s.wins ?? 0,
             losses: s.losses ?? 0,
+            ratedMatchesToday: s.ratedMatchesToday ?? 0,
           });
         }
       } catch (err) {

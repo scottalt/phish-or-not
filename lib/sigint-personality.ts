@@ -538,6 +538,25 @@ export const MILESTONES = {
     buttonText: "GIVE ME A MINUTE",
   } as SigintDialogue,
 
+  h2h_half_rate: {
+    lines: [
+      "10 rated matches today. You've been busy.",
+      "The system's throttling your rank gains now. Half points per match.",
+      "You can still queue. Still climb. Just slower.",
+      "10 more and the points freeze completely until tomorrow.",
+    ],
+    buttonText: "NOTED",
+  } as SigintDialogue,
+
+  h2h_daily_cap: {
+    lines: [
+      "20 rated matches. That's the daily ceiling.",
+      "Rank points are frozen until tomorrow. Wins and losses still count for your record.",
+      "Go outside. Touch grass. That's an order.",
+    ],
+    buttonText: "FINE",
+  } as SigintDialogue,
+
   max_level: {
     lines: [
       "Level 30. You hit the ceiling.",

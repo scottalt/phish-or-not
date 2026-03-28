@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { ACHIEVEMENTS, RARITY_COLORS } from '@/lib/achievements';
-import { getRankFromPoints, H2H_RANKS } from '@/lib/h2h';
+import { getRankFromPoints, H2H_RANKS, H2H_DAILY_RATED_CAP, H2H_DAILY_HALF_RATE_AFTER } from '@/lib/h2h';
 import { useSigint } from '@/lib/SigintContext';
 import type { PlayerProfile } from '@/lib/types';
 
@@ -27,7 +27,7 @@ export function H2HLobby({ profile, onSearch, onBack }: Props) {
   const [h2hStats, setH2HStats] = useState<{
     rankLabel: string; rankPoints: number; rankColor: string;
     wins: number; losses: number; winStreak: number; bestWinStreak: number;
-    peakRankPoints: number;
+    peakRankPoints: number; ratedMatchesToday: number;
   } | null>(null);
   const [leaderboard, setLeaderboard] = useState<{ position: number; displayName: string; rankPoints: number; rankLabel: string; rankColor: string; wins: number; losses: number }[]>([]);
 
@@ -124,6 +124,46 @@ export function H2HLobby({ profile, onSearch, onBack }: Props) {
           <div className="text-[var(--c-muted)] text-sm font-mono text-center leading-relaxed">
             5 cards. Wrong answer = eliminated. Fastest perfect run wins.
           </div>
+
+          {/* Rated matches indicator */}
+          {h2hStats && (() => {
+            const used = h2hStats.ratedMatchesToday;
+            const atCap = used >= H2H_DAILY_RATED_CAP;
+            const halfRate = used >= H2H_DAILY_HALF_RATE_AFTER && !atCap;
+            const remaining = Math.max(0, H2H_DAILY_RATED_CAP - used);
+            return (
+              <div className={`border px-3 py-2 text-center font-mono text-sm space-y-1 ${
+                atCap ? 'border-[rgba(255,51,51,0.4)] bg-[rgba(255,51,51,0.04)]' :
+                halfRate ? 'border-[rgba(255,170,0,0.4)] bg-[rgba(255,170,0,0.04)]' :
+                'border-[color-mix(in_srgb,var(--c-primary)_20%,transparent)]'
+              }`}>
+                <div className="flex items-center justify-center gap-3">
+                  <span className={atCap ? 'text-[#ff3333]' : halfRate ? 'text-[#ffaa00]' : 'text-[var(--c-secondary)]'}>
+                    RATED MATCHES TODAY
+                  </span>
+                  <span className={`font-bold ${atCap ? 'text-[#ff3333]' : halfRate ? 'text-[#ffaa00]' : 'text-[var(--c-primary)]'}`}>
+                    {used}/{H2H_DAILY_RATED_CAP}
+                  </span>
+                </div>
+                {/* Progress bar */}
+                <div className="w-full h-1.5 bg-[var(--c-bg-alt)] overflow-hidden">
+                  <div
+                    className={`h-full transition-all duration-500 ${
+                      atCap ? 'bg-[#ff3333]' : halfRate ? 'bg-[#ffaa00]' : 'bg-[var(--c-primary)]'
+                    }`}
+                    style={{ width: `${Math.min(100, (used / H2H_DAILY_RATED_CAP) * 100)}%` }}
+                  />
+                </div>
+                <div className={`text-xs ${atCap ? 'text-[#ff3333]' : halfRate ? 'text-[#ffaa00]' : 'text-[var(--c-muted)]'}`}>
+                  {atCap
+                    ? 'RANK POINTS FROZEN — resets at midnight UTC'
+                    : halfRate
+                    ? `HALF POINTS — ${remaining} rated matches left today`
+                    : `${remaining} rated matches until daily cap`}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Search button */}
           <button
