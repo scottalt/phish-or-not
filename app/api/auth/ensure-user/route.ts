@@ -27,18 +27,16 @@ export async function POST(req: NextRequest) {
 
     const supabase = getSupabaseAdminClient();
 
-    // Try to create the auth user. If they exist, this errors.
+    // Try to create the user — if they exist, Supabase errors and we detect it.
     const { data: created, error } = await supabase.auth.admin.createUser({
       email,
       email_confirm: true,
     });
 
     if (error) {
+      // Race condition: user created between check and create
       const msg = error.message.toLowerCase();
-      const alreadyInAuth = msg.includes('already been registered')
-        || msg.includes('already exists')
-        || msg.includes('duplicate');
-      if (alreadyInAuth) {
+      if (msg.includes('already been registered') || msg.includes('already exists') || msg.includes('duplicate')) {
         return NextResponse.json({ ok: true, existing: true });
       }
       console.error('[ensure-user] createUser error:', error.message);
@@ -46,12 +44,10 @@ export async function POST(req: NextRequest) {
     }
 
     // createUser succeeded — check if it returned an existing user
-    // (some Supabase versions don't error, they return the existing user)
+    // (some Supabase versions return the user without erroring)
     if (created?.user?.created_at) {
-      const createdAt = new Date(created.user.created_at).getTime();
-      const now = Date.now();
-      // If the user was created more than 60s ago, they're existing
-      if (now - createdAt > 60_000) {
+      const age = Date.now() - new Date(created.user.created_at).getTime();
+      if (age > 60_000) {
         return NextResponse.json({ ok: true, existing: true });
       }
     }
