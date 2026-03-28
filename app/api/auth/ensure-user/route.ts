@@ -34,14 +34,13 @@ export async function POST(req: NextRequest) {
       email_confirm: true,
     });
 
-    // Case A: Supabase errored — user exists
+    // Case A: Supabase errored — most likely user already exists
+    // Treat ALL createUser errors as "existing" — the OTP will still send
+    // via signInWithOtp on the client side regardless. The only thing
+    // `existing` controls is whether to show the terms checkbox.
     if (error) {
-      const msg = error.message.toLowerCase();
-      if (msg.includes('already been registered') || msg.includes('already exists') || msg.includes('duplicate')) {
-        return NextResponse.json({ ok: true, existing: true });
-      }
-      console.error('[ensure-user] createUser error:', error.message);
-      return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });
+      console.log(`[ensure-user] createUser error for ${email}: ${error.message} — treating as existing`);
+      return NextResponse.json({ ok: true, existing: true });
     }
 
     // Case B: createUser "succeeded" — but did it create a new user or return an existing one?
