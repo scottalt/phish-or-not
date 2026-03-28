@@ -39,6 +39,15 @@ export function AnnouncementBanner() {
         if (global) {
           setGlobalBanner(global);
           setTimeout(() => setBannerVisible(true), 2000);
+          // Auto-dismiss after 3 full scroll passes (20s each = 60s) + 2s entry delay
+          setTimeout(() => {
+            setBannerDismissed(true);
+            fetch('/api/player/messages', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ messageId: global.id }),
+            }).catch(() => {});
+          }, 62000);
         }
       })
       .catch(() => {});
