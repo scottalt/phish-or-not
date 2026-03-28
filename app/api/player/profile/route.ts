@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { getSupabaseAdminClient } from '@/lib/supabase';
 import filter from 'leo-profanity';
+import { isAdminUser } from '@/lib/adminAuth';
 
 const VALID_PRIVACY_LEVELS = ['public', 'friends', 'private'] as const;
 const MAX_BIO_LENGTH = 200;
@@ -39,14 +40,36 @@ export async function PATCH(req: NextRequest) {
     if (typeof body.bio !== 'string') {
       return NextResponse.json({ error: 'Invalid bio' }, { status: 400 });
     }
-    // Reject bios containing < or > characters (plain text only, no HTML)
-    if (body.bio.includes('<') || body.bio.includes('>')) {
-      return NextResponse.json({ error: 'Bio cannot contain < or > characters' }, { status: 400 });
-    }
     const cleaned = body.bio.trim().slice(0, MAX_BIO_LENGTH);
-    if (filter.check(cleaned)) {
-      return NextResponse.json({ error: 'Keep it clean, operative.' }, { status: 400 });
+    const admin = isAdminUser(authId);
+
+    if (!admin) {
+      // Block HTML/script injection
+      if (/[<>]/.test(cleaned)) {
+        return NextResponse.json({ error: 'Bio cannot contain < or > characters.' }, { status: 400 });
+      }
+
+      // Block URLs (http, https, www, common TLDs)
+      if (/https?:\/\/|www\.|\.com\b|\.net\b|\.org\b|\.io\b|\.gg\b|\.dev\b|\.xyz\b|\.me\b/i.test(cleaned)) {
+        return NextResponse.json({ error: 'URLs are not allowed in bios.' }, { status: 400 });
+      }
+
+      // Block code/script patterns
+      if (/javascript:|data:|on\w+=|eval\(|alert\(|document\.|window\.|<script|<\/script|\{[\s\S]*\}|function\s*\(/i.test(cleaned)) {
+        return NextResponse.json({ error: 'Invalid bio content.' }, { status: 400 });
+      }
+
+      // Block excessive special characters (allow basic punctuation)
+      if (/[{}[\]\\|`~^]/.test(cleaned)) {
+        return NextResponse.json({ error: 'Bio contains unsupported characters.' }, { status: 400 });
+      }
+
+      // Profanity filter
+      if (filter.check(cleaned)) {
+        return NextResponse.json({ error: 'Keep it clean, operative.' }, { status: 400 });
+      }
     }
+
     updates.bio = cleaned;
   }
 

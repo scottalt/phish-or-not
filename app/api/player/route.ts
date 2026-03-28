@@ -166,6 +166,8 @@ export async function POST(req: NextRequest) {
       ? body.displayName.trim().slice(0, 20)
       : null;
     if (!displayName) return NextResponse.json({ error: 'Invalid display_name' }, { status: 400 });
+    if (/[<>{}\[\]\\|`~^]/.test(displayName)) return NextResponse.json({ error: 'Callsign contains invalid characters.' }, { status: 400 });
+    if (/https?:\/\/|www\./i.test(displayName)) return NextResponse.json({ error: 'URLs are not allowed.' }, { status: 400 });
     if (filter.check(displayName)) return NextResponse.json({ error: 'Keep it clean.' }, { status: 400 });
 
     // Enforce unique callsigns (case-insensitive)

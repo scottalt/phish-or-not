@@ -4,13 +4,13 @@ import { useTheme } from '@/lib/ThemeContext';
 import { getThemeById } from '@/lib/themes';
 
 /**
- * Renders a player name with theme-appropriate styling:
- * - Rainbow effect for SINGULARITY theme (nameEffect='rainbow')
- * - Theme primary color for all other themes
- * - Falls back to fallbackColor or the current player's theme
+ * Renders a player name with theme-appropriate styling.
  *
- * For the current player: omit themeId (reads from ThemeContext)
- * For other players: pass themeId or themeColor directly
+ * For the CURRENT player's own name: omit themeId/themeColor/nameEffect.
+ *   → reads from ThemeContext (their equipped theme)
+ *
+ * For OTHER players (leaderboards, PVP): pass themeId, themeColor, or nameEffect.
+ *   → uses only the provided values, never falls back to current player's theme
  */
 export function RainbowName({
   name,
@@ -29,9 +29,13 @@ export function RainbowName({
 }) {
   const { theme: currentTheme } = useTheme();
 
-  // Determine if rainbow: explicit nameEffect prop, or resolved from themeId
-  const resolvedTheme = themeId ? getThemeById(themeId) : currentTheme;
-  const isRainbow = nameEffect === 'rainbow' || resolvedTheme.nameEffect === 'rainbow';
+  // Is this rendering another player's name? (any external prop provided)
+  const isOtherPlayer = !!(themeId || themeColor || nameEffect);
+
+  // Rainbow check: explicit nameEffect, or themeId resolves to rainbow
+  const isRainbow = nameEffect === 'rainbow'
+    || (themeId ? getThemeById(themeId).nameEffect === 'rainbow' : false)
+    || (!isOtherPlayer && currentTheme.nameEffect === 'rainbow');
 
   if (isRainbow) {
     return (
@@ -41,8 +45,12 @@ export function RainbowName({
     );
   }
 
-  // Use explicit themeColor, or derive from themeId, or use fallbackColor
-  const color = themeColor ?? (themeId ? getThemeById(themeId).colors.primary : null) ?? fallbackColor;
+  // Color: explicit themeColor → derive from themeId → current player's theme → fallback
+  let color: string | undefined;
+  if (themeColor) color = themeColor;
+  else if (themeId) color = getThemeById(themeId).colors.primary;
+  else if (!isOtherPlayer) color = undefined; // inherit from parent (current player's theme via CSS vars)
+  else color = fallbackColor;
 
   return (
     <span className={className} style={color ? { color } : undefined}>
