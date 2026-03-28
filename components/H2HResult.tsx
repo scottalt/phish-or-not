@@ -429,18 +429,16 @@ export function H2HResult({
         return (
           <div className="w-full term-border p-3 anim-fade-in-up space-y-2" style={{ animationDelay: '500ms', animationFillMode: 'both' }}>
             {total > 0 && (
-              <div className="flex items-center justify-between text-xs font-mono">
-                <span className="text-[var(--c-accent)] tracking-widest">+{total} XP EARNED</span>
-                <div className="flex gap-3 text-[var(--c-muted)]">
-                  {baseXp > 0 && <span>{correct} correct = {baseXp}</span>}
-                  {winBonus > 0 && <span className="text-[var(--c-primary)]">win +{winBonus}</span>}
-                  {completionBonus > 0 && <span className="text-[var(--c-primary)]">{correct >= H2H_CARDS_PER_MATCH ? 'perfect' : 'complete'} +{completionBonus}</span>}
+              <div className="text-center text-xs font-mono space-y-0.5">
+                <div className="text-[var(--c-accent)] tracking-widest text-sm font-bold">+{total} XP</div>
+                <div className="text-[var(--c-muted)]">
+                  {correct} correct{winBonus > 0 ? ' · win bonus' : ''}{completionBonus > 0 ? (correct >= H2H_CARDS_PER_MATCH ? ' · perfect' : ' · complete') : ''}
                 </div>
               </div>
             )}
             {total === 0 && (
-              <div className="text-[var(--c-muted)] text-xs font-mono tracking-widest text-center">
-                0 correct — no XP earned
+              <div className="text-[var(--c-muted)] text-xs font-mono text-center">
+                No XP earned
               </div>
             )}
             <LevelMeter
