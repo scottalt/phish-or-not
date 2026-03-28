@@ -419,23 +419,38 @@ export function H2HResult({
         </div>
       ) : null}
 
-      {/* XP Bar */}
-      {profile && !isBot && matchData && (
-        <div className="w-full term-border p-3 anim-fade-in-up" style={{ animationDelay: '500ms', animationFillMode: 'both' }}>
-          <LevelMeter
-            xp={profile.xp}
-            level={profile.level}
-            xpEarned={(() => {
-              const correct = matchData.myCards;
-              let earned = correct * XP_PER_CORRECT;
-              if (correct >= H2H_CARDS_PER_MATCH) earned += 50; // perfect bonus
-              else if (correct >= H2H_CARDS_PER_MATCH - 1) earned += 25; // completion bonus
-              if (isWin) earned += 20; // win bonus
-              return earned > 0 ? earned : undefined;
-            })()}
-          />
-        </div>
-      )}
+      {/* XP Bar + breakdown */}
+      {profile && !isBot && matchData && (() => {
+        const correct = matchData.myCards;
+        const baseXp = correct * XP_PER_CORRECT;
+        const winBonus = isWin ? 20 : 0;
+        const completionBonus = correct >= H2H_CARDS_PER_MATCH ? 50 : (correct >= H2H_CARDS_PER_MATCH - 1 ? 25 : 0);
+        const total = baseXp + winBonus + completionBonus;
+        return (
+          <div className="w-full term-border p-3 anim-fade-in-up space-y-2" style={{ animationDelay: '500ms', animationFillMode: 'both' }}>
+            {total > 0 && (
+              <div className="flex items-center justify-between text-xs font-mono">
+                <span className="text-[var(--c-accent)] tracking-widest">+{total} XP EARNED</span>
+                <div className="flex gap-3 text-[var(--c-muted)]">
+                  {baseXp > 0 && <span>{correct} correct = {baseXp}</span>}
+                  {winBonus > 0 && <span className="text-[var(--c-primary)]">win +{winBonus}</span>}
+                  {completionBonus > 0 && <span className="text-[var(--c-primary)]">{correct >= H2H_CARDS_PER_MATCH ? 'perfect' : 'complete'} +{completionBonus}</span>}
+                </div>
+              </div>
+            )}
+            {total === 0 && (
+              <div className="text-[var(--c-muted)] text-xs font-mono tracking-widest text-center">
+                0 correct — no XP earned
+              </div>
+            )}
+            <LevelMeter
+              xp={profile.xp}
+              level={profile.level}
+              xpEarned={total > 0 ? total : undefined}
+            />
+          </div>
+        );
+      })()}
 
       {/* Review cards */}
       {reviewCards.length > 0 && (
