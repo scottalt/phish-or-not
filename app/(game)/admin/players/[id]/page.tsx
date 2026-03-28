@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ACHIEVEMENTS, RARITY_COLORS, type AchievementRarity } from '@/lib/achievements';
+import { THEMES } from '@/lib/themes';
 
 interface PlayerData {
   player: Record<string, unknown>;
@@ -198,6 +199,19 @@ export default function AdminPlayerDetail() {
           {renderEditableField('GRADUATED', 'researchGraduated', p.research_graduated, 'boolean')}
           {renderEditableField('SESSIONS', 'totalSessions', p.total_sessions, 'number')}
           {renderEditableField('CUSTOM TITLE', 'customTitle', p.custom_title, 'text')}
+          {/* Theme override */}
+          <div className="flex items-center justify-between py-1">
+            <span className="text-[var(--c-secondary)] text-xs tracking-widest">THEME</span>
+            <select
+              value={(p.theme_id as string) ?? 'phosphor'}
+              onChange={(e) => saveField('themeId', e.target.value)}
+              className="bg-[var(--c-bg)] border border-[color-mix(in_srgb,var(--c-primary)_30%,transparent)] px-2 py-1 text-[var(--c-primary)] font-mono text-sm focus:outline-none"
+            >
+              {THEMES.map((t) => (
+                <option key={t.id} value={t.id}>{t.name}{t.hidden ? ' (SECRET)' : ''}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 

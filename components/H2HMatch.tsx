@@ -245,9 +245,19 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
   const [opponentBadgeName, setOpponentBadgeName] = useState<string | null>(null);
   const [opponentBadgeRarity, setOpponentBadgeRarity] = useState<AchievementRarity | null>(null);
   const [opponentThemeColor, setOpponentThemeColor] = useState<string>('#00ff41');
+  const [opponentNameEffect, setOpponentNameEffect] = useState<string | null>(null);
+  const [myNameEffect, setMyNameEffect] = useState<string | null>(null);
   const [myBadgeIcon, setMyBadgeIcon] = useState<string | null>(null);
   const [myBadgeName, setMyBadgeName] = useState<string | null>(null);
   const [myBadgeRarity, setMyBadgeRarity] = useState<AchievementRarity | null>(null);
+
+  // Helper: render name with optional rainbow effect
+  function renderName(name: string, effect: string | null, fallbackColor: string) {
+    if (effect === 'rainbow') {
+      return <span className="rainbow-name-glow"><span className="rainbow-name">{name}</span></span>;
+    }
+    return <span style={{ color: fallbackColor }}>{name}</span>;
+  }
 
   // ── Ready-up lobby ──
   const [ready, setReady] = useState(false);
@@ -339,6 +349,7 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
           const opp = matchData.players[opponentId];
           setOpponentName(opp.displayName);
           if (opp.themeColor) setOpponentThemeColor(opp.themeColor);
+          if (opp.nameEffect) setOpponentNameEffect(opp.nameEffect);
           if (opp.featuredBadge) {
             const oppAch = ACHIEVEMENTS.find(a => a.id === opp.featuredBadge);
             setOpponentBadgeIcon(oppAch?.icon ?? null);
@@ -353,6 +364,7 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
         // Set own name + badge
         const me = matchData.players[playerId];
         if (me?.displayName) setMyName(me.displayName);
+        if (me?.nameEffect) setMyNameEffect(me.nameEffect);
         if (me?.featuredBadge) {
           const myAch = ACHIEVEMENTS.find(a => a.id === me.featuredBadge);
           setMyBadgeIcon(myAch?.icon ?? null);
@@ -909,7 +921,7 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
                 {myBadgeIcon ?? '●'}
               </div>
               <div className="flex-1 text-left min-w-0">
-                <div className="text-[var(--c-primary)] font-black tracking-wide truncate">{myName}</div>
+                <div className="font-black tracking-wide truncate">{renderName(myName, myNameEffect, 'var(--c-primary)')}</div>
                 {myBadgeName && <div className={`text-[10px] tracking-widest ${myBadgeRarity ? RARITY_BADGE_CLASS[myBadgeRarity] : ''}`} style={{ color: myBadgeRarity ? RARITY_COLORS[myBadgeRarity] : 'var(--c-muted)' }}>{myBadgeName}</div>}
               </div>
               <div className={`text-xs tracking-widest shrink-0 ${ready ? 'text-[var(--c-primary)]' : 'text-[var(--c-muted)]'}`}>
@@ -930,7 +942,7 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
                 {opponentBadgeIcon ?? '●'}
               </div>
               <div className="flex-1 text-left min-w-0">
-                <div className="font-black tracking-wide truncate" style={{ color: opponentThemeColor }}>{opponentName}</div>
+                <div className="font-black tracking-wide truncate">{renderName(opponentName, opponentNameEffect, opponentThemeColor)}</div>
                 {opponentBadgeName && <div className={`text-[10px] tracking-widest ${opponentBadgeRarity ? RARITY_BADGE_CLASS[opponentBadgeRarity] : ''}`} style={{ color: opponentBadgeRarity ? RARITY_COLORS[opponentBadgeRarity] : opponentThemeColor }}>{opponentBadgeName}</div>}
               </div>
               <div className={`text-xs tracking-widest shrink-0 ${opponentReady ? 'text-[var(--c-primary)]' : 'text-[var(--c-muted)] animate-pulse'}`}>
@@ -1004,7 +1016,7 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
         <div className="w-full term-border px-3 py-2">
           <div className="flex items-center justify-between text-sm font-mono">
             <span className="text-[var(--c-secondary)]">
-              <span style={{ color: opponentThemeColor }}>OPP:</span> {opponentBadgeIcon && <span className={opponentBadgeRarity ? RARITY_BADGE_CLASS[opponentBadgeRarity] : ''} style={{ color: opponentThemeColor }}>{opponentBadgeIcon} </span>}<span style={{ color: opponentThemeColor }}>{opponentName}</span>
+              <span style={{ color: opponentThemeColor }}>OPP:</span> {opponentBadgeIcon && <span className={opponentBadgeRarity ? RARITY_BADGE_CLASS[opponentBadgeRarity] : ''} style={{ color: opponentThemeColor }}>{opponentBadgeIcon} </span>}{renderName(opponentName, opponentNameEffect, opponentThemeColor)}
               {opponentBadgeName && <span className={`ml-1.5 text-xs ${opponentBadgeRarity ? RARITY_BADGE_CLASS[opponentBadgeRarity] : ''}`} style={{ color: opponentBadgeRarity ? RARITY_COLORS[opponentBadgeRarity] : opponentThemeColor }}>[{opponentBadgeName}]</span>}
             </span>
             <div className="flex items-center gap-2">
@@ -1083,7 +1095,7 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
         </div>
         <div className="flex items-center gap-2">
           {myBadgeIcon && <span className={`text-[var(--c-primary)] ${myBadgeRarity ? RARITY_BADGE_CLASS[myBadgeRarity] : ''}`}>{myBadgeIcon}</span>}
-          <span className="text-[var(--c-primary)] font-bold text-base">{myName}</span>
+          <span className="font-bold text-base">{renderName(myName, myNameEffect, 'var(--c-primary)')}</span>
           {myBadgeName && <span className={`text-xs ${myBadgeRarity ? RARITY_BADGE_CLASS[myBadgeRarity] : ''}`} style={{ color: myBadgeRarity ? RARITY_COLORS[myBadgeRarity] : 'var(--c-primary)' }}>[{myBadgeName}]</span>}
           <ProgressSquares completed={myProgress} total={H2H_CARDS_PER_MATCH} />
           <span className="text-[var(--c-primary)] text-sm">{myProgress}/{H2H_CARDS_PER_MATCH}</span>
@@ -1095,7 +1107,7 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
         <div className="flex items-center justify-between font-mono">
           <div className="flex items-center gap-2">
             {opponentBadgeIcon && <span className={opponentBadgeRarity ? RARITY_BADGE_CLASS[opponentBadgeRarity] : ''} style={{ color: opponentThemeColor }}>{opponentBadgeIcon}</span>}
-            <span className="font-bold text-base" style={{ color: opponentThemeColor }}>{opponentName}</span>
+            <span className="font-bold text-base">{renderName(opponentName, opponentNameEffect, opponentThemeColor)}</span>
             {opponentBadgeName && <span className={`text-xs ${opponentBadgeRarity ? RARITY_BADGE_CLASS[opponentBadgeRarity] : ''}`} style={{ color: opponentBadgeRarity ? RARITY_COLORS[opponentBadgeRarity] : opponentThemeColor }}>[{opponentBadgeName}]</span>}
           </div>
           <div className="flex items-center gap-2">

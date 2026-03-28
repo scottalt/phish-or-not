@@ -75,15 +75,16 @@ export async function GET(
     .select('id, display_name, featured_badge, featured_badges, theme_id')
     .in('id', playerIds);
 
-  const playerMap: Record<string, { displayName: string; featuredBadge: string | null; themeColor: string }> = {};
+  const playerMap: Record<string, { displayName: string; featuredBadge: string | null; themeColor: string; nameEffect: string | null }> = {};
   for (const p of players ?? []) {
-    // PvP badge: first item in featured_badges array, falling back to legacy featured_badge column
     const badges = p.featured_badges as string[] | null;
     const pvpBadge = badges?.[0] ?? p.featured_badge ?? null;
+    const theme = THEMES.find(t => t.id === (p.theme_id ?? 'phosphor'));
     playerMap[p.id] = {
       displayName: p.display_name,
       featuredBadge: pvpBadge,
-      themeColor: THEMES.find(t => t.id === (p.theme_id ?? 'phosphor'))?.colors.primary ?? '#00ff41',
+      themeColor: theme?.colors.primary ?? '#00ff41',
+      nameEffect: theme?.nameEffect ?? null,
     };
   }
 

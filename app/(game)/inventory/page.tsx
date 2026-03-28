@@ -166,8 +166,8 @@ export default function InventoryPage() {
         {/* Tab content */}
         {tab === 'themes' && (
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-            {THEMES.map((t) => {
-              const unlocked = isThemeUnlocked(t, profile.level, profile.researchGraduated);
+            {THEMES.filter((t) => !t.hidden || profile.themeId === t.id).map((t) => {
+              const unlocked = isThemeUnlocked(t, profile.level, profile.researchGraduated, profile.themeId);
               const isActive = activeTheme.id === t.id;
               return (
                 <button

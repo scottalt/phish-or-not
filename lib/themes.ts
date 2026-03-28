@@ -16,6 +16,8 @@ export interface ThemeDef {
   unlockLevel: number;
   unlockLabel: string;
   colors: ThemeColors;
+  nameEffect?: 'rainbow';  // special PVP name animation
+  hidden?: boolean;         // hidden from theme list unless equipped
 }
 
 export const THEMES: ThemeDef[] = [
@@ -121,13 +123,35 @@ export const THEMES: ThemeDef[] = [
       accentDim: '#cc8800',
     },
   },
+  {
+    id: 'singularity',
+    name: 'SINGULARITY',
+    subtitle: 'Beyond the event horizon',
+    unlockLevel: 99, // unreachable — admin-granted only
+    unlockLabel: '???',
+    nameEffect: 'rainbow',
+    hidden: true,
+    colors: {
+      primary: '#ffffff',
+      secondary: '#bb99ff',
+      muted: '#6644aa',
+      dark: '#331a66',
+      bg: '#0a0610',
+      bgAlt: '#060410',
+      accent: '#ff0080',
+      accentDim: '#cc0066',
+    },
+  },
 ];
 
 export function getThemeById(id: string): ThemeDef {
   return THEMES.find((t) => t.id === id) ?? THEMES[0];
 }
 
-export function isThemeUnlocked(theme: ThemeDef, playerLevel: number, graduated: boolean): boolean {
-  if (theme.id === 'phosphor') return true; // default always available
+export function isThemeUnlocked(theme: ThemeDef, playerLevel: number, graduated: boolean, playerThemeId?: string): boolean {
+  if (theme.id === 'phosphor') return true;
+  // Admin-granted themes: if it's the player's current theme, it's unlocked
+  if (playerThemeId === theme.id) return true;
+  if (theme.hidden) return false; // hidden themes can't be earned
   return graduated && playerLevel >= theme.unlockLevel;
 }
