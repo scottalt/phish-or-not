@@ -297,18 +297,14 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
       // Show milestone via SigintContext (renders from layout, not StartScreen)
       triggerSigint(pendingMilestone);
       // Queue bonus milestones behind it (level, sessions)
-      if (profile.level >= 30) triggerSigint('max_level');
-      else if (profile.level >= 28) triggerSigint('level_28');
-      else if (profile.level >= 25) triggerSigint('level_25');
-      else if (profile.level >= 22) triggerSigint('level_22');
-      else if (profile.level >= 20) triggerSigint('level_20');
-      else if (profile.level >= 18) triggerSigint('level_18');
-      else if (profile.level >= 15) triggerSigint('level_15');
-      else if (profile.level >= 13) triggerSigint('level_13');
-      else if (profile.level >= 10) triggerSigint('level_10');
-      else if (profile.level >= 7) triggerSigint('level_7');
-      else if (profile.level >= 5) triggerSigint('level_5');
-      else if (profile.level >= 3) triggerSigint('level_3');
+      // Level moments: only fire for exact milestone levels (not >=)
+      const levelMoments: Record<number, string> = {
+        3: 'level_3', 5: 'level_5', 7: 'level_7', 10: 'level_10',
+        13: 'level_13', 15: 'level_15', 18: 'level_18', 20: 'level_20',
+        22: 'level_22', 25: 'level_25', 28: 'level_28', 30: 'max_level',
+      };
+      const levelMoment = levelMoments[profile.level];
+      if (levelMoment) triggerSigint(levelMoment);
       if (profile.totalSessions >= 7) triggerSigint('played_7_days');
       return;
     }
@@ -318,18 +314,14 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
     const lastGreeted = Number(sessionStorage.getItem('sigint_greeted') ?? '0');
     if (answers > 0 && lastGreeted && Date.now() - lastGreeted < 2 * 60 * 60 * 1000) {
       // Even without greeting, check bonus milestones
-      if (profile.level >= 30) triggerSigint('max_level');
-      else if (profile.level >= 28) triggerSigint('level_28');
-      else if (profile.level >= 25) triggerSigint('level_25');
-      else if (profile.level >= 22) triggerSigint('level_22');
-      else if (profile.level >= 20) triggerSigint('level_20');
-      else if (profile.level >= 18) triggerSigint('level_18');
-      else if (profile.level >= 15) triggerSigint('level_15');
-      else if (profile.level >= 13) triggerSigint('level_13');
-      else if (profile.level >= 10) triggerSigint('level_10');
-      else if (profile.level >= 7) triggerSigint('level_7');
-      else if (profile.level >= 5) triggerSigint('level_5');
-      else if (profile.level >= 3) triggerSigint('level_3');
+      // Level moments: only fire for exact milestone levels (not >=)
+      const levelMoments: Record<number, string> = {
+        3: 'level_3', 5: 'level_5', 7: 'level_7', 10: 'level_10',
+        13: 'level_13', 15: 'level_15', 18: 'level_18', 20: 'level_20',
+        22: 'level_22', 25: 'level_25', 28: 'level_28', 30: 'max_level',
+      };
+      const levelMoment = levelMoments[profile.level];
+      if (levelMoment) triggerSigint(levelMoment);
       if (profile.totalSessions >= 7) triggerSigint('played_7_days');
       return;
     }
@@ -530,18 +522,14 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
             setShowHandlerGreeting(false);
             // After greeting, fire bonus milestones (level, sessions) via SigintContext queue
             setTimeout(() => {
-              if (profile && profile.level >= 30) triggerSigint('max_level');
-              else if (profile && profile.level >= 28) triggerSigint('level_28');
-              else if (profile && profile.level >= 25) triggerSigint('level_25');
-              else if (profile && profile.level >= 22) triggerSigint('level_22');
-              else if (profile && profile.level >= 20) triggerSigint('level_20');
-              else if (profile && profile.level >= 18) triggerSigint('level_18');
-              else if (profile && profile.level >= 15) triggerSigint('level_15');
-              else if (profile && profile.level >= 13) triggerSigint('level_13');
-              else if (profile && profile.level >= 10) triggerSigint('level_10');
-              else if (profile && profile.level >= 7) triggerSigint('level_7');
-              else if (profile && profile.level >= 5) triggerSigint('level_5');
-              else if (profile && profile.level >= 3) triggerSigint('level_3');
+              // Level moments: only fire for exact milestone levels
+              const lvlMoments: Record<number, string> = {
+                3: 'level_3', 5: 'level_5', 7: 'level_7', 10: 'level_10',
+                13: 'level_13', 15: 'level_15', 18: 'level_18', 20: 'level_20',
+                22: 'level_22', 25: 'level_25', 28: 'level_28', 30: 'max_level',
+              };
+              const lvlMoment = profile ? lvlMoments[profile.level] : undefined;
+              if (lvlMoment) triggerSigint(lvlMoment);
               if (profile && profile.totalSessions >= 7) triggerSigint('played_7_days');
             }, 300);
           }}
