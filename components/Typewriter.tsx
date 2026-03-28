@@ -14,7 +14,8 @@ interface Props {
 }
 
 /** Typewriter text effect — characters appear one by one with optional cursor and sound */
-export function Typewriter({ text, speed = 30, delay = 0, onComplete, className, cursor = true, sound = false }: Props) {
+export function Typewriter({ text: rawText, speed = 30, delay = 0, onComplete, className, cursor = true, sound = false }: Props) {
+  const text = rawText ?? '';
   const [displayed, setDisplayed] = useState('');
   const [started, setStarted] = useState(false);
   const [done, setDone] = useState(false);
