@@ -11,12 +11,12 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  */
 export async function POST(req: NextRequest) {
   try {
-    // Rate limit: 10 requests per IP per hour
+    // Rate limit: 50 requests per IP per hour
     const ip = getClientIp(req);
     const rlKey = `ratelimit:ensure-user:${ip}`;
     const rlCount = await redis.incr(rlKey);
     if (rlCount === 1) await redis.expire(rlKey, 60 * 60);
-    if (rlCount > 10) {
+    if (rlCount > 50) {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
     }
 
