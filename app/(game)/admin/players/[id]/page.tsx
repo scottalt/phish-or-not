@@ -46,6 +46,7 @@ export default function AdminPlayerDetail() {
   const [actionMsg, setActionMsg] = useState<string | null>(null);
   const [msgLines, setMsgLines] = useState('');
   const [msgButton, setMsgButton] = useState('ACKNOWLEDGED');
+  const [msgAchievement, setMsgAchievement] = useState('');
   const [sendingMsg, setSendingMsg] = useState(false);
 
   function fetchPlayer() {
@@ -426,24 +427,53 @@ export default function AdminPlayerDetail() {
               className="flex-1 bg-transparent border border-[color-mix(in_srgb,var(--c-primary)_20%,transparent)] px-2 py-1.5 text-[var(--c-primary)] font-mono text-sm focus:outline-none"
             />
           </div>
+          {/* Achievement award (optional) */}
+          <div className="space-y-1">
+            <div className="text-[var(--c-secondary)] text-xs font-mono">AWARD ACHIEVEMENT (optional)</div>
+            <select
+              value={msgAchievement}
+              onChange={(e) => setMsgAchievement(e.target.value)}
+              className="w-full bg-[var(--c-bg)] border border-[color-mix(in_srgb,var(--c-primary)_20%,transparent)] px-2 py-2 text-[var(--c-primary)] font-mono text-xs focus:outline-none"
+            >
+              <option value="">No achievement</option>
+              {ACHIEVEMENTS.map((a) => (
+                <option key={a.id} value={a.id}>{a.icon} {a.name} ({a.rarity})</option>
+              ))}
+            </select>
+            {msgAchievement && (() => {
+              const ach = ACHIEVEMENTS.find((a) => a.id === msgAchievement);
+              if (!ach) return null;
+              const color = RARITY_COLORS[ach.rarity as AchievementRarity];
+              return (
+                <div className="flex items-center gap-2 px-2 py-1 border border-dashed" style={{ borderColor: `${color}40` }}>
+                  <span style={{ color }}>{ach.icon}</span>
+                  <span className="text-xs font-mono" style={{ color }}>{ach.name}</span>
+                  <span className="text-[var(--c-dark)] text-[10px] font-mono">{ach.rarity}</span>
+                </div>
+              );
+            })()}
+          </div>
+
           <button
             onClick={async () => {
               const lines = msgLines.split('\n').filter((l) => l.trim());
               if (lines.length === 0) return;
               setSendingMsg(true);
+              const body: Record<string, unknown> = { targetPlayerId: id, lines, buttonText: msgButton || 'ACKNOWLEDGED' };
+              if (msgAchievement) body.achievementId = msgAchievement;
               const res = await fetch('/api/admin/messages', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ targetPlayerId: id, lines, buttonText: msgButton || 'ACKNOWLEDGED' }),
+                body: JSON.stringify(body),
               });
-              if (res.ok) { setActionMsg('MESSAGE SENT'); setMsgLines(''); }
+              if (res.ok) { setActionMsg(msgAchievement ? 'MESSAGE + ACHIEVEMENT SENT' : 'MESSAGE SENT'); setMsgLines(''); setMsgAchievement(''); }
               else setActionMsg('SEND FAILED');
               setSendingMsg(false);
             }}
             disabled={sendingMsg || !msgLines.trim()}
             className="w-full py-3 term-border text-[var(--c-accent)] font-mono text-xs tracking-widest hover:bg-[color-mix(in_srgb,var(--c-accent)_5%,transparent)] disabled:opacity-40 transition-all"
           >
-            {sendingMsg ? 'SENDING...' : '[ SEND TO THIS PLAYER ]'}
+            {sendingMsg ? 'SENDING...' : msgAchievement ? '[ SEND MESSAGE + AWARD BADGE ]' : '[ SEND TO THIS PLAYER ]'}
           </button>
         </div>
       )}

@@ -28,7 +28,7 @@ export async function GET() {
   // that haven't been seen yet and haven't expired
   const { data: messages, error } = await admin
     .from('admin_messages')
-    .select('id, lines, button_text, target_player_id, created_at, expires_at')
+    .select('id, lines, button_text, target_player_id, created_at, expires_at, achievement_id')
     .or(`target_player_id.eq.${playerId},target_player_id.is.null`)
     .eq('archived', false)
     .order('created_at', { ascending: false });
@@ -52,6 +52,7 @@ export async function GET() {
     lines: m.lines,
     buttonText: m.button_text,
     isGlobal: !m.target_player_id,
+    achievementId: m.achievement_id ?? null,
     createdAt: m.created_at,
   }));
 
@@ -63,7 +64,7 @@ export async function POST(req: Request) {
   const playerId = await getPlayerId();
   if (!playerId) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
-  const { messageId } = await req.json();
+  const { messageId, grantAchievement } = await req.json();
   if (!messageId) return NextResponse.json({ error: 'messageId required' }, { status: 400 });
 
   const admin = getSupabaseAdminClient();
@@ -71,6 +72,18 @@ export async function POST(req: Request) {
     { message_id: messageId, player_id: playerId },
     { onConflict: 'message_id,player_id' },
   );
+
+  // Grant achievement if the message includes one
+  if (grantAchievement && typeof grantAchievement === 'string') {
+    // Verify the message actually has this achievement (prevent spoofing)
+    const { data: msg } = await admin.from('admin_messages').select('achievement_id').eq('id', messageId).single();
+    if (msg?.achievement_id === grantAchievement) {
+      await admin.from('player_achievements').upsert(
+        { player_id: playerId, achievement_id: grantAchievement, unlocked_at: new Date().toISOString() },
+        { onConflict: 'player_id,achievement_id' },
+      );
+    }
+  }
 
   return NextResponse.json({ ok: true });
 }

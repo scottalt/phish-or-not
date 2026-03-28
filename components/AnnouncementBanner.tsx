@@ -3,12 +3,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { usePlayer } from '@/lib/usePlayer';
 import { useSigint } from '@/lib/SigintContext';
+import { ACHIEVEMENTS, RARITY_COLORS, type AchievementRarity } from '@/lib/achievements';
 
 interface AdminMessage {
   id: string;
   lines: string[];
   buttonText: string;
   isGlobal: boolean;
+  achievementId: string | null;
   createdAt: string;
 }
 
@@ -48,10 +50,31 @@ export function AnnouncementBanner() {
         // Queue all targeted messages through SigintContext (shares the overlay queue with moments)
         const targeted = msgs.filter((m) => !m.isGlobal);
         for (const msg of targeted) {
+          // Look up achievement for reveal card
+          const achDef = msg.achievementId ? ACHIEVEMENTS.find((a) => a.id === msg.achievementId) : null;
+          const reveal = achDef ? {
+            icon: achDef.icon,
+            name: achDef.name,
+            description: achDef.description,
+            rarity: achDef.rarity,
+            color: RARITY_COLORS[achDef.rarity as AchievementRarity],
+          } : null;
+
           triggerCustom(
             msg.lines.map(substituteVars),
             msg.buttonText,
-            () => markSeen(msg),
+            () => {
+              markSeen(msg);
+              // Grant the achievement on dismiss
+              if (msg.achievementId) {
+                fetch('/api/player/messages', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ messageId: msg.id, grantAchievement: msg.achievementId }),
+                }).catch(() => {});
+              }
+            },
+            reveal,
           );
         }
 

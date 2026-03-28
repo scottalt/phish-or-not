@@ -5,10 +5,19 @@ import { Typewriter } from './Typewriter';
 import { playBootTick } from '@/lib/sounds';
 import { useSoundEnabled } from '@/lib/useSoundEnabled';
 
+export interface AchievementReveal {
+  icon: string;
+  name: string;
+  description: string;
+  rarity: string;
+  color: string;
+}
+
 interface Props {
   lines: string[];
   buttonText?: string;
   onDismiss: () => void;
+  achievementReveal?: AchievementReveal | null;
 }
 
 /**
@@ -16,7 +25,7 @@ interface Props {
  * Shows one message at a time. Player taps NEXT to advance.
  * Final message shows a custom button to dismiss.
  */
-export function Handler({ lines: rawLines, buttonText = 'CONTINUE', onDismiss }: Props) {
+export function Handler({ lines: rawLines, buttonText = 'CONTINUE', onDismiss, achievementReveal }: Props) {
   // Guard against undefined/empty lines (prevents crash if dialogue key is missing)
   const lines = rawLines?.length ? rawLines : ['...'];
   const [currentLine, setCurrentLine] = useState(0);
@@ -73,6 +82,49 @@ export function Handler({ lines: rawLines, buttonText = 'CONTINUE', onDismiss }:
             />
           </div>
         </div>
+
+        {/* Achievement reveal — shows on last line when typing is done */}
+        {typingDone && isLastLine && achievementReveal && (
+          <div className="px-4 pb-2 anim-fade-in-up">
+            <div
+              className="border-2 px-4 py-4 text-center space-y-2"
+              style={{
+                borderColor: achievementReveal.color,
+                boxShadow: `0 0 20px ${achievementReveal.color}40, 0 0 60px ${achievementReveal.color}15, inset 0 0 30px ${achievementReveal.color}08`,
+              }}
+            >
+              <div className="text-[var(--c-muted)] text-[10px] font-mono tracking-[0.3em]">ACHIEVEMENT UNLOCKED</div>
+              <div
+                className="text-4xl py-2"
+                style={{
+                  color: achievementReveal.color,
+                  textShadow: `0 0 12px ${achievementReveal.color}90, 0 0 30px ${achievementReveal.color}40, 0 0 60px ${achievementReveal.color}20`,
+                  animation: 'badge-mythic-shimmer 2.5s ease-in-out infinite',
+                }}
+              >
+                {achievementReveal.icon}
+              </div>
+              <div
+                className="text-lg font-mono font-black tracking-widest"
+                style={{
+                  color: achievementReveal.color,
+                  textShadow: `0 0 8px ${achievementReveal.color}60, 0 0 20px ${achievementReveal.color}25`,
+                }}
+              >
+                {achievementReveal.name}
+              </div>
+              <div className="text-[var(--c-secondary)] text-xs font-mono leading-relaxed">
+                {achievementReveal.description}
+              </div>
+              <div
+                className="text-[10px] font-mono tracking-[0.2em] uppercase mt-1"
+                style={{ color: achievementReveal.color }}
+              >
+                {achievementReveal.rarity}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Next / Final button */}
         {typingDone && (

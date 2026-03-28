@@ -50,6 +50,7 @@ export async function GET(req: NextRequest) {
       seenCount: count ?? 0,
       isGlobal: !msg.target_player_id,
       archived: msg.archived ?? false,
+      achievementId: msg.achievement_id ?? null,
     };
   }));
 
@@ -62,7 +63,7 @@ export async function POST(req: NextRequest) {
   if (denied) return denied;
 
   const body = await req.json();
-  const { targetPlayerId, lines, buttonText, expiresAt } = body;
+  const { targetPlayerId, lines, buttonText, expiresAt, achievementId } = body;
 
   if (!lines || !Array.isArray(lines) || lines.length === 0) {
     return NextResponse.json({ error: 'lines required (array of strings)' }, { status: 400 });
@@ -81,6 +82,7 @@ export async function POST(req: NextRequest) {
     lines: lines.map((l: unknown) => String(l)),
     button_text: buttonText || 'ACKNOWLEDGED',
     expires_at: expiresAt || null,
+    achievement_id: achievementId || null,
   }).select('id').single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

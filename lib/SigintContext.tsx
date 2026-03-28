@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useCallback, useRef, type ReactNode } from 'react';
-import { Handler } from '@/components/Handler';
+import { Handler, type AchievementReveal } from '@/components/Handler';
 import { ALL_DIALOGUES } from '@/lib/sigint-personality';
 import { usePlayer } from '@/lib/usePlayer';
 import { playerGet, playerSet } from '@/lib/player-storage';
@@ -10,7 +10,7 @@ interface SigintContextValue {
   /** Trigger a SIGINT dialogue by moment ID. Only shows once per player (tracked in DB). */
   triggerSigint: (momentId: string) => void;
   /** Trigger a custom dialogue with raw lines (not tracked as a moment). onDismiss called after. */
-  triggerCustom: (lines: string[], buttonText: string, onDismiss?: () => void) => void;
+  triggerCustom: (lines: string[], buttonText: string, onDismiss?: () => void, achievement?: AchievementReveal | null) => void;
   /** Whether SIGINT is currently showing */
   isShowing: boolean;
 }
@@ -27,7 +27,7 @@ export function useSigint() {
 
 type QueueItem =
   | { type: 'moment'; id: string }
-  | { type: 'custom'; lines: string[]; buttonText: string; onDismiss?: () => void };
+  | { type: 'custom'; lines: string[]; buttonText: string; onDismiss?: () => void; achievement?: AchievementReveal | null };
 
 export function SigintProvider({ children }: { children: ReactNode }) {
   const { profile, refreshProfile } = usePlayer();
@@ -37,6 +37,7 @@ export function SigintProvider({ children }: { children: ReactNode }) {
   const queueRef = useRef<QueueItem[]>([]);
   const activeRef = useRef<string | null>(null);
   const customDismissRef = useRef<(() => void) | null>(null);
+  const [achievementReveal, setAchievementReveal] = useState<AchievementReveal | null>(null);
 
   function showItem(item: QueueItem) {
     if (item.type === 'moment') {
@@ -46,6 +47,7 @@ export function SigintProvider({ children }: { children: ReactNode }) {
       customDismissRef.current = null;
       setLines(dialogue.lines);
       setButtonText(dialogue.buttonText ?? 'CONTINUE');
+      setAchievementReveal(null);
       setActiveMoment(item.id);
       return true;
     } else {
@@ -53,6 +55,7 @@ export function SigintProvider({ children }: { children: ReactNode }) {
       customDismissRef.current = item.onDismiss ?? null;
       setLines(item.lines);
       setButtonText(item.buttonText);
+      setAchievementReveal(item.achievement ?? null);
       setActiveMoment('__custom__');
       return true;
     }
@@ -77,8 +80,8 @@ export function SigintProvider({ children }: { children: ReactNode }) {
     showItem(item);
   }, [profile?.seenMoments]);
 
-  const triggerCustom = useCallback((customLines: string[], customButtonText: string, onDismiss?: () => void) => {
-    const item: QueueItem = { type: 'custom', lines: customLines, buttonText: customButtonText, onDismiss };
+  const triggerCustom = useCallback((customLines: string[], customButtonText: string, onDismiss?: () => void, achievement?: AchievementReveal | null) => {
+    const item: QueueItem = { type: 'custom', lines: customLines, buttonText: customButtonText, onDismiss, achievement };
 
     if (activeRef.current !== null) {
       queueRef.current.push(item);
@@ -119,6 +122,7 @@ export function SigintProvider({ children }: { children: ReactNode }) {
     customDismissRef.current = null;
     setActiveMoment(null);
     setLines([]);
+    setAchievementReveal(null);
 
     // Fire custom dismiss callback (e.g., mark admin message as seen)
     if (wasCustom && dismissCb) dismissCb();
@@ -134,6 +138,7 @@ export function SigintProvider({ children }: { children: ReactNode }) {
           lines={lines}
           buttonText={buttonText}
           onDismiss={handleDismiss}
+          achievementReveal={achievementReveal}
         />
       )}
     </SigintContext.Provider>
