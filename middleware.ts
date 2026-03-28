@@ -52,7 +52,7 @@ export async function middleware(req: NextRequest) {
     (pathname.startsWith('/api/player/admin') && pathname !== '/api/player/admin-check');
 
   if (isAdminRoute) {
-    const adminUserId = process.env.ADMIN_USER_ID;
+    const adminUserId = process.env.ADMIN_USER_ID?.trim();
     if (!adminUserId || user?.id !== adminUserId) {
       return new NextResponse(null, { status: 404 });
     }

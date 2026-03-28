@@ -3,7 +3,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
 export function isAdminUser(authId: string | null | undefined): boolean {
-  const adminUserId = process.env.ADMIN_USER_ID;
+  const adminUserId = process.env.ADMIN_USER_ID?.trim();
   return !!adminUserId && !!authId && authId === adminUserId;
 }
 
