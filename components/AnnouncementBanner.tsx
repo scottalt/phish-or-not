@@ -16,6 +16,7 @@ export function AnnouncementBanner() {
   const { signedIn } = usePlayer();
   const [messages, setMessages] = useState<AdminMessage[]>([]);
   const [globalBanner, setGlobalBanner] = useState<AdminMessage | null>(null);
+  const [allGlobals, setAllGlobals] = useState<AdminMessage[]>([]);
   const [sigintMessage, setSigintMessage] = useState<AdminMessage | null>(null);
   const [bannerVisible, setBannerVisible] = useState(false);
   const [bannerDismissed, setBannerDismissed] = useState(false);
@@ -35,18 +36,22 @@ export function AnnouncementBanner() {
         const targeted = msgs.find((m) => !m.isGlobal);
         if (targeted) setSigintMessage(targeted);
 
-        const global = msgs.find((m) => m.isGlobal);
-        if (global) {
-          setGlobalBanner(global);
+        const globals = msgs.filter((m) => m.isGlobal);
+        if (globals.length > 0) {
+          setGlobalBanner(globals[0]); // store first for dismiss tracking
+          setAllGlobals(globals);
           setTimeout(() => setBannerVisible(true), 2000);
           // Auto-dismiss after 3 full scroll passes (20s each = 60s) + 2s entry delay
           setTimeout(() => {
             setBannerDismissed(true);
-            fetch('/api/player/messages', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ messageId: global.id }),
-            }).catch(() => {});
+            // Mark all globals as seen
+            for (const g of globals) {
+              fetch('/api/player/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messageId: g.id }),
+              }).catch(() => {});
+            }
           }, 62000);
         }
       })
@@ -73,13 +78,13 @@ export function AnnouncementBanner() {
   }
 
   function handleBannerDismiss() {
-    if (globalBanner) dismissMessage(globalBanner);
+    for (const g of allGlobals) dismissMessage(g);
     setBannerDismissed(true);
   }
 
-  // Combine all global message lines into one ticker string
-  const tickerText = globalBanner
-    ? `⚡ SIGINT — ${globalBanner.lines.join('  ·  ')}`
+  // Concatenate all global messages into one ticker string
+  const tickerText = allGlobals.length > 0
+    ? allGlobals.map((g) => `⚡ ${g.lines.join('  ·  ')}`).join('     ///     ')
     : '';
 
   return (
