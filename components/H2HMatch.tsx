@@ -596,7 +596,7 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
                 fetch(`/api/h2h/match/${matchId}`, {
                   method: 'PATCH',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ action: 'complete', winnerId: playerId }),
+                  body: JSON.stringify({ action: 'complete', winnerId: playerId, botCards: i, botTimeMs: Math.round(totalElapsed + thinkDelay) }),
                   keepalive: true,
                 });
               } catch { /* best effort */ }
@@ -628,7 +628,7 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
                 fetch(`/api/h2h/match/${matchId}`, {
                   method: 'PATCH',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ action: 'complete', winnerId: opponentIdRef.current }),
+                  body: JSON.stringify({ action: 'complete', winnerId: opponentIdRef.current, botCards: H2H_CARDS_PER_MATCH, botTimeMs: Math.round(capturedElapsed) }),
                   keepalive: true,
                 });
               } catch { /* best effort */ }

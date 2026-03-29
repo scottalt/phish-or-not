@@ -302,6 +302,17 @@ export async function PATCH(
   const resolvedWinnerId = humanWon ? player.id : (opponentId ?? null);
   const resolvedLoserId = humanWon ? (opponentId ?? null) : player.id;
 
+  // Write bot's simulated progress to match record (for result screen display)
+  const botCards = typeof body.botCards === 'number' ? body.botCards : null;
+  const botTimeMs = typeof body.botTimeMs === 'number' ? body.botTimeMs : null;
+  if (botCards !== null || botTimeMs !== null) {
+    const isPlayer1 = completeMatch.player1_id === player.id;
+    await admin.from('h2h_matches').update({
+      ...(botCards !== null && { [isPlayer1 ? 'player2_cards_completed' : 'player1_cards_completed']: botCards }),
+      ...(botTimeMs !== null && { [isPlayer1 ? 'player2_time_ms' : 'player1_time_ms']: botTimeMs }),
+    }).eq('id', id);
+  }
+
   // Route through finalizeMatch for ranked resolution (persistent bots)
   // For ghost matches, finalizeMatch handles the ghost_match branch
   await finalizeMatch(id, resolvedWinnerId, resolvedLoserId);
