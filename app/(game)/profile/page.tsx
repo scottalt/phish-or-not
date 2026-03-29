@@ -1437,7 +1437,7 @@ export default function ProfilePage() {
             </a>
             <Link
               href="/settings"
-              className="text-[var(--c-secondary)] text-xs font-mono opacity-70 hover:opacity-100 underline transition-all"
+              className="block text-[var(--c-secondary)] text-xs font-mono opacity-70 hover:opacity-100 underline transition-all"
             >
               Settings
             </Link>
