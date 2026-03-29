@@ -14,7 +14,7 @@ import {
 } from '@/lib/h2h-realtime';
 import type { MatchProgressEvent, MatchResultEvent } from '@/lib/h2h-realtime';
 import { ACHIEVEMENTS, RARITY_BADGE_CLASS, RARITY_COLORS, type AchievementRarity } from '@/lib/achievements';
-import { playOpponentDown, playCountdownBeep, playCountdownGo } from '@/lib/sounds';
+import { playOpponentDown, playCountdownBeep, playCountdownGo, playCorrect, playWrong } from '@/lib/sounds';
 import { useSoundEnabled } from '@/lib/useSoundEnabled';
 
 // ---------------------------------------------------------------------------
@@ -696,8 +696,9 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
         }
 
         if (data.correct) {
-          // Brief green flash for correct answer feedback
+          // Brief green flash + sound for correct answer feedback
           setFlash('correct');
+          if (soundEnabled) playCorrect();
           setTimeout(() => setFlash(null), 200);
 
           const nextIndex = cardIndex + 1;
@@ -740,6 +741,7 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
         } else {
           // Wrong answer — match over immediately
           setFlash('wrong');
+          if (soundEnabled) playWrong();
           setTimeout(() => {
             setSubmitting(false);
             if (!matchEndedRef.current) {
