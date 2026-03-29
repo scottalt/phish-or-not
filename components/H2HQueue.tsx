@@ -171,33 +171,23 @@ export function H2HQueue({ profile, onMatchFound, onCancel }: Props) {
     }
   }, [elapsed, joined, cleanup, leaveQueue]);
 
-  // ── Bot match — user-initiated after timeout ──
-  const [botAvailable, setBotAvailable] = useState(false);
-  const [launchingBot, setLaunchingBot] = useState(false);
+  // ── Bot match — auto-trigger silently after timeout ──
+  const botTriggeredRef = useRef(false);
 
   useEffect(() => {
-    if (elapsed >= BOT_TIMEOUT_S && !botAvailable && !matchedRef.current) {
-      setBotAvailable(true);
-    }
-  }, [elapsed, botAvailable]);
-
-  async function handlePlayBot() {
-    if (matchedRef.current || launchingBot) return;
-    setLaunchingBot(true);
+    if (elapsed < BOT_TIMEOUT_S || botTriggeredRef.current || matchedRef.current) return;
+    botTriggeredRef.current = true;
 
     let retryCount = 0;
     const MAX_RETRIES = 10;
 
     async function tryCreateBot(): Promise<void> {
       if (matchedRef.current || !mountedRef.current) return;
-      if (retryCount >= MAX_RETRIES) {
-        if (mountedRef.current) { setError('Could not create a match. Please try again.'); setLaunchingBot(false); }
-        return;
-      }
+      if (retryCount >= MAX_RETRIES) return; // silently give up, queue timeout will handle
       retryCount++;
       try {
         const res = await fetch('/api/h2h/queue/bot', { method: 'POST' });
-        if (!mountedRef.current) return;
+        if (!mountedRef.current || matchedRef.current) return;
         if (res.ok) {
           const data = await res.json();
           if (data.matchId) {
@@ -216,7 +206,7 @@ export function H2HQueue({ profile, onMatchFound, onCancel }: Props) {
     }
 
     tryCreateBot();
-  }
+  }, [elapsed, cleanup, onMatchFound]);
 
   // ── Cancel handler ──
   const handleCancel = useCallback(async () => {
@@ -228,7 +218,6 @@ export function H2HQueue({ profile, onMatchFound, onCancel }: Props) {
 
   // ── Scanning animation dots ──
   const dots = '.'.repeat((elapsed % 3) + 1);
-  const botCountdown = Math.max(0, BOT_TIMEOUT_S - elapsed);
 
   const displayName = profile.displayName ?? 'AGENT';
 
@@ -309,32 +298,12 @@ export function H2HQueue({ profile, onMatchFound, onCancel }: Props) {
             <span className="text-[var(--c-muted)]">
               Queue: <span className="text-[var(--c-primary)]">{elapsed}s</span>
             </span>
-            {!botAvailable && (
-              <span className="text-[var(--c-muted)]">
-                Bot in <span className="text-[var(--c-secondary)]">{botCountdown}s</span>
-              </span>
-            )}
             {ratedMatchesLeft !== null && (
               <span className="text-[var(--c-muted)]">
                 Rated: <span className={ratedMatchesLeft > 0 ? 'text-[var(--c-secondary)]' : 'text-[#ffaa00]'}>{ratedMatchesLeft}</span>
               </span>
             )}
           </div>
-
-          {/* Bot match option — appears after 30s */}
-          {botAvailable && !launchingBot && (
-            <button
-              onClick={handlePlayBot}
-              className="w-full py-3 border-2 border-[rgba(255,170,0,0.5)] text-[var(--c-accent)] text-sm font-mono tracking-widest hover:bg-[rgba(255,170,0,0.06)] active:scale-95 transition-all anim-fade-in"
-            >
-              [ PLAY BOT — UNRATED ]
-            </button>
-          )}
-          {launchingBot && (
-            <div className="text-center text-[var(--c-accent)] text-sm font-mono tracking-widest animate-pulse">
-              LAUNCHING BOT MATCH...
-            </div>
-          )}
 
           {winStreak >= 2 && (
             <div className="text-center">

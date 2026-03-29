@@ -104,7 +104,7 @@ export async function POST() {
       card_ids: [],
       status: 'active',
       is_ghost_match: true,
-      is_rated: false,
+      is_rated: true,
       started_at: new Date().toISOString(),
     })
     .select('id')

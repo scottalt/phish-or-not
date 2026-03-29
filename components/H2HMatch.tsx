@@ -358,7 +358,7 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
           }
         } else if (isBot) {
           const { getRandomBotName } = await import('@/lib/h2h');
-          setOpponentName(getRandomBotName());
+          setOpponentName(getRandomBotName(matchId));
         }
 
         // Set own name + badge
@@ -806,13 +806,12 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
   const [readyTimer, setReadyTimer] = useState(30);
   const [countdown, setCountdown] = useState<number | null>(null);
 
-  // Bot matches skip the lobby and start immediately
+  // Bot matches — simulate opponent readying up after a short random delay
   useEffect(() => {
-    if (isBot && !loading && cards.length > 0) {
-      setReady(true);
-      setOpponentReady(true);
-      setMatchStarted(true);
-    }
+    if (!isBot || loading || cards.length === 0) return;
+    const delay = 1500 + Math.random() * 2500; // 1.5–4s
+    const t = setTimeout(() => setOpponentReady(true), delay);
+    return () => clearTimeout(t);
   }, [isBot, loading, cards.length]);
 
   // Both ready → start dramatic countdown (3, 2, 1, GO), then begin match
@@ -839,7 +838,7 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
 
   // Ready timeout — 30s to accept, otherwise cancel match (no rank point cost)
   useEffect(() => {
-    if (loading || matchStarted || isBot || countdown !== null) return;
+    if (loading || matchStarted || countdown !== null) return;
     const interval = setInterval(() => {
       setReadyTimer((prev) => {
         if (prev <= 1) {
@@ -867,7 +866,7 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [loading, matchStarted, isBot, countdown, onMatchEnd]);
+  }, [loading, matchStarted, countdown, onMatchEnd]);
 
   function handleReady() {
     setReady(true);
@@ -905,7 +904,7 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
   }
 
   // ── Ready-up lobby (rendered as early return — safe because all hooks are above) ──
-  if (!matchStarted && !isBot) {
+  if (!matchStarted) {
     return (
       <div className="flex flex-col items-center gap-4 w-full max-w-sm lg:max-w-lg px-4 pb-safe">
         <div className="w-full term-border bg-[var(--c-bg)]">

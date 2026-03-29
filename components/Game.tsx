@@ -497,16 +497,8 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
           onMatchFound={(matchId, isBot) => {
             setH2HMatchId(matchId);
             setH2HIsBot(isBot);
-            if (isBot) {
-              // Bot gets a random name for the countdown
-              import('@/lib/h2h').then(({ getRandomBotName }) => {
-                setH2HOpponentName(getRandomBotName());
-                setPhase('h2h_countdown');
-              });
-            } else {
-              // Real PvP — go straight to match lobby (accept first, then countdown plays after)
-              setPhase('h2h_match');
-            }
+            // Both bot and real matches go to match lobby (accept → countdown → play)
+            setPhase('h2h_match');
           }}
           onCancel={() => setPhase('start')}
         />

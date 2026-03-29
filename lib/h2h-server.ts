@@ -60,8 +60,8 @@ export async function awardH2HXp(
 
 export async function finalizeMatch(
   matchId: string,
-  winnerId: string,
-  loserId: string,
+  winnerId: string | null,
+  loserId: string | null,
 ) {
   const admin = getSupabaseAdminClient();
 
@@ -76,7 +76,79 @@ export async function finalizeMatch(
     return;
   }
 
-  if (match.is_rated && match.player1_id && match.player2_id) {
+  if (match.is_rated && match.is_ghost_match && match.player1_id) {
+    // ── Rated bot match — award XP + rank to human player ──
+    const humanId = match.player1_id as string;
+    const isWinner = winnerId === humanId;
+
+    const { data: updated } = await admin
+      .from('h2h_matches')
+      .update({
+        status: 'complete',
+        winner_id: winnerId,
+        player1_points_delta: 0, // will be updated below
+        ended_at: new Date().toISOString(),
+      })
+      .eq('id', matchId)
+      .eq('status', 'active')
+      .select('id');
+
+    if (!updated || updated.length === 0) {
+      console.warn(`[finalizeMatch] Bot match ${matchId} already finalized`);
+      return;
+    }
+
+    const { data: playerStats } = await admin
+      .from('h2h_player_stats')
+      .select('*')
+      .eq('player_id', humanId)
+      .eq('season', CURRENT_SEASON)
+      .single();
+
+    const playerPoints = playerStats?.rank_points ?? 0;
+    const playerRank = getRankFromPoints(playerPoints);
+    const today = new Date().toISOString().slice(0, 10);
+    const ratedToday =
+      playerStats?.last_match_date === today
+        ? playerStats.rated_matches_today ?? 0
+        : 0;
+
+    // Treat bot as same-tier opponent
+    const pointsDelta = calculatePointsDelta(
+      playerRank.tier, playerRank.tier, isWinner, ratedToday,
+    );
+
+    await admin.from('h2h_matches')
+      .update({ player1_points_delta: pointsDelta })
+      .eq('id', matchId);
+
+    const { error: rpcErr } = await admin.rpc('update_h2h_stats', {
+      p_player_id: humanId, p_season: CURRENT_SEASON,
+      p_points_delta: pointsDelta, p_is_winner: isWinner, p_today: today,
+    });
+    if (rpcErr) console.error(`[finalizeMatch] Bot match stats RPC failed:`, rpcErr.message);
+
+    // Award XP
+    const { count: correctCount } = await admin
+      .from('h2h_match_answers')
+      .select('id', { count: 'exact', head: true })
+      .eq('match_id', matchId)
+      .eq('player_id', humanId)
+      .eq('correct', true);
+
+    if (ratedToday < 20) {
+      await awardH2HXp(admin, humanId, correctCount ?? 0, isWinner);
+    }
+
+    if (isWinner && (correctCount ?? 0) >= H2H_CARDS_PER_MATCH) {
+      await admin.from('player_achievements').upsert(
+        { player_id: humanId, achievement_id: 'h2h_perfect', unlocked_at: new Date().toISOString() },
+        { onConflict: 'player_id,achievement_id' },
+      );
+    }
+
+    await redis.del(`h2h:bot-lock:${humanId}`);
+  } else if (match.is_rated && match.player1_id && match.player2_id && winnerId && loserId) {
     const { data: winnerStats } = await admin
       .from('h2h_player_stats')
       .select('*')

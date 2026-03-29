@@ -75,15 +75,8 @@ export async function POST(
       return NextResponse.json({ error: 'Not a participant' }, { status: 403 });
     }
     const opponentId = playerId === match.player1_id ? match.player2_id : match.player1_id;
-    if (opponentId) {
-      await finalizeMatch(matchId, opponentId, playerId);
-    } else {
-      // Bot match — cancel and release bot lock
-      await admin.from('h2h_matches')
-        .update({ status: 'cancelled', ended_at: new Date().toISOString() })
-        .eq('id', matchId).eq('status', 'active');
-      await redis.del(`h2h:bot-lock:${playerId}`);
-    }
+    // Forfeit = loss (bot or real match)
+    await finalizeMatch(matchId, opponentId ?? null, playerId);
     return NextResponse.json({ ok: true, forfeited: true });
   }
 
@@ -267,9 +260,7 @@ export async function POST(
       }
 
       // First player to finish all cards wins — finalize immediately
-      if (opponentId) {
-        await finalizeMatch(matchId, playerId, opponentId);
-      }
+      await finalizeMatch(matchId, playerId, opponentId);
 
       return NextResponse.json({
         correct: true,
@@ -295,14 +286,8 @@ export async function POST(
   // ── Wrong answer — check if opponent also got this card wrong ──
 
   if (!opponentId) {
-    // Ghost match — just mark complete, no winner (atomic to prevent double-finalization)
-    await admin.from('h2h_matches').update({
-      status: 'complete',
-      ended_at: new Date().toISOString(),
-    }).eq('id', matchId).eq('status', 'active');
-
-    // Release bot lock so player can queue again immediately
-    await redis.del(`h2h:bot-lock:${playerId}`);
+    // Ghost match — player eliminated, finalize with rank/XP
+    await finalizeMatch(matchId, null, playerId);
 
     return NextResponse.json({
       correct: false,

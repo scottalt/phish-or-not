@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { getRankFromPoints, H2H_CARDS_PER_MATCH } from '@/lib/h2h';
+import { getRankFromPoints, getRandomBotName, H2H_CARDS_PER_MATCH } from '@/lib/h2h';
 import { XP_PER_CORRECT } from '@/lib/xp';
 import type { H2HRank } from '@/lib/h2h';
 import { ACHIEVEMENTS, RARITY_BADGE_CLASS, type AchievementRarity } from '@/lib/achievements';
@@ -101,8 +101,8 @@ export function H2HResult({
     if (!matchData || sigintFired.current) return;
     sigintFired.current = true;
 
-    // Standard SIGINT moments — non-bot only
-    if (!isBot && stats) {
+    // Standard SIGINT moments
+    if (stats) {
       if (isWin) {
         if (matchData.myCards === H2H_CARDS_PER_MATCH) triggerSigint('perfect_match');
         triggerSigint('first_pvp_win');
@@ -135,25 +135,24 @@ export function H2HResult({
     // Rated match cap warnings
     if (stats && stats.ratedMatchesToday >= 20) triggerSigint('h2h_daily_cap');
     else if (stats && stats.ratedMatchesToday >= 10) triggerSigint('h2h_half_rate');
-  }, [matchData, stats, isWin, isLoss, isBot, reason, triggerSigint]);
+  }, [matchData, stats, isWin, isLoss, reason, triggerSigint]);
 
   // Play victory/defeat sound when server data resolves the winner
   const soundPlayed = useRef(false);
   useEffect(() => {
-    if (soundPlayed.current || !soundEnabled) return;
-    if (!matchData && !isBot) return;
+    if (soundPlayed.current || !soundEnabled || !matchData) return;
     soundPlayed.current = true;
     if (isWin) playVictory();
-    else if (!isBot) playDefeat();
-  }, [matchData, isWin, isBot, soundEnabled]);
+    else playDefeat();
+  }, [matchData, isWin, soundEnabled]);
 
   // Play bonus sounds (rank-up, streak) after stats load
   const bonusSoundPlayed = useRef(false);
   useEffect(() => {
-    if (bonusSoundPlayed.current || !soundEnabled || !stats || isBot) return;
+    if (bonusSoundPlayed.current || !soundEnabled || !stats) return;
     bonusSoundPlayed.current = true;
     if (isWin && stats.winStreak >= 3) setTimeout(() => playStreak(), 400);
-  }, [stats, isWin, isBot, soundEnabled]);
+  }, [stats, isWin, soundEnabled]);
 
   useEffect(() => {
     let cancelled = false;
@@ -189,7 +188,7 @@ export function H2HResult({
 
           setMatchData({
             myName: myPlayer?.displayName ?? 'YOU',
-            oppName: oppPlayer?.displayName ?? 'OPPONENT',
+            oppName: oppPlayer?.displayName ?? (isBot ? getRandomBotName(matchId) : 'OPPONENT'),
             myBadgeIcon: myAch?.icon ?? null,
             myBadgeName: myAch?.name ?? null,
             oppBadgeIcon: oppAch?.icon ?? null,
@@ -254,7 +253,7 @@ export function H2HResult({
 
   // Animate rank points counter (count from old to new over 1s)
   useEffect(() => {
-    if (!stats || isBot || displayPoints !== null) return;
+    if (!stats || displayPoints !== null) return;
     const start = Math.max(0, oldPoints);
     const end = stats.rankPoints;
     if (start === end) { setDisplayPoints(end); return; }
@@ -270,7 +269,7 @@ export function H2HResult({
     // Delay start to sync with staged reveal
     const timer = setTimeout(() => requestAnimationFrame(tick), 400);
     return () => clearTimeout(timer);
-  }, [stats, isBot, oldPoints, displayPoints]);
+  }, [stats, oldPoints, displayPoints]);
 
   // Rank-up fanfare sound (delayed to land after points counter finishes)
   const rankUpSoundPlayed = useRef(false);
@@ -365,38 +364,26 @@ export function H2HResult({
             </span>
           </div>
           {/* Opponent */}
-          {!isBot ? (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 min-w-0">
-                {matchData.oppBadgeIcon && <span className={`text-lg ${matchData.oppBadgeRarity ? RARITY_BADGE_CLASS[matchData.oppBadgeRarity] : ''}`} style={{ color: matchData.oppThemeColor }}>{matchData.oppBadgeIcon}</span>}
-                <div className="min-w-0">
-                  <div className="font-bold text-sm truncate" style={{ color: matchData.oppThemeColor }}>{matchData.oppName}</div>
-                  {matchData.oppBadgeName && <div className="text-[10px] tracking-widest" style={{ color: matchData.oppThemeColor, opacity: 0.7 }}>{matchData.oppBadgeName}</div>}
-                </div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 min-w-0">
+              {matchData.oppBadgeIcon && <span className={`text-lg ${matchData.oppBadgeRarity ? RARITY_BADGE_CLASS[matchData.oppBadgeRarity] : ''}`} style={{ color: matchData.oppThemeColor }}>{matchData.oppBadgeIcon}</span>}
+              <div className="min-w-0">
+                <div className="font-bold text-sm truncate" style={{ color: matchData.oppThemeColor }}>{matchData.oppName}</div>
+                {matchData.oppBadgeName && <div className="text-[10px] tracking-widest" style={{ color: matchData.oppThemeColor, opacity: 0.7 }}>{matchData.oppBadgeName}</div>}
               </div>
-              <span className={`text-xs font-mono shrink-0 ${matchData.oppEliminated ? 'text-[#ff3333]' : 'text-[var(--c-secondary)]'}`}>
-                {matchData.oppEliminated
-                  ? `${matchData.oppCards}/${H2H_CARDS_PER_MATCH} eliminated`
-                  : `${matchData.oppCards}/${H2H_CARDS_PER_MATCH} · ${formatTime(matchData.oppTimeMs)}`
-                }
-              </span>
             </div>
-          ) : (
-            <div className="flex items-center justify-between">
-              <span className="text-[var(--c-muted)] text-sm">BOT</span>
-              <span className="text-[var(--c-muted)] text-xs">practice match</span>
-            </div>
-          )}
+            <span className={`text-xs font-mono shrink-0 ${matchData.oppEliminated ? 'text-[#ff3333]' : 'text-[var(--c-secondary)]'}`}>
+              {matchData.oppEliminated
+                ? `${matchData.oppCards}/${H2H_CARDS_PER_MATCH} eliminated`
+                : `${matchData.oppCards}/${H2H_CARDS_PER_MATCH} · ${formatTime(matchData.oppTimeMs)}`
+              }
+            </span>
+          </div>
         </div>
       )}
 
       {/* Rank + Points */}
-      {isBot ? (
-        <div className="term-border bg-[var(--c-bg)] border-[color-mix(in_srgb,var(--c-muted)_30%,transparent)] px-4 py-3 text-center space-y-1">
-          <p className="text-sm text-[var(--c-muted)] tracking-widest font-mono">PRACTICE MATCH</p>
-          <p className="text-xs text-[var(--c-muted)] font-mono">No XP, rank points, or stats awarded. Play against a real opponent for ranked rewards.</p>
-        </div>
-      ) : stats ? (
+      {stats ? (
         <div className="text-center text-sm font-mono anim-fade-in-up" style={{ animationDelay: '300ms', animationFillMode: 'both' }}>
           <p>
             <span style={{ color: oldRank.color }}>{oldRank.label.toUpperCase()}</span>
@@ -420,7 +407,7 @@ export function H2HResult({
       ) : null}
 
       {/* XP Bar + breakdown */}
-      {profile && !isBot && matchData && (() => {
+      {profile && matchData && (() => {
         const correct = matchData.myCards;
         const baseXp = correct * XP_PER_CORRECT;
         const winBonus = isWin ? 20 : 0;

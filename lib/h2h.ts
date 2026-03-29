@@ -20,7 +20,15 @@ const BOT_NAMES = [
   'LOGIC_BOMB', 'TRAP_DOOR', 'FIRE_WALL', 'SAND_BOX', 'HONEY_POT',
 ];
 
-export function getRandomBotName(): string {
+export function getRandomBotName(matchId?: string): string {
+  if (matchId) {
+    // Deterministic: hash matchId to pick a consistent name
+    let hash = 0;
+    for (let i = 0; i < matchId.length; i++) {
+      hash = ((hash << 5) - hash + matchId.charCodeAt(i)) | 0;
+    }
+    return BOT_NAMES[Math.abs(hash) % BOT_NAMES.length];
+  }
   return BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)];
 }
 

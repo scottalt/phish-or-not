@@ -255,22 +255,21 @@ export async function PATCH(
     const p2Cards = cancelMatch.player2_cards_completed ?? 0;
     const isPreGame = p1Cards === 0 && p2Cards === 0;
 
-    if (cancelMatch.is_ghost_match || !cancelMatch.is_rated || isPreGame) {
+    if (!cancelMatch.is_rated || isPreGame) {
+      // Unrated or pre-game — cancel without penalty
       await admin.from('h2h_matches')
         .update({ status: 'cancelled', ended_at: new Date().toISOString() })
         .eq('id', id)
         .eq('status', 'active');
-      await redis.del(`h2h:bot-lock:${player.id}`);
+      if (cancelMatch.is_ghost_match) await redis.del(`h2h:bot-lock:${player.id}`);
       return NextResponse.json({ ok: true });
     }
 
-    // Rated PvP match in progress — treat cancel as forfeit (opponent wins)
+    // Rated match in progress (bot or real) — treat cancel as forfeit
     const opponentId = cancelMatch.player1_id === player.id
       ? cancelMatch.player2_id
       : cancelMatch.player1_id;
-    if (opponentId) {
-      await finalizeMatch(id, opponentId, player.id);
-    }
+    await finalizeMatch(id, opponentId ?? null, player.id);
     return NextResponse.json({ ok: true, forfeited: true });
   }
 
