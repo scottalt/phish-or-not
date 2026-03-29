@@ -33,13 +33,13 @@ function getAudio(): HTMLAudioElement {
 function startMusic() {
   const a = getAudio();
   a.volume = MUSIC_VOLUME;
-  a.play().catch(() => {});
+  if (a.paused) a.play().catch(() => {});
 }
 
 function stopMusic() {
   if (!_audio) return;
-  _audio.volume = 0;
-  // Keep playing silently — some browsers need active audio to keep things alive
+  _audio.pause();
+  _audio.currentTime = 0;
 }
 
 export function TerminalSounds() {
