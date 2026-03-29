@@ -111,9 +111,10 @@ export async function POST() {
     // Query all bot players with their stats
     const { data: botPlayers } = await admin
       .from('players')
-      .select('id, bot_config, h2h_player_stats!player_id(rank_points, rated_matches_today, last_match_date)')
+      .select('id, bot_config, h2h_player_stats!left(rank_points, rated_matches_today, last_match_date)')
       .eq('is_bot', true);
 
+    console.log(`[bot] persistent bot query returned ${botPlayers?.length ?? 0} bots`);
     if (botPlayers && botPlayers.length > 0) {
       const todayStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 
@@ -122,7 +123,7 @@ export async function POST() {
           ? bot.h2h_player_stats[0]
           : bot.h2h_player_stats;
         if (!stats) return true; // no stats yet — under cap
-        const isToday = stats.last_match_date?.slice(0, 10) === todayStr;
+        const isToday = String(stats.last_match_date ?? '').slice(0, 10) === todayStr;
         const matchesToday = isToday ? (stats.rated_matches_today ?? 0) : 0;
         return matchesToday < 20;
       });
