@@ -264,7 +264,7 @@ export async function PATCH(
         .update({ status: 'cancelled', ended_at: new Date().toISOString() })
         .eq('id', id)
         .eq('status', 'active');
-      if (cancelMatch.is_ghost_match) await redis.del(`h2h:bot-lock:${player.id}`);
+      await redis.del(`h2h:bot-lock:${player.id}`);
       return NextResponse.json({ ok: true });
     }
 
