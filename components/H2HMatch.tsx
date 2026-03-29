@@ -537,7 +537,7 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
   // ── Bot opponent simulation ──
   // Simulates a realistic human opponent: variable speed, hesitation, mistakes
   useEffect(() => {
-    if (!isBot || loading || eliminated || finished || cards.length === 0) return;
+    if (!isBot || !matchStarted || loading || eliminated || finished || cards.length === 0) return;
 
     // ── Personality: randomize bot behavior per match ──
     // Use persistent bot personality or random fallback (ghost bots)
@@ -645,7 +645,7 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
     return () => {
       timers.forEach(clearTimeout);
     };
-  }, [isBot, loading, eliminated, finished, cards.length, botConfig]);
+  }, [isBot, matchStarted, loading, eliminated, finished, cards.length, botConfig]);
 
   // ── Submit answer ──
   async function submitAnswer(userAnswer: 'phishing' | 'legit') {

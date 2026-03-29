@@ -234,7 +234,8 @@ export async function finalizeMatch(
     if (loserRatedToday < 20) xpAwards.push(awardH2HXp(admin, loserId, loserCorrect ?? 0, false));
     await Promise.all(xpAwards);
 
-    if (match.is_ghost_match && match.player1_id) {
+    // Release bot-lock for player1 (works for both ghost and persistent bot matches)
+    if (match.player1_id) {
       await redis.del(`h2h:bot-lock:${match.player1_id}`);
     }
 
