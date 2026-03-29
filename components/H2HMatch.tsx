@@ -251,6 +251,8 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
   const [myBadgeName, setMyBadgeName] = useState<string | null>(null);
   const [myBadgeRarity, setMyBadgeRarity] = useState<AchievementRarity | null>(null);
   const [botConfig, setBotConfig] = useState<{ speed_factor: number; accuracy: number; hesitation_chance: number } | null>(null);
+  const botConfigRef = useRef(botConfig);
+  botConfigRef.current = botConfig;
 
   // Helper: render name with optional rainbow effect
   function renderName(name: string, effect: string | null, fallbackColor: string) {
@@ -541,9 +543,10 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
 
     // ── Personality: randomize bot behavior per match ──
     // Use persistent bot personality or random fallback (ghost bots)
-    const speedFactor = botConfig?.speed_factor ?? (0.6 + Math.random() * 0.4);
-    const accuracy = botConfig?.accuracy ?? (0.85 + Math.random() * 0.10);
-    const hesitationChance = botConfig?.hesitation_chance ?? 0.15;
+    const cfg = botConfigRef.current;
+    const speedFactor = cfg?.speed_factor ?? (0.6 + Math.random() * 0.4);
+    const accuracy = cfg?.accuracy ?? (0.85 + Math.random() * 0.10);
+    const hesitationChance = cfg?.hesitation_chance ?? 0.15;
 
     // ── Per-card timing: competent but beatable ──
     const botTimes = cards.map((card) => {
@@ -625,12 +628,12 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
                 fetch(`/api/h2h/match/${matchId}`, {
                   method: 'PATCH',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ action: 'complete', winnerId: null }),
+                  body: JSON.stringify({ action: 'complete', winnerId: opponentIdRef.current }),
                   keepalive: true,
                 });
               } catch { /* best effort */ }
               onMatchEnd({
-                winnerId: null,
+                winnerId: opponentIdRef.current,
                 myPointsDelta: 0,
                 opponentPointsDelta: 0,
                 reason: 'completed',
@@ -645,7 +648,8 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
     return () => {
       timers.forEach(clearTimeout);
     };
-  }, [isBot, matchStarted, loading, eliminated, finished, cards.length, botConfig]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isBot, matchStarted, loading, eliminated, finished, cards.length]);
 
   // ── Submit answer ──
   async function submitAnswer(userAnswer: 'phishing' | 'legit') {
