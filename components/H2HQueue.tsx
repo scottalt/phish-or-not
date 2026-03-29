@@ -11,7 +11,8 @@ interface Props {
 }
 
 const POLL_INTERVAL_MS = 3000;
-const BOT_TIMEOUT_S = 30;
+const BOT_TIMEOUT_MIN_S = 30;
+const BOT_TIMEOUT_MAX_S = 45;
 const QUEUE_MAX_S = 300; // 5 minutes
 
 export function H2HQueue({ profile, onMatchFound, onCancel }: Props) {
@@ -171,11 +172,12 @@ export function H2HQueue({ profile, onMatchFound, onCancel }: Props) {
     }
   }, [elapsed, joined, cleanup, leaveQueue]);
 
-  // ── Bot match — auto-trigger silently after timeout ──
+  // ── Bot match — auto-trigger silently after random timeout ──
   const botTriggeredRef = useRef(false);
+  const botTimeoutRef = useRef(BOT_TIMEOUT_MIN_S + Math.random() * (BOT_TIMEOUT_MAX_S - BOT_TIMEOUT_MIN_S));
 
   useEffect(() => {
-    if (elapsed < BOT_TIMEOUT_S || botTriggeredRef.current || matchedRef.current) return;
+    if (elapsed < botTimeoutRef.current || botTriggeredRef.current || matchedRef.current) return;
     botTriggeredRef.current = true;
 
     let retryCount = 0;
