@@ -9,7 +9,7 @@ export async function GET() {
 
   const { data, error } = await admin
     .from('h2h_player_stats')
-    .select('player_id, rank_points, wins, losses, players!player_id(display_name, theme_id)')
+    .select('player_id, rank_points, wins, losses, players!player_id(display_name, theme_id, is_bot)')
     .eq('season', CURRENT_SEASON)
     .order('rank_points', { ascending: false })
     .limit(100);
@@ -34,6 +34,7 @@ export async function GET() {
       losses: row.losses,
       nameEffect: theme?.nameEffect ?? null,
       themeColor: theme?.colors.primary ?? '#00ff41',
+      isBot: player?.is_bot ?? false,
     };
   });
 
