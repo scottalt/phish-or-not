@@ -250,6 +250,7 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
   const [myBadgeIcon, setMyBadgeIcon] = useState<string | null>(null);
   const [myBadgeName, setMyBadgeName] = useState<string | null>(null);
   const [myBadgeRarity, setMyBadgeRarity] = useState<AchievementRarity | null>(null);
+  const [botConfig, setBotConfig] = useState<{ speed_factor: number; accuracy: number; hesitation_chance: number } | null>(null);
 
   // Helper: render name with optional rainbow effect
   function renderName(name: string, effect: string | null, fallbackColor: string) {
@@ -345,20 +346,33 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
           : matchData.match.player1Id;
         opponentIdRef.current = opponentId;
 
-        if (opponentId && matchData.players[opponentId]) {
-          const opp = matchData.players[opponentId];
-          setOpponentName(opp.displayName);
-          if (opp.themeColor) setOpponentThemeColor(opp.themeColor);
-          if (opp.nameEffect) setOpponentNameEffect(opp.nameEffect);
-          if (opp.featuredBadge) {
-            const oppAch = ACHIEVEMENTS.find(a => a.id === opp.featuredBadge);
+        const opponentPlayer = opponentId ? matchData.players[opponentId] : null;
+        const isOpponentBot = opponentPlayer?.isBot ?? false;
+
+        if (opponentId && opponentPlayer && !isOpponentBot) {
+          // Real human opponent
+          setOpponentName(opponentPlayer.displayName);
+          if (opponentPlayer.themeColor) setOpponentThemeColor(opponentPlayer.themeColor);
+          if (opponentPlayer.nameEffect) setOpponentNameEffect(opponentPlayer.nameEffect);
+          if (opponentPlayer.featuredBadge) {
+            const oppAch = ACHIEVEMENTS.find(a => a.id === opponentPlayer.featuredBadge);
             setOpponentBadgeIcon(oppAch?.icon ?? null);
             setOpponentBadgeName(oppAch?.name ?? null);
             setOpponentBadgeRarity(oppAch?.rarity ?? null);
           }
+        } else if (isOpponentBot && opponentPlayer) {
+          // Persistent bot — use their real display name + theme
+          setOpponentName(opponentPlayer.displayName);
+          if (opponentPlayer.themeColor) setOpponentThemeColor(opponentPlayer.themeColor);
         } else if (isBot) {
+          // Ghost bot fallback
           const { getRandomBotName } = await import('@/lib/h2h');
           setOpponentName(getRandomBotName(matchId));
+        }
+
+        // Read bot personality config from opponent data (persistent bots)
+        if (opponentId && matchData.players[opponentId]?.botConfig) {
+          setBotConfig(matchData.players[opponentId].botConfig);
         }
 
         // Set own name + badge
@@ -526,7 +540,10 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
     if (!isBot || loading || eliminated || finished || cards.length === 0) return;
 
     // ── Personality: randomize bot behavior per match ──
-    const speedFactor = 0.6 + Math.random() * 0.4; // 0.6x (fast) to 1.0x (moderate)
+    // Use persistent bot personality or random fallback (ghost bots)
+    const speedFactor = botConfig?.speed_factor ?? (0.6 + Math.random() * 0.4);
+    const accuracy = botConfig?.accuracy ?? (0.85 + Math.random() * 0.10);
+    const hesitationChance = botConfig?.hesitation_chance ?? 0.15;
 
     // ── Per-card timing: competent but beatable ──
     const botTimes = cards.map((card) => {
@@ -538,20 +555,18 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
 
       baseMs *= speedFactor;
 
-      // 15% chance of brief hesitation (1-2s re-read)
-      if (Math.random() < 0.15) {
+      // chance of brief hesitation (1-2s re-read)
+      if (Math.random() < hesitationChance) {
         baseMs += 1000 + Math.random() * 1000;
       }
 
       return baseMs;
     });
 
-    // ── Failure: ~10% total chance the bot gets eliminated ──
-    // Bots are skilled — they rarely mess up
+    // ── Failure: bot gets eliminated based on accuracy ──
     let botEliminationCard = -1;
     for (let i = 0; i < cards.length; i++) {
-      const failChance = 0.02 + i * 0.005; // 2% base + 0.5% per card position
-      if (Math.random() < failChance) {
+      if (Math.random() > accuracy) {
         botEliminationCard = i;
         break;
       }
@@ -630,7 +645,7 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
     return () => {
       timers.forEach(clearTimeout);
     };
-  }, [isBot, loading, eliminated, finished, cards.length]);
+  }, [isBot, loading, eliminated, finished, cards.length, botConfig]);
 
   // ── Submit answer ──
   async function submitAnswer(userAnswer: 'phishing' | 'legit') {
