@@ -526,37 +526,31 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
     if (!isBot || loading || eliminated || finished || cards.length === 0) return;
 
     // ── Personality: randomize bot behavior per match ──
-    // Some bots are fast+reckless, others are slow+careful
-    const speedFactor = 0.7 + Math.random() * 0.6; // 0.7x (fast) to 1.3x (slow)
+    const speedFactor = 0.6 + Math.random() * 0.4; // 0.6x (fast) to 1.0x (moderate)
 
-    // ── Per-card timing: realistic human reading patterns ──
+    // ── Per-card timing: skilled player reading patterns ──
     const botTimes = cards.map((card) => {
       const len = card.body.length;
       let baseMs: number;
-      if (len < 300) baseMs = 4000 + Math.random() * 5000;       // 4-9s
-      else if (len < 600) baseMs = 7000 + Math.random() * 7000;  // 7-14s
-      else baseMs = 10000 + Math.random() * 10000;                // 10-20s
+      if (len < 300) baseMs = 2000 + Math.random() * 3000;       // 2-5s
+      else if (len < 600) baseMs = 3500 + Math.random() * 4500;  // 3.5-8s
+      else baseMs = 5000 + Math.random() * 6000;                  // 5-11s
 
-      // Apply personality speed factor
       baseMs *= speedFactor;
 
-      // Occasional hesitation: 20% chance the bot pauses an extra 2-5s on a card
-      // (like a real player re-reading something suspicious)
-      if (Math.random() < 0.2) {
-        baseMs += 2000 + Math.random() * 3000;
+      // 15% chance of brief hesitation (1-2s re-read)
+      if (Math.random() < 0.15) {
+        baseMs += 1000 + Math.random() * 1000;
       }
 
       return baseMs;
     });
 
-    // ── Failure: ~30% chance the bot gets eliminated somewhere ──
-    // Later cards are harder — cumulative fail chance increases
+    // ── Failure: ~10% total chance the bot gets eliminated ──
+    // Bots are skilled — they rarely mess up
     let botEliminationCard = -1;
     for (let i = 0; i < cards.length; i++) {
-      const len = cards[i].body.length;
-      // Base fail chance + increases on later cards (fatigue/complexity)
-      const cardPositionBonus = i * 0.02; // +2% per card position
-      const failChance = (len < 300 ? 0.04 : len < 600 ? 0.07 : 0.11) + cardPositionBonus;
+      const failChance = 0.02 + i * 0.005; // 2% base + 0.5% per card position
       if (Math.random() < failChance) {
         botEliminationCard = i;
         break;
@@ -685,26 +679,7 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
             setSubmitting(false);
             setCardIndex(nextIndex);
             if (nextIndex >= H2H_CARDS_PER_MATCH) {
-              if (isBot) {
-                // Bot match — player finished all cards
-                if (!matchEndedRef.current) {
-                  matchEndedRef.current = true;
-                  try {
-                    fetch(`/api/h2h/match/${matchId}`, {
-                      method: 'PATCH',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ action: 'complete', winnerId: playerId }),
-                      keepalive: true,
-                    });
-                  } catch { /* best effort */ }
-                  onMatchEnd({
-                    winnerId: playerId,
-                    myPointsDelta: 0,
-                    opponentPointsDelta: 0,
-                    reason: 'completed',
-                  });
-                }
-              } else if (data.matchOver && !matchEndedRef.current) {
+              if ((isBot || data.matchOver) && !matchEndedRef.current) {
                 // Server finalized — first to finish wins, notify opponent
                 matchEndedRef.current = true;
                 broadcastResult(channelRef.current, {
@@ -727,17 +702,6 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
         } else {
           // Wrong answer — match over immediately
           setFlash('wrong');
-          // For bot matches, mark complete server-side so it doesn't stay active
-          if (isBot) {
-            try {
-              fetch(`/api/h2h/match/${matchId}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'complete', winnerId: null }),
-                keepalive: true,
-              });
-            } catch { /* best effort */ }
-          }
           setTimeout(() => {
             setSubmitting(false);
             if (!matchEndedRef.current) {
