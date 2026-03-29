@@ -276,26 +276,35 @@ export async function PATCH(
     return NextResponse.json({ ok: true, forfeited: true });
   }
 
-  // Complete action — for bot matches marking as done
-  // winnerId from body: player.id if they won, null if they got eliminated
-  const botWinnerId = body.winnerId === player.id ? player.id : null;
-  const { data: updated } = await admin
+  // Complete action — for bot matches (ghost or persistent) marking as done
+  // Fetch match to determine type and route through finalizeMatch for ranked resolution
+  const { data: completeMatch } = await admin
     .from('h2h_matches')
-    .update({
-      status: 'complete',
-      winner_id: botWinnerId,
-      ended_at: new Date().toISOString(),
-    })
+    .select('*, players:player2_id(is_bot)')
     .eq('id', id)
     .eq('status', 'active')
-    .eq('is_ghost_match', true)
-    .eq('player1_id', player.id)
-    .select('id');
+    .single();
 
-  if (!updated || updated.length === 0) {
+  if (!completeMatch || (completeMatch.player1_id !== player.id && completeMatch.player2_id !== player.id)) {
     return NextResponse.json({ error: 'Match not found or already complete' }, { status: 409 });
   }
 
-  await redis.del(`h2h:bot-lock:${player.id}`);
+  const isBotMatch = completeMatch.is_ghost_match || completeMatch.players?.is_bot;
+  if (!isBotMatch) {
+    return NextResponse.json({ error: 'Complete action only for bot matches' }, { status: 400 });
+  }
+
+  // Resolve winner/loser — winnerId from client is player.id (human won) or null (bot won)
+  const humanWon = body.winnerId === player.id;
+  const opponentId = completeMatch.player1_id === player.id
+    ? completeMatch.player2_id
+    : completeMatch.player1_id;
+  const resolvedWinnerId = humanWon ? player.id : (opponentId ?? null);
+  const resolvedLoserId = humanWon ? (opponentId ?? null) : player.id;
+
+  // Route through finalizeMatch for ranked resolution (persistent bots)
+  // For ghost matches, finalizeMatch handles the ghost_match branch
+  await finalizeMatch(id, resolvedWinnerId, resolvedLoserId);
+
   return NextResponse.json({ ok: true });
 }

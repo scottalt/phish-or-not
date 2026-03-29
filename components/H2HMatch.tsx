@@ -593,7 +593,7 @@ export function H2HMatch({ matchId, playerId, isBot, onMatchEnd }: Props) {
                 fetch(`/api/h2h/match/${matchId}`, {
                   method: 'PATCH',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ action: 'complete' }),
+                  body: JSON.stringify({ action: 'complete', winnerId: playerId }),
                   keepalive: true,
                 });
               } catch { /* best effort */ }
