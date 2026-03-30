@@ -320,6 +320,7 @@ export interface RoguelikeRunState {
   perks: PerkId[];
   floorsCleared: number;
   cardHistory: string[];      // cardIds answered so far
+  cardsCorrect: number;       // count of correct answers
   currentFloorCardIds: string[];
   currentCardIndex: number;
   currentGimmick: GimmickId | null;
@@ -358,7 +359,8 @@ export function calculateCardScore(
   speedThresholdMs: number = INTEL_SPEED_THRESHOLD_MS,
 ): number {
   if (!correct) {
-    return SCORE_WRONG_BASE;
+    const multiplier = SCORE_FLOOR_MULTIPLIER[Math.min(floor, SCORE_FLOOR_MULTIPLIER.length - 1)] ?? 1;
+    return Math.round(SCORE_WRONG_BASE * multiplier);
   }
 
   const multiplier = SCORE_FLOOR_MULTIPLIER[Math.min(floor, SCORE_FLOOR_MULTIPLIER.length - 1)] ?? 1;
@@ -381,7 +383,7 @@ export function calculateCardScore(
  */
 export function calculateStreakIntel(streak: number, streakMin: number = INTEL_STREAK_MIN): number {
   if (streak < streakMin) return 0;
-  return INTEL_STREAK_BONUS;
+  return INTEL_STREAK_BONUS * streak;
 }
 
 /**

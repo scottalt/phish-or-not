@@ -153,6 +153,7 @@ export async function POST() {
       perks: [],
       floorsCleared: 0,
       cardHistory: [],
+      cardsCorrect: 0,
       currentFloorCardIds: floor0CardIds,
       currentCardIndex: 0,
       currentGimmick: floorGimmicks[0] ?? null,

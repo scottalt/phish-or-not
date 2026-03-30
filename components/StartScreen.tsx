@@ -175,7 +175,31 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
       if (dailyRes.ok) setDailyLeaderboard(await dailyRes.json());
       if (xpRes.ok) setXpLeaderboard(await xpRes.json());
       const roguelikeRes = await fetch('/api/roguelike/leaderboard');
-      if (roguelikeRes.ok) setRoguelikeLeaderboard(await roguelikeRes.json());
+      if (roguelikeRes.ok) {
+        const roguelikeData = await roguelikeRes.json();
+        const entries = (roguelikeData.leaderboard ?? roguelikeData) as {
+          displayName?: string | null;
+          score: number;
+          level?: number;
+          nameEffect?: string | null;
+          themeColor?: string | null;
+          operationName?: string | null;
+          floorsCleared?: number | null;
+          deaths?: number | null;
+        }[];
+        setRoguelikeLeaderboard(
+          entries.map((e) => ({
+            name: e.displayName ?? 'Unknown Agent',
+            score: e.score,
+            level: e.level,
+            nameEffect: e.nameEffect,
+            themeColor: e.themeColor,
+            operationName: e.operationName,
+            floorReached: e.floorsCleared,
+            deaths: e.deaths,
+          })),
+        );
+      }
     } catch {
       // silently fail
     }

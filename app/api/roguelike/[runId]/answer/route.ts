@@ -224,6 +224,7 @@ export async function POST(
       intel: newIntelFinal,
       score: newScore,
       cardHistory: newCardHistory,
+      cardsCorrect: (state.cardsCorrect ?? 0) + (correct ? 1 : 0),
       currentCardIndex: newCardIndex,
       floorsCleared: newFloorsCleared,
       status: newStatus,

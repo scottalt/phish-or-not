@@ -223,6 +223,9 @@ export async function PATCH(
       totalFloors: state.totalFloors,
       deaths: state.deaths,
       bestStreak: state.bestStreak,
+      cardsAnswered: state.cardHistory.length,
+      cardsCorrect: state.cardsCorrect ?? 0,
+      operationName: state.operationName,
       status: state.status,
       completedAt,
     });
