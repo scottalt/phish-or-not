@@ -1,0 +1,195 @@
+import { NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+import { getSupabaseAdminClient } from '@/lib/supabase';
+import { redis } from '@/lib/redis';
+import {
+  type RoguelikeRunState,
+  ROGUELIKE_FLOORS,
+  ROGUELIKE_CARDS_PER_FLOOR,
+  ROGUELIKE_DEFAULT_LIVES,
+  ROGUELIKE_MAX_LIVES,
+  ROGUELIKE_SESSION_TTL,
+} from '@/lib/roguelike';
+import { generateOperationName } from '@/lib/roguelike-operations';
+import { assignGimmicks } from '@/lib/roguelike-gimmicks';
+import { selectFloorCards } from '@/lib/roguelike-cards';
+import type { Card } from '@/lib/types';
+
+// POST /api/roguelike/start — Begin a new roguelike run
+export async function POST() {
+  // ── Auth ──
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } },
+  );
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+
+  const admin = getSupabaseAdminClient();
+
+  // ── Look up player (must be research_graduated) ──
+  const { data: player, error: playerError } = await admin
+    .from('players')
+    .select('id, research_graduated')
+    .eq('auth_id', user.id)
+    .single();
+
+  if (playerError || !player) {
+    return NextResponse.json({ error: 'Player not found' }, { status: 404 });
+  }
+  if (!player.research_graduated) {
+    return NextResponse.json({ error: 'Must complete research graduation to play Roguelike mode' }, { status: 403 });
+  }
+
+  const playerId: string = player.id;
+
+  // ── Check no active run already in progress ──
+  const existingRunId = await redis.get<string>(`roguelike:active:${playerId}`);
+  if (existingRunId) {
+    return NextResponse.json({ error: 'Active run already in progress', runId: existingRunId }, { status: 409 });
+  }
+
+  // ── Generate operation name + assign floor gimmicks ──
+  const operationName = generateOperationName();
+  const floorGimmicks = assignGimmicks(ROGUELIKE_FLOORS);
+
+  // ── Fetch card pool from DB ──
+  let { data: dbRows } = await admin
+    .from('cards_generated')
+    .select('card_id, pool, type, is_phishing, difficulty, from_address, subject, body, clues, explanation, highlights, technique, auth_status')
+    .eq('pool', 'roguelike');
+
+  // Fallback to freeplay + expert if no roguelike-specific cards exist
+  if (!dbRows || dbRows.length === 0) {
+    const { data: fallbackRows } = await admin
+      .from('cards_generated')
+      .select('card_id, pool, type, is_phishing, difficulty, from_address, subject, body, clues, explanation, highlights, technique, auth_status')
+      .in('pool', ['freeplay', 'expert']);
+    dbRows = fallbackRows ?? [];
+  }
+
+  if (!dbRows || dbRows.length === 0) {
+    return NextResponse.json({ error: 'No cards available for roguelike mode' }, { status: 500 });
+  }
+
+  // ── Convert DB rows to Card objects ──
+  const cards: Card[] = dbRows.map((r) => ({
+    id: r.card_id,
+    type: r.type,
+    isPhishing: r.is_phishing,
+    difficulty: r.difficulty,
+    from: r.from_address,
+    subject: r.subject,
+    body: r.body,
+    clues: r.clues ?? [],
+    explanation: r.explanation ?? '',
+    highlights: r.highlights ?? [],
+    technique: r.technique,
+    authStatus: r.auth_status ?? 'verified',
+  }));
+
+  // ── Select floor 0 cards ──
+  const floor0Assignments = selectFloorCards(cards, 0, [], ROGUELIKE_CARDS_PER_FLOOR);
+  const floor0CardIds = floor0Assignments.map((a) => a.cardId);
+  const floor0Cards = floor0CardIds
+    .map((id) => cards.find((c) => c.id === id))
+    .filter((c): c is Card => c !== undefined);
+
+  // ── Create roguelike_runs DB record ──
+  const { data: runRecord, error: insertError } = await admin
+    .from('roguelike_runs')
+    .insert({
+      player_id: playerId,
+      operation_name: operationName,
+      score: 0,
+      floor_reached: 0,
+      floors_cleared: 0,
+      lives_remaining: ROGUELIKE_DEFAULT_LIVES,
+      lives_max: ROGUELIKE_MAX_LIVES,
+      intel_earned: 0,
+      intel_spent: 0,
+      clearance_earned: 0,
+      gimmick_assignments: floorGimmicks,
+      perks_purchased: [],
+      cards_answered: 0,
+      cards_correct: 0,
+      best_streak: 0,
+      deaths: 0,
+      status: 'active',
+    })
+    .select('id')
+    .single();
+
+  if (insertError || !runRecord) {
+    console.error('[roguelike/start] DB insert failed:', insertError);
+    return NextResponse.json({ error: 'Failed to create run' }, { status: 500 });
+  }
+
+  const runId: string = runRecord.id;
+  const now = new Date().toISOString();
+
+  // ── Build RoguelikeRunState ──
+  const state: RoguelikeRunState = {
+    runId,
+    operationName,
+    playerId,
+    currentFloor: 0,
+    totalFloors: ROGUELIKE_FLOORS,
+    lives: ROGUELIKE_DEFAULT_LIVES,
+    maxLives: ROGUELIKE_MAX_LIVES,
+    intel: 0,
+    score: 0,
+    streak: 0,
+    bestStreak: 0,
+    deaths: 0,
+    perks: [],
+    floorsCleared: 0,
+    cardHistory: [],
+    currentFloorCardIds: floor0CardIds,
+    currentCardIndex: 0,
+    currentGimmick: floorGimmicks[0] ?? null,
+    floorGimmicks,
+    startedAt: now,
+    completedAt: null,
+    status: 'active',
+  };
+
+  // ── Store state, cards, and assignments in Redis ──
+  await Promise.all([
+    redis.set(`roguelike:run:${runId}`, JSON.stringify(state), { ex: ROGUELIKE_SESSION_TTL }),
+    redis.set(`roguelike:active:${playerId}`, runId, { ex: ROGUELIKE_SESSION_TTL }),
+    redis.set(`roguelike:cards:${runId}:0`, JSON.stringify(floor0Cards), { ex: ROGUELIKE_SESSION_TTL }),
+    redis.set(`roguelike:assignments:${runId}:0`, JSON.stringify(floor0Assignments), { ex: ROGUELIKE_SESSION_TTL }),
+  ]);
+
+  // ── Return safe card data (no answers) + run info ──
+  const safeCards = floor0Cards.map((c) => ({
+    id: c.id,
+    type: c.type,
+    difficulty: c.difficulty,
+    from: c.from,
+    subject: c.subject,
+    body: c.body,
+    authStatus: c.authStatus,
+  }));
+
+  return NextResponse.json({
+    runId,
+    operationName,
+    currentFloor: 0,
+    totalFloors: ROGUELIKE_FLOORS,
+    lives: ROGUELIKE_DEFAULT_LIVES,
+    maxLives: ROGUELIKE_MAX_LIVES,
+    intel: 0,
+    score: 0,
+    gimmick: floorGimmicks[0] ?? null,
+    floorGimmicks,
+    cards: safeCards,
+    assignments: floor0Assignments,
+  });
+}
