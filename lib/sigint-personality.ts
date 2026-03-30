@@ -721,6 +721,38 @@ export const ROGUELIKE_DIALOGUES = {
     buttonText: "FAIR ENOUGH",
   } as SigintDialogue,
 
+  roguelike_death_floor2: {
+    lines: [
+      "Made it past the warmup but couldn't hold the line.",
+      "Floor 2's where the real game starts.",
+    ],
+    buttonText: "ACKNOWLEDGED",
+  } as SigintDialogue,
+
+  roguelike_death_floor3: {
+    lines: [
+      "Floor 3. That's where most operatives fall.",
+      "You were close to something.",
+    ],
+    buttonText: "TRY AGAIN",
+  } as SigintDialogue,
+
+  roguelike_death_floor4: {
+    lines: [
+      "Floor 4. Almost there.",
+      "That's the one that separates good from great.",
+    ],
+    buttonText: "NEXT TIME",
+  } as SigintDialogue,
+
+  roguelike_death_boss: {
+    lines: [
+      "The boss floor. It's designed to break you.",
+      "Come back with better perks.",
+    ],
+    buttonText: "REGROUP",
+  } as SigintDialogue,
+
   roguelike_clear: {
     lines: [
       "Tower cleared. All floors. Every threat neutralized.",

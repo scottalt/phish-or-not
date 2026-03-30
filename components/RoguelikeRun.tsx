@@ -458,21 +458,47 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
       }
 
       // SIGINT mid-floor toasts
+      const STREAK_3_TOASTS = [
+        "Nice read. Keep that up.",
+        "Three in a row. You're warming up.",
+        "Good pattern recognition.",
+      ];
+      const STREAK_5_TOASTS = [
+        "You're on fire, operative.",
+        "Five straight. Impressive.",
+        "Razor sharp. Don't get cocky.",
+      ];
+      const LIFE_LOST_TOASTS = [
+        "Shake it off. Stay focused.",
+        "That one was tricky. Regroup.",
+        "Damage taken. Keep moving.",
+      ];
+      const LAST_LIFE_TOASTS = [
+        "One more slip and we're dark.",
+        "Final life. Every call matters now.",
+        "Critical status. Focus.",
+      ];
+      const FLOOR_CLEAR_TOASTS = [
+        "Floor cleared. Requisition incoming.",
+        "Sector clear. Moving up.",
+        "Good work. Resupply ahead.",
+      ];
+
       if (data.floorCleared) {
-        showToast('Floor cleared. Requisition incoming.');
+        showToast(FLOOR_CLEAR_TOASTS[Math.floor(Math.random() * FLOOR_CLEAR_TOASTS.length)]);
       } else if (data.correct) {
         if (data.streak === 5) {
-          showToast("You're on fire, operative.");
+          showToast(STREAK_5_TOASTS[Math.floor(Math.random() * STREAK_5_TOASTS.length)]);
         } else if (data.streak === 3) {
-          showToast('Nice read. Keep that up.');
+          showToast(STREAK_3_TOASTS[Math.floor(Math.random() * STREAK_3_TOASTS.length)]);
         }
       } else {
         const liveLost = data.lives < lives;
         if (liveLost) {
           if (data.lives === 1) {
-            showToast("One more slip and we're dark.");
+            showToast(LAST_LIFE_TOASTS[Math.floor(Math.random() * LAST_LIFE_TOASTS.length)]);
           } else {
-            showToast('Shake it off. Stay focused.');
+            showToast(LIFE_LOST_TOASTS[Math.floor(Math.random() * LIFE_LOST_TOASTS.length)]);
           }
         }
       }
@@ -583,12 +609,25 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
       setShopPerks(data.offerings ?? []);
       setIntel(data.intel);
       setLives(data.lives);
-      setShopSigintLine(SHOP_QUIPS[Math.floor(Math.random() * SHOP_QUIPS.length)]);
 
       // Compute next floor's gimmick for shop preview
       const nextFloorIndex = floor + 1;
       const nextGimmickId = gimmicks[nextFloorIndex] ?? null;
       setNextGimmick(nextGimmickId);
+
+      // If player has SIGNAL_INTERCEPT upgrade, reveal next gimmick name
+      const hasSignalIntercept = ownedUpgrades.includes('SIGNAL_INTERCEPT');
+      if (hasSignalIntercept && nextGimmickId) {
+        const gimmickDef = GIMMICK_DEFS[nextGimmickId];
+        const INTEL_LINES = [
+          `Intel suggests the next floor is ${gimmickDef.label}. Prepare accordingly.`,
+          `Heads up — ${gimmickDef.label} protocols detected ahead.`,
+          `Next batch: ${gimmickDef.label}. Adjust your strategy.`,
+        ];
+        setShopSigintLine(INTEL_LINES[Math.floor(Math.random() * INTEL_LINES.length)]);
+      } else {
+        setShopSigintLine(SHOP_QUIPS[Math.floor(Math.random() * SHOP_QUIPS.length)]);
+      }
 
       setPhase('shop');
     } catch (err) {

@@ -66,6 +66,14 @@ export function RoguelikeResult({
       triggerSigint('roguelike_clear');
     } else if (floorsCleared === 0) {
       triggerSigint('roguelike_death_floor1');
+    } else if (floorsCleared === 1) {
+      triggerSigint('roguelike_death_floor2');
+    } else if (floorsCleared === 2) {
+      triggerSigint('roguelike_death_floor3');
+    } else if (floorsCleared === 3) {
+      triggerSigint('roguelike_death_floor4');
+    } else if (floorsCleared === 4) {
+      triggerSigint('roguelike_death_boss');
     } else {
       triggerSigint('roguelike_death');
     }
