@@ -78,26 +78,53 @@ export async function GET(req: Request) {
   // Look up player info (level + theme) from DB
   const names = dedupedEntries.map((e) => e.name);
   const supabase = getSupabaseAdminClient();
+  // Try exact match first, then fall back to case-insensitive for any misses
   const { data: playerInfo } = await supabase
     .from('players')
     .select('display_name, level, theme_id')
     .in('display_name', names);
 
+  // Build map keyed by lowercase name for case-insensitive matching
   const playerMap: Record<string, { level: number; nameEffect: string | null; color: string }> = {};
   for (const p of playerInfo ?? []) {
     const theme = THEMES.find((t) => t.id === (p.theme_id ?? 'phosphor'));
-    playerMap[p.display_name] = {
+    const info = {
       level: p.level ?? 1,
       nameEffect: theme?.nameEffect ?? null,
       color: theme?.colors.primary ?? '#00ff41',
     };
+    playerMap[p.display_name as string] = info;
+    playerMap[(p.display_name as string).toLowerCase()] = info;
   }
+
+  // For any names not found by exact match, try case-insensitive DB lookup
+  const missingNames = names.filter((n) => !playerMap[n] && !playerMap[n.toLowerCase()]);
+  if (missingNames.length > 0) {
+    // Build an OR filter of ilike conditions
+    const orFilter = missingNames.map((n) => `display_name.ilike.${n}`).join(',');
+    const { data: extraInfo } = await supabase
+      .from('players')
+      .select('display_name, level, theme_id')
+      .or(orFilter);
+    for (const p of extraInfo ?? []) {
+      const theme = THEMES.find((t) => t.id === (p.theme_id ?? 'phosphor'));
+      const info = {
+        level: p.level ?? 1,
+        nameEffect: theme?.nameEffect ?? null,
+        color: theme?.colors.primary ?? '#00ff41',
+      };
+      playerMap[p.display_name as string] = info;
+      playerMap[(p.display_name as string).toLowerCase()] = info;
+    }
+  }
+
+  const lookup = (name: string) => playerMap[name] ?? playerMap[name.toLowerCase()];
 
   return NextResponse.json(dedupedEntries.map((e) => ({
     ...e,
-    level: playerMap[e.name]?.level ?? 1,
-    nameEffect: playerMap[e.name]?.nameEffect ?? null,
-    themeColor: playerMap[e.name]?.color ?? '#00ff41',
+    level: lookup(e.name)?.level ?? 1,
+    nameEffect: lookup(e.name)?.nameEffect ?? null,
+    themeColor: lookup(e.name)?.color ?? '#00ff41',
   })));
 }
 
