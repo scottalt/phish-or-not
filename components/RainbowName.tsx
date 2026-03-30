@@ -50,7 +50,7 @@ export function RainbowName({
   if (themeColor) color = themeColor;
   else if (themeId) color = getThemeById(themeId).colors.primary;
   else if (!isOtherPlayer) color = undefined; // inherit from parent (current player's theme via CSS vars)
-  else color = fallbackColor;
+  else color = fallbackColor ?? '#00ff41';
 
   return (
     <span className={className} style={color ? { color } : undefined}>

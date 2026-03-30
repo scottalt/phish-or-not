@@ -283,7 +283,7 @@ export function H2HLobby({ profile, onSearch, onBack }: Props) {
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="text-[var(--c-muted)] w-5 text-right shrink-0">{entry.position}.</span>
-                      <span className="truncate"><RainbowName name={entry.displayName} nameEffect={(entry as Record<string, unknown>).nameEffect as string | undefined} themeColor={(entry as Record<string, unknown>).themeColor as string | undefined} fallbackColor="var(--c-secondary)" /></span>
+                      <span className="truncate"><RainbowName name={entry.displayName} nameEffect={(entry as Record<string, unknown>).nameEffect as string | undefined} themeColor={(entry as Record<string, unknown>).themeColor as string | undefined} fallbackColor="#3cc462" /></span>
                     </div>
                     <div className="flex items-center gap-2 shrink-0 ml-2">
                       <span style={{ color: entry.rankColor }} className="text-xs">

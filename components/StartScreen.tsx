@@ -748,7 +748,7 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
                           <span className="text-[var(--c-muted)] w-4">{i + 1}.</span>
                           {row.display_name ? (
                             <Link href={`/player/${encodeURIComponent(row.display_name)}`} className="flex-1 truncate hover:text-[var(--c-primary)] transition-colors">
-                              <RainbowName name={row.display_name} themeId={row.theme_id ?? undefined} fallbackColor="var(--c-secondary)" />
+                              <RainbowName name={row.display_name} themeId={row.theme_id ?? undefined} fallbackColor="#3cc462" />
                             </Link>
                           ) : (
                             <span className="text-[var(--c-muted)] flex-1 truncate">ANON</span>
@@ -771,7 +771,7 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
                           <span className={`text-sm font-mono w-4 shrink-0 ${i === 0 ? 'text-[var(--c-accent)]' : 'text-[var(--c-muted)]'}`}>{i + 1}</span>
                           {entry.name ? (
                             <Link href={`/player/${encodeURIComponent(entry.name)}`} className="text-sm font-mono flex-1 truncate hover:text-[var(--c-primary)] transition-colors">
-                              <RainbowName name={entry.name} nameEffect={entry.nameEffect} themeColor={entry.themeColor} fallbackColor="var(--c-secondary)" />
+                              <RainbowName name={entry.name} nameEffect={entry.nameEffect} themeColor={entry.themeColor} fallbackColor="#3cc462" />
                             </Link>
                           ) : (
                             <span className="text-[var(--c-muted)] text-sm font-mono flex-1 truncate">ANON</span>
@@ -796,7 +796,7 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
                         <div key={i} className="flex items-center gap-2 px-3 py-1.5 lg:py-2.5 text-sm lg:text-base font-mono anim-fade-in-up" style={{ opacity: 0, animationDelay: `${i * 60}ms` }}>
                           <span className="text-[var(--c-muted)] w-4">{row.position}.</span>
                           <Link href={`/player/${encodeURIComponent(row.displayName)}`} className="flex-1 truncate hover:text-[var(--c-primary)] transition-colors">
-                            <RainbowName name={row.displayName} nameEffect={row.nameEffect} themeColor={row.themeColor} fallbackColor="var(--c-secondary)" />
+                            <RainbowName name={row.displayName} nameEffect={row.nameEffect} themeColor={row.themeColor} fallbackColor="#3cc462" />
                           </Link>
                           <span className="text-sm font-mono shrink-0" style={{ color: row.rankColor }}>{row.rankLabel}</span>
                           <span className="text-[var(--c-primary)]">{row.rankPoints} pts</span>

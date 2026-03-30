@@ -97,7 +97,7 @@ export async function GET(req: Request) {
     ...e,
     level: playerMap[e.name]?.level ?? 1,
     nameEffect: playerMap[e.name]?.nameEffect ?? null,
-    themeColor: playerMap[e.name]?.color ?? null,
+    themeColor: playerMap[e.name]?.color ?? '#00ff41',
   })));
 }
 
