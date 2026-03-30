@@ -790,6 +790,59 @@ body {
   ) !important;
 }
 
+/* ═══════════════════════════════════════════════════
+   ROGUELIKE — timer, death, floor intro animations
+   ═══════════════════════════════════════════════════ */
+
+/* Timer progress bar — color set via inline style */
+@keyframes timer-shrink {
+  from { width: 100%; }
+  to   { width: 0%; }
+}
+.roguelike-timer-bar {
+  height: 4px;
+  border-radius: 2px;
+  animation: timer-shrink var(--timer-duration, 15s) linear forwards;
+}
+
+/* Death screen shake — more dramatic for final death */
+@keyframes death-shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); }
+  20%, 40%, 60%, 80% { transform: translateX(6px); }
+}
+.anim-death-shake {
+  animation: death-shake 0.6s ease-in-out;
+}
+
+/* Red border flash on wrong answer */
+@keyframes red-border-flash {
+  0%   { border-color: #ff3333; box-shadow: 0 0 20px rgba(255, 51, 51, 0.4), inset 0 0 20px rgba(255, 51, 51, 0.1); }
+  100% { border-color: color-mix(in srgb, var(--c-primary) 35%, transparent); box-shadow: none; }
+}
+.anim-red-flash {
+  animation: red-border-flash 0.8s ease-out forwards;
+}
+
+/* Floor intro title */
+@keyframes floor-intro-zoom {
+  0%   { transform: scale(0.6); opacity: 0; }
+  60%  { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.anim-floor-intro {
+  animation: floor-intro-zoom 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Wager button pulse */
+@keyframes wager-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 170, 0, 0); }
+  50%      { box-shadow: 0 0 12px 2px rgba(255, 170, 0, 0.3); }
+}
+.anim-wager-pulse {
+  animation: wager-pulse 1.5s ease-in-out infinite;
+}
+
 /* Respect reduced motion — pause new animations too */
 @media (prefers-reduced-motion: reduce) {
   .anim-xp-pop,
@@ -810,5 +863,15 @@ body {
   }
   .data-stream {
     display: none !important;
+  }
+  .roguelike-timer-bar {
+    animation: none !important;
+    width: 50% !important;
+  }
+  .anim-death-shake,
+  .anim-red-flash,
+  .anim-floor-intro,
+  .anim-wager-pulse {
+    animation: none !important;
   }
 }
