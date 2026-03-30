@@ -70,14 +70,17 @@ export function getShopOfferings(state: RoguelikeRunState, count: number): PerkI
 export function applyPerkPurchase(
   state: RoguelikeRunState,
   perkId: PerkId,
+  priceOverride?: number,
 ): RoguelikeRunState {
   const def = PERK_DEFS.find((d) => d.id === perkId);
   if (!def) throw new Error(`Unknown perk: ${perkId}`);
-  if (state.intel < def.cost) throw new Error(`Insufficient Intel for perk: ${perkId}`);
+
+  const effectiveCost = priceOverride ?? def.cost;
+  if (state.intel < effectiveCost) throw new Error(`Insufficient Intel for perk: ${perkId}`);
 
   const next: RoguelikeRunState = {
     ...state,
-    intel: state.intel - def.cost,
+    intel: state.intel - effectiveCost,
     perks: [...state.perks, perkId],
   };
 

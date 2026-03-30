@@ -14,6 +14,8 @@ import {
 import { generateOperationName } from '@/lib/roguelike-operations';
 import { assignGimmicks } from '@/lib/roguelike-gimmicks';
 import { selectFloorCards } from '@/lib/roguelike-cards';
+import { hasUpgrade } from '@/lib/roguelike-upgrades';
+import type { UpgradeId } from '@/lib/roguelike-upgrades';
 import type { Card } from '@/lib/types';
 
 // POST /api/roguelike/start — Begin a new roguelike run
@@ -54,6 +56,13 @@ export async function POST() {
     if (existingRunId) {
       return NextResponse.json({ error: 'Active run already in progress', runId: existingRunId }, { status: 409 });
     }
+
+    // ── Fetch player's permanent upgrades ──
+    const { data: upgradeRows } = await admin
+      .from('roguelike_upgrades')
+      .select('upgrade_id')
+      .eq('player_id', playerId);
+    const ownedUpgrades: UpgradeId[] = (upgradeRows ?? []).map((r) => r.upgrade_id as UpgradeId);
 
     // ── Generate operation name + assign floor gimmicks ──
     const operationName = generateOperationName();
@@ -103,6 +112,19 @@ export async function POST() {
       .map((id) => cards.find((c) => c.id === id))
       .filter((c): c is Card => c !== undefined);
 
+    // ── Apply permanent upgrade effects ──
+    let startLives = ROGUELIKE_DEFAULT_LIVES;
+    let freeInspections = 0;
+    let intelMultiplier = 1;
+    let shopSlots = 3;
+    let perkDiscount = 1;
+
+    if (hasUpgrade(ownedUpgrades, 'THICK_SKIN')) startLives = 4;
+    if (hasUpgrade(ownedUpgrades, 'ANALYST_EYE')) freeInspections = 1;
+    if (hasUpgrade(ownedUpgrades, 'HAZARD_PAY')) intelMultiplier = 1.15;
+    if (hasUpgrade(ownedUpgrades, 'BLACK_MARKET')) shopSlots = 4;
+    if (hasUpgrade(ownedUpgrades, 'INSIDER_TRADING')) perkDiscount = 0.9;
+
     // ── Create roguelike_runs DB record ──
     const { data: runRecord, error: insertError } = await admin
       .from('roguelike_runs')
@@ -112,7 +134,7 @@ export async function POST() {
         score: 0,
         floor_reached: 0,
         floors_cleared: 0,
-        lives_remaining: ROGUELIKE_DEFAULT_LIVES,
+        lives_remaining: startLives,
         lives_max: ROGUELIKE_MAX_LIVES,
         intel_earned: 0,
         intel_spent: 0,
@@ -143,7 +165,7 @@ export async function POST() {
       playerId,
       currentFloor: 0,
       totalFloors: ROGUELIKE_FLOORS,
-      lives: ROGUELIKE_DEFAULT_LIVES,
+      lives: startLives,
       maxLives: ROGUELIKE_MAX_LIVES,
       intel: 0,
       score: 0,
@@ -161,6 +183,12 @@ export async function POST() {
       startedAt: now,
       completedAt: null,
       status: 'active',
+      // Phase 2 upgrade state
+      activeUpgrades: ownedUpgrades.length > 0 ? ownedUpgrades : undefined,
+      freeInspections: freeInspections > 0 ? freeInspections : undefined,
+      intelMultiplier: intelMultiplier !== 1 ? intelMultiplier : undefined,
+      shopSlots: shopSlots !== 3 ? shopSlots : undefined,
+      perkDiscount: perkDiscount !== 1 ? perkDiscount : undefined,
     };
 
     // ── Store state, cards, and assignments in Redis (Fix 12: handle errors) ──
@@ -193,12 +221,14 @@ export async function POST() {
       operationName,
       currentFloor: 0,
       totalFloors: ROGUELIKE_FLOORS,
-      lives: ROGUELIKE_DEFAULT_LIVES,
+      lives: startLives,
       maxLives: ROGUELIKE_MAX_LIVES,
       intel: 0,
       score: 0,
       gimmick: floorGimmicks[0] ?? null,
       floorGimmicks,
+      activeUpgrades: ownedUpgrades.length > 0 ? ownedUpgrades : undefined,
+      freeInspections: freeInspections > 0 ? freeInspections : undefined,
       cards: safeCards,
       assignments: floor0Assignments,
     });

@@ -48,10 +48,16 @@ export async function GET(
     if (state.playerId !== playerId) return NextResponse.json({ error: 'Not your run' }, { status: 403 });
     if (state.status !== 'active') return NextResponse.json({ error: 'Run is not active' }, { status: 409 });
 
-    // ── Get shop offerings ──
-    const offeringIds = getShopOfferings(state, 3);
+    // ── Get shop offerings (BLACK_MARKET upgrade: 4 slots instead of 3) ──
+    const shopSlots = state.shopSlots ?? 3;
+    const offeringIds = getShopOfferings(state, shopSlots);
     const offerings = offeringIds.map((id) => {
       const def = PERK_DEFS.find((d) => d.id === id);
+      if (!def) return null;
+      // INSIDER_TRADING upgrade: 10% discount on perk prices
+      if (state.perkDiscount && state.perkDiscount < 1) {
+        return { ...def, cost: Math.max(0, Math.floor(def.cost * state.perkDiscount)) };
+      }
       return def;
     }).filter(Boolean);
 
@@ -101,9 +107,16 @@ export async function POST(
     if (state.status !== 'active') return NextResponse.json({ error: 'Run is not active' }, { status: 409 });
 
     // ── Apply purchase (throws if insufficient intel or unknown perk) ──
+    // INSIDER_TRADING upgrade: 10% discount on perk prices
+    let priceOverride: number | undefined;
+    if (state.perkDiscount && state.perkDiscount < 1) {
+      const def = PERK_DEFS.find((d) => d.id === perkId);
+      if (def) priceOverride = Math.max(0, Math.floor(def.cost * state.perkDiscount));
+    }
+
     let updatedState: RoguelikeRunState;
     try {
-      updatedState = applyPerkPurchase(state, perkId);
+      updatedState = applyPerkPurchase(state, perkId, priceOverride);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Purchase failed';
       return NextResponse.json({ error: msg }, { status: 400 });

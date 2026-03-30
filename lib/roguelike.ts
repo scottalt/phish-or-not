@@ -350,6 +350,12 @@ export interface RoguelikeRunState {
   startedAt: string;          // ISO timestamp
   completedAt: string | null;
   status: 'active' | 'dead' | 'completed';
+  // Phase 2: permanent upgrades active for this run
+  activeUpgrades?: string[];       // UpgradeId[] active for this run
+  freeInspections?: number;        // ANALYST_EYE: free inspections remaining
+  intelMultiplier?: number;        // HAZARD_PAY: 1.15x intel
+  shopSlots?: number;              // BLACK_MARKET: 4 instead of 3
+  perkDiscount?: number;           // INSIDER_TRADING: 0.9 multiplier
 }
 
 // ─── Leaderboard ──────────────────────────────────────────────────────────────

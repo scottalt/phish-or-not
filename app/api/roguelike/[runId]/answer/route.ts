@@ -170,6 +170,16 @@ export async function POST(
         earned += INTEL_SPEED_BONUS;
       }
 
+      // HAZARD_PAY upgrade: +15% Intel from correct answers
+      if (state.intelMultiplier && state.intelMultiplier > 1) {
+        earned = Math.round(earned * state.intelMultiplier);
+      }
+
+      // LAST_STAND upgrade: at 1 life, correct answers give +3 Intel bonus
+      if (newLives === 1 && state.activeUpgrades?.includes('LAST_STAND')) {
+        earned += 3;
+      }
+
       // DOUBLE_INTEL perk: doubles this card's intel (one-time use)
       if (hasPerk(state, 'DOUBLE_INTEL')) {
         earned *= 2;
@@ -205,12 +215,20 @@ export async function POST(
     let newFloorsCleared = state.floorsCleared;
     let newIntelFinal = newIntel;
 
+    let finalLives = newLives;
+
     if (newLives <= 0) {
       newStatus = 'dead';
     } else if (floorComplete) {
       // Floor completed — award floor clear intel bonus
       newIntelFinal = newIntel + INTEL_FLOOR_CLEAR;
       newFloorsCleared = state.floorsCleared + 1;
+
+      // FIELD_MEDIC upgrade: heal 1 life on floor clear (if below max)
+      if (state.activeUpgrades?.includes('FIELD_MEDIC') && finalLives < state.maxLives) {
+        finalLives = finalLives + 1;
+      }
+
       // Status stays 'active'; client will call shop/next-floor
     }
 
@@ -220,7 +238,7 @@ export async function POST(
       streak: newStreak,
       bestStreak: newBestStreak,
       deaths: newDeaths,
-      lives: newLives,
+      lives: finalLives,
       intel: newIntelFinal,
       score: newScore,
       cardHistory: newCardHistory,
@@ -247,7 +265,7 @@ export async function POST(
       explanation: card.explanation,
       technique: card.technique ?? null,
       cardScore,
-      lives: newLives,
+      lives: finalLives,
       intel: newIntelFinal,
       score: newScore,
       streak: newStreak,
