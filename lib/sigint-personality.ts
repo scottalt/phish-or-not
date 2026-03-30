@@ -689,6 +689,55 @@ export const PROMO_DIALOGUES = {
   } as SigintDialogue,
 };
 
+// ── Roguelike mode dialogues ──
+
+export const ROGUELIKE_DIALOGUES = {
+  first_roguelike: {
+    lines: [
+      "New briefing, operative.",
+      "This is DEADLOCK — a high-stakes simulation tower.",
+      "Five floors of escalating threats. Three lives. Perks between floors.",
+      "The emails get harder. The modifiers stack. And if you run out of lives...",
+      "...you start from scratch.",
+      "Good luck in there. I'll be on comms.",
+    ],
+    buttonText: "BEGIN OPERATION",
+  } as SigintDialogue,
+
+  roguelike_death: {
+    lines: [
+      "We lost containment.",
+      "Debrief: take what you learned and run it again.",
+    ],
+    buttonText: "ACKNOWLEDGED",
+  } as SigintDialogue,
+
+  roguelike_death_floor1: {
+    lines: [
+      "...",
+      "You didn't even make it past triage.",
+      "Coffee first next time.",
+    ],
+    buttonText: "FAIR ENOUGH",
+  } as SigintDialogue,
+
+  roguelike_clear: {
+    lines: [
+      "Tower cleared. All floors. Every threat neutralized.",
+      "Not bad, operative. Not bad at all.",
+    ],
+    buttonText: "MISSION COMPLETE",
+  } as SigintDialogue,
+
+  roguelike_flawless: {
+    lines: [
+      "Flawless. Zero casualties. Perfect read on every threat.",
+      "I'm putting this one in the classified file.",
+    ],
+    buttonText: "ACKNOWLEDGED",
+  } as SigintDialogue,
+};
+
 // ── All dialogues combined for lookup ──
 
 export const ALL_DIALOGUES: Record<string, SigintDialogue> = {
@@ -696,4 +745,5 @@ export const ALL_DIALOGUES: Record<string, SigintDialogue> = {
   ...ONBOARDING_EXTRA,
   ...MILESTONES,
   ...PAGE_VISITS,
+  ...ROGUELIKE_DIALOGUES,
 };
