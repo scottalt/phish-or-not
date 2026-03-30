@@ -45,8 +45,10 @@ export function assignGimmicks(floorCount: number = ROGUELIKE_FLOORS): (GimmickI
  * or null if the gimmick does not impose a timer.
  *
  * UNDER_PRESSURE: 15 000ms base, minus 2 000ms per floor, minimum 8 000ms.
+ * QUICK_SCAN: flat 12 000ms per card — fast pace, no floor scaling.
  */
 export function getTimerDuration(gimmick: GimmickId | null, floor: number): number | null {
+  if (gimmick === 'QUICK_SCAN') return 12000;
   if (gimmick !== 'UNDER_PRESSURE') return null;
   const duration = 15000 - floor * 2000;
   return Math.max(8000, duration);

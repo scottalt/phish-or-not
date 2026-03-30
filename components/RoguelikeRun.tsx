@@ -83,7 +83,7 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
 
   // ── Run state ──
   const [floor, setFloor] = useState(0);
-  const [totalFloors, setTotalFloors] = useState(3);
+  const [totalFloors, setTotalFloors] = useState(ROGUELIKE_FLOORS);
   const [gimmick, setGimmick] = useState<GimmickId | null>(null);
   const [gimmicks, setGimmicks] = useState<(GimmickId | null)[]>([]);
   const [lives, setLives] = useState(3);
@@ -995,6 +995,14 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
             [ CONFIRM ]
           </button>
         </div>
+
+        {/* Abort during wager */}
+        <button
+          onClick={onBack}
+          className="text-xs text-[var(--c-muted)] hover:text-[var(--c-secondary)] tracking-widest text-center pt-1 transition-colors"
+        >
+          [ ABORT MISSION ]
+        </button>
       </div>
     );
   }
