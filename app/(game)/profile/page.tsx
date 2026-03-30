@@ -70,7 +70,7 @@ export default function ProfilePage() {
   const [backgroundSaving, setBackgroundSaving] = useState(false);
   const [showRanks, setShowRanks] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
-  const [profileTab, setProfileTab] = useState<'info' | 'solo' | 'h2h' | 'quests' | 'friends'>('info');
+  const [profileTab, setProfileTab] = useState<'info' | 'solo' | 'h2h' | 'quests' | 'friends' | 'deadlock'>('info');
   const [editingBio, setEditingBio] = useState(false);
   const [bioValue, setBioValue] = useState('');
   const [bioSaving, setBioSaving] = useState(false);
@@ -576,6 +576,18 @@ export default function ProfilePage() {
               </span>
             )}
           </button>
+          {profile.researchGraduated && (
+            <button
+              onClick={() => setProfileTab('deadlock')}
+              className={`flex-1 py-2 text-sm font-mono tracking-widest transition-colors ${
+                profileTab === 'deadlock'
+                  ? 'text-[#ff3333] bg-[rgba(255,51,51,0.06)] border-b-2 border-[#ff3333]'
+                  : 'text-[var(--c-secondary)] hover:text-[#ff3333] border-b-2 border-transparent'
+              }`}
+            >
+              DEADLOCK
+            </button>
+          )}
         </div>
 
         {/* ═══════════════ INFO TAB ═══════════════ */}

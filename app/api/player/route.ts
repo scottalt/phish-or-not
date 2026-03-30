@@ -80,7 +80,7 @@ export async function GET(req: NextRequest) {
   const nowHour = new Date().toISOString().slice(0, 13);
   const todayStr = new Date().toISOString().slice(0, 10);
 
-  const [{ count: researchAnswersSubmitted }, { data: achievementRows }, { data: streakData }, { data: momentRows }, hourlyCount, dailyCount, { data: dailyAnswers }] = await Promise.all([
+  const [{ count: researchAnswersSubmitted }, { data: achievementRows }, { data: streakData }, { data: momentRows }, hourlyCount, dailyCount, { data: dailyAnswers }, { data: roguelikeRunsRaw }] = await Promise.all([
     admin.from('answers').select('*', { count: 'exact', head: true })
       .eq('player_id', row.id as string).eq('game_mode', 'research'),
     admin.from('player_achievements').select('achievement_id')
@@ -97,6 +97,11 @@ export async function GET(req: NextRequest) {
       .eq('player_id', row.id as string)
       .eq('game_mode', 'daily')
       .gte('created_at', todayStr + 'T00:00:00.000Z'),
+    // Roguelike run stats
+    admin.from('roguelike_runs')
+      .select('score, floors_cleared, clearance_earned, cards_answered, cards_correct')
+      .eq('player_id', row.id as string)
+      .in('status', ['complete', 'abandoned']),
   ]);
 
   const achievements = (achievementRows ?? []).map((r: { achievement_id: string }) => r.achievement_id);
@@ -132,10 +137,28 @@ export async function GET(req: NextRequest) {
     dailyResult = { score, totalScore };
   }
 
+  // Compute roguelike stats from run rows
+  const roguelikeRuns = roguelikeRunsRaw ?? [];
+  const roguelikeTotalRuns = roguelikeRuns.length;
+  const roguelikeBestScore = roguelikeRuns.reduce((max, r) => Math.max(max, (r.score as number) ?? 0), 0);
+  const roguelikeBestFloor = roguelikeRuns.reduce((max, r) => Math.max(max, (r.floors_cleared as number) ?? 0), 0);
+  const roguelikeTotalClearanceEarned = roguelikeRuns.reduce((sum, r) => sum + ((r.clearance_earned as number) ?? 0), 0);
+  const roguelikeAccuracyRuns = roguelikeRuns.filter(r => ((r.cards_answered as number) ?? 0) > 0);
+  const roguelikeAvgAccuracy = roguelikeAccuracyRuns.length > 0
+    ? roguelikeAccuracyRuns.reduce((sum, r) => sum + ((r.cards_correct as number) ?? 0) / (r.cards_answered as number), 0) / roguelikeAccuracyRuns.length
+    : 0;
+  const roguelikeClearance = (row.roguelike_clearance as number) ?? 0;
+
   const profile = toProfile(row, researchAnswersSubmitted ?? 0, achievements, streakData, seenMoments);
 
   return NextResponse.json({
     ...profile,
+    roguelikeBestScore,
+    roguelikeBestFloor,
+    roguelikeTotalRuns,
+    roguelikeClearance,
+    roguelikeAvgAccuracy: Math.round(roguelikeAvgAccuracy * 100),
+    roguelikeTotalClearanceEarned,
     dailyResult,
     cooldown: {
       hourlyRemaining: Math.max(0, MAX_HOURLY - hUsed),
