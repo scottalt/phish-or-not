@@ -77,7 +77,8 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
   const [callsignError, setCallsignError] = useState('');
   const [background, setBackground] = useState<PlayerBackground | null>(null);
   const [xpLeaderboard, setXpLeaderboard] = useState<{ display_name: string | null; xp: number; level: number; research_graduated: boolean; theme_id?: string | null }[]>([]);
-  const [activeTab, setActiveTab] = useState<'daily' | 'xp' | 'h2h'>('xp');
+  const [activeTab, setActiveTab] = useState<'daily' | 'xp' | 'h2h' | 'roguelike'>('xp');
+  const [roguelikeLeaderboard, setRoguelikeLeaderboard] = useState<{name: string; score: number; level?: number; nameEffect?: string | null; themeColor?: string | null; operationName?: string | null; floorReached?: number | null; deaths?: number | null}[]>([]);
   const [h2hStats, setH2HStats] = useState<{ rankLabel: string; rankIcon: string; rankPoints: number; rankColor: string; wins: number; losses: number; winStreak: number } | null>(null);
   const [h2hLeaderboard, setH2HLeaderboard] = useState<{ position: number; displayName: string; rankPoints: number; rankLabel: string; rankColor: string; wins: number; losses: number; nameEffect?: string | null; themeColor?: string | null }[]>([]);
   const [lbExpanded, setLbExpanded] = useState(false);
@@ -173,6 +174,8 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
       ]);
       if (dailyRes.ok) setDailyLeaderboard(await dailyRes.json());
       if (xpRes.ok) setXpLeaderboard(await xpRes.json());
+      const roguelikeRes = await fetch('/api/roguelike/leaderboard');
+      if (roguelikeRes.ok) setRoguelikeLeaderboard(await roguelikeRes.json());
     } catch {
       // silently fail
     }
@@ -740,6 +743,17 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
                         </button>
                       </>
                     )}
+                    {canSeeH2HLb && (
+                      <>
+                        <span className="text-[var(--c-muted)] text-sm">|</span>
+                        <button
+                          onClick={() => setActiveTab('roguelike')}
+                          className={`text-sm font-mono tracking-widest ${activeTab === 'roguelike' ? 'text-[#ff3333]' : 'text-[var(--c-muted)] hover:text-[var(--c-secondary)]'}`}
+                        >
+                          DEADLOCK
+                        </button>
+                      </>
+                    )}
                   </div>
                   {activeTab === 'xp' && xpLeaderboard.length > 0 && (
                     <div key={`xp-${xpLeaderboard.length}`} className="divide-y divide-[color-mix(in_srgb,var(--c-primary)_8%,transparent)]">
@@ -807,6 +821,32 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
                   )}
                   {canSeeH2HLb && activeTab === 'h2h' && h2hLeaderboard.length === 0 && (
                     <div className="px-3 py-4 text-center text-[var(--c-muted)] text-sm font-mono">No ranked matches yet. Be the first.</div>
+                  )}
+                  {canSeeH2HLb && activeTab === 'roguelike' && roguelikeLeaderboard.length > 0 && (
+                    <div key={`roguelike-${roguelikeLeaderboard.length}`} className="divide-y divide-[color-mix(in_srgb,var(--c-primary)_8%,transparent)]">
+                      {roguelikeLeaderboard.map((entry, i) => (
+                        <div key={i} className="flex items-center gap-3 px-3 py-1.5 lg:py-2.5 anim-fade-in-up" style={{ opacity: 0, animationDelay: `${Math.min(i, 10) * 60}ms` }}>
+                          <span className={`text-sm font-mono w-4 shrink-0 ${i === 0 ? 'text-[#ff3333]' : 'text-[var(--c-muted)]'}`}>{i + 1}</span>
+                          {entry.name ? (
+                            <Link href={`/player/${encodeURIComponent(entry.name)}`} className="text-sm font-mono flex-1 truncate hover:text-[var(--c-primary)] transition-colors">
+                              <RainbowName name={entry.name} nameEffect={entry.nameEffect} themeColor={entry.themeColor} fallbackColor="#3cc462" />
+                            </Link>
+                          ) : (
+                            <span className="text-[var(--c-muted)] text-sm font-mono flex-1 truncate">ANON</span>
+                          )}
+                          {entry.operationName && (
+                            <span className="text-[#ff3333] text-xs font-mono shrink-0 hidden sm:block truncate max-w-[80px]">{entry.operationName}</span>
+                          )}
+                          {entry.floorReached != null && (
+                            <span className="text-[var(--c-secondary)] text-xs font-mono shrink-0">F{entry.floorReached}</span>
+                          )}
+                          <span className="text-[#ff3333] text-sm font-mono font-bold shrink-0">{entry.score}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {canSeeH2HLb && activeTab === 'roguelike' && roguelikeLeaderboard.length === 0 && (
+                    <div className="px-3 py-4 text-center text-[var(--c-muted)] text-sm font-mono">No runs yet. Be the first to survive.</div>
                   )}
                   {!lbExpanded && (xpLeaderboard.length >= 10 || dailyLeaderboard.length >= 10) && (
                     <button
@@ -976,6 +1016,14 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
                     {pvpButton}
                     {dailyButton}
                   </div>
+                  <button
+                    onClick={() => handleStart('roguelike')}
+                    className="w-full py-4 term-border font-mono font-bold tracking-widest text-sm active:scale-95 transition-all text-[#ff3333] hover:bg-[rgba(255,51,51,0.05)]"
+                    style={{ borderColor: 'rgba(255, 51, 51, 0.35)' }}
+                  >
+                    [ DEADLOCK ]
+                    <div className="text-[var(--c-muted)] text-xs mt-1 font-normal tracking-wide">Roguelike Survival</div>
+                  </button>
                   {leaderboard}
                   {versionLink}
                 </div>
@@ -991,8 +1039,16 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
                 <div className="flex flex-col sm:flex-row gap-3">
                   {pvpButton}
                   {dailyButton}
-                  {freeplayButton}
                 </div>
+                <button
+                  onClick={() => handleStart('roguelike')}
+                  className="w-full py-4 term-border font-mono font-bold tracking-widest text-sm active:scale-95 transition-all text-[#ff3333] hover:bg-[rgba(255,51,51,0.05)]"
+                  style={{ borderColor: 'rgba(255, 51, 51, 0.35)' }}
+                >
+                  [ DEADLOCK ]
+                  <div className="text-[var(--c-muted)] text-xs mt-1 font-normal tracking-wide">Roguelike Survival</div>
+                </button>
+                {freeplayButton}
                 {leaderboard}
                 {versionLink}
               </div>

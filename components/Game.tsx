@@ -47,6 +47,7 @@ import { H2HQueue } from './H2HQueue';
 import { H2HCountdown } from './H2HCountdown';
 import { H2HMatch } from './H2HMatch';
 import { H2HResult } from './H2HResult';
+import { RoguelikeRun } from './RoguelikeRun';
 import type { Card, DealCard, Answer, Confidence, RoundResult, GameMode, AnswerEvent, SessionPayload } from '@/lib/types';
 import type { SafeDealCard } from '@/lib/card-utils';
 import { useSoundEnabled, useMusicEnabled } from '@/lib/useSoundEnabled';
@@ -98,6 +99,7 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
   const [h2hOpponentBadge, setH2HOpponentBadge] = useState<string | null>(null);
   const [h2hOpponentThemeColor, setH2HOpponentThemeColor] = useState('#00ff41');
   const [h2hResult, setH2HResult] = useState<{ winnerId: string | null; myPointsDelta: number; opponentPointsDelta: number; reason: string } | null>(null);
+  const [roguelikeActive, setRoguelikeActive] = useState(false);
   const hasAutoStarted = useRef(false);
   const tutorialCorrectRef = useRef(false);
   const [flashClass, setFlashClass] = useState<string | null>(null);
@@ -166,6 +168,11 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
     if (newMode === 'h2h') {
       setMode('h2h');
       setPhase('h2h_lobby');
+      return;
+    }
+
+    if (newMode === 'roguelike') {
+      setRoguelikeActive(true);
       return;
     }
 
@@ -475,6 +482,18 @@ export function Game({ previewMode = false }: { previewMode?: boolean }) {
       setCurrentIndex(nextIndex);
       setPhase('playing');
     }
+  }
+
+  if (roguelikeActive) {
+    return (
+      <RoguelikeRun
+        onBack={() => setRoguelikeActive(false)}
+        onPlayAgain={() => {
+          setRoguelikeActive(false);
+          setTimeout(() => setRoguelikeActive(true), 100);
+        }}
+      />
+    );
   }
 
   if (phase === 'h2h_lobby' && profile) {
