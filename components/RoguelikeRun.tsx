@@ -168,9 +168,14 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
       });
-      if (!res.ok) return null;
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        console.error(`[RoguelikeRun] Finalize failed: HTTP ${res.status}`, body);
+        return null;
+      }
       return await res.json();
-    } catch {
+    } catch (err) {
+      console.error('[RoguelikeRun] Finalize failed:', err);
       return null;
     }
   }
@@ -194,6 +199,8 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
       });
 
       if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        console.error(`[RoguelikeRun] Answer failed: HTTP ${res.status}`, body);
         answering.current = false;
         return;
       }
@@ -250,7 +257,8 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
         setPhase('floor');
       }, 1500);
 
-    } catch {
+    } catch (err) {
+      console.error('[RoguelikeRun] Answer failed:', err);
       answering.current = false;
     }
   }
@@ -269,7 +277,8 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
       setIntel(data.intel);
       setLives(data.lives);
       setPhase('shop');
-    } catch {
+    } catch (err) {
+      console.error('[RoguelikeRun] Shop load failed:', err);
       await advanceToNextFloor(id);
     }
   }
@@ -282,7 +291,11 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ perkId }),
     });
-    if (!res.ok) return;
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      console.error(`[RoguelikeRun] Buy perk failed: HTTP ${res.status}`, body);
+      return;
+    }
     const data = await res.json();
     setIntel(data.intel);
     setLives(data.lives);
@@ -337,7 +350,8 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
       // Preview the NEXT floor's gimmick for the shop (store for next shop visit)
       setNextGimmick(null);
       setPhase('floor');
-    } catch {
+    } catch (err) {
+      console.error('[RoguelikeRun] Next floor failed:', err);
       const result = await finalizeRun(id);
       setResultData(result);
       setPhase('result');

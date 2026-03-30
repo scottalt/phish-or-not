@@ -85,6 +85,9 @@ export function applyPerkPurchase(
   if (perkId === 'EXTRA_LIFE') {
     next.lives = Math.min(next.lives + 1, ROGUELIKE_MAX_LIVES);
   }
+  if (perkId === 'INTEL_CACHE') {
+    next.intel += 20;
+  }
 
   return next;
 }

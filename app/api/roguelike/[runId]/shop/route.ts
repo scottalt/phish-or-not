@@ -26,39 +26,44 @@ export async function GET(
 ) {
   const { runId } = await params;
 
-  // ── Auth ──
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-    { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } },
-  );
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  try {
+    // ── Auth ──
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+      { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } },
+    );
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
-  const playerId = await getPlayerId(user.id);
-  if (!playerId) return NextResponse.json({ error: 'Player not found' }, { status: 404 });
+    const playerId = await getPlayerId(user.id);
+    if (!playerId) return NextResponse.json({ error: 'Player not found' }, { status: 404 });
 
-  // ── Load state ──
-  const state = await loadState(runId);
-  if (!state) return NextResponse.json({ error: 'Run not found or expired' }, { status: 404 });
-  if (state.playerId !== playerId) return NextResponse.json({ error: 'Not your run' }, { status: 403 });
-  if (state.status !== 'active') return NextResponse.json({ error: 'Run is not active' }, { status: 409 });
+    // ── Load state ──
+    const state = await loadState(runId);
+    if (!state) return NextResponse.json({ error: 'Run not found or expired' }, { status: 404 });
+    if (state.playerId !== playerId) return NextResponse.json({ error: 'Not your run' }, { status: 403 });
+    if (state.status !== 'active') return NextResponse.json({ error: 'Run is not active' }, { status: 409 });
 
-  // ── Get shop offerings ──
-  const offeringIds = getShopOfferings(state, 3);
-  const offerings = offeringIds.map((id) => {
-    const def = PERK_DEFS.find((d) => d.id === id);
-    return def;
-  }).filter(Boolean);
+    // ── Get shop offerings ──
+    const offeringIds = getShopOfferings(state, 3);
+    const offerings = offeringIds.map((id) => {
+      const def = PERK_DEFS.find((d) => d.id === id);
+      return def;
+    }).filter(Boolean);
 
-  return NextResponse.json({
-    offerings,
-    intel: state.intel,
-    perks: state.perks,
-  });
+    return NextResponse.json({
+      offerings,
+      intel: state.intel,
+      perks: state.perks,
+    });
+  } catch (err) {
+    console.error(`[roguelike/${runId}/shop] Unhandled error in GET:`, err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }
 
 // POST /api/roguelike/[runId]/shop — Purchase a perk
@@ -68,49 +73,54 @@ export async function POST(
 ) {
   const { runId } = await params;
 
-  // ── Auth ──
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-    { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } },
-  );
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-
-  const playerId = await getPlayerId(user.id);
-  if (!playerId) return NextResponse.json({ error: 'Player not found' }, { status: 404 });
-
-  // ── Parse body ──
-  const body = await req.json().catch(() => null);
-  if (!body?.perkId) return NextResponse.json({ error: 'Missing perkId' }, { status: 400 });
-  const { perkId } = body as { perkId: PerkId };
-
-  // ── Load state ──
-  const state = await loadState(runId);
-  if (!state) return NextResponse.json({ error: 'Run not found or expired' }, { status: 404 });
-  if (state.playerId !== playerId) return NextResponse.json({ error: 'Not your run' }, { status: 403 });
-  if (state.status !== 'active') return NextResponse.json({ error: 'Run is not active' }, { status: 409 });
-
-  // ── Apply purchase (throws if insufficient intel or unknown perk) ──
-  let updatedState: RoguelikeRunState;
   try {
-    updatedState = applyPerkPurchase(state, perkId);
+    // ── Auth ──
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+      { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } },
+    );
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+
+    const playerId = await getPlayerId(user.id);
+    if (!playerId) return NextResponse.json({ error: 'Player not found' }, { status: 404 });
+
+    // ── Parse body ──
+    const body = await req.json().catch(() => null);
+    if (!body?.perkId) return NextResponse.json({ error: 'Missing perkId' }, { status: 400 });
+    const { perkId } = body as { perkId: PerkId };
+
+    // ── Load state ──
+    const state = await loadState(runId);
+    if (!state) return NextResponse.json({ error: 'Run not found or expired' }, { status: 404 });
+    if (state.playerId !== playerId) return NextResponse.json({ error: 'Not your run' }, { status: 403 });
+    if (state.status !== 'active') return NextResponse.json({ error: 'Run is not active' }, { status: 409 });
+
+    // ── Apply purchase (throws if insufficient intel or unknown perk) ──
+    let updatedState: RoguelikeRunState;
+    try {
+      updatedState = applyPerkPurchase(state, perkId);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Purchase failed';
+      return NextResponse.json({ error: msg }, { status: 400 });
+    }
+
+    // ── Save updated state ──
+    await redis.set(`roguelike:run:${runId}`, JSON.stringify(updatedState), {
+      ex: ROGUELIKE_SESSION_TTL,
+    });
+
+    return NextResponse.json({
+      intel: updatedState.intel,
+      lives: updatedState.lives,
+      perks: updatedState.perks,
+    });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : 'Purchase failed';
-    return NextResponse.json({ error: msg }, { status: 400 });
+    console.error(`[roguelike/${runId}/shop] Unhandled error in POST:`, err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-
-  // ── Save updated state ──
-  await redis.set(`roguelike:run:${runId}`, JSON.stringify(updatedState), {
-    ex: ROGUELIKE_SESSION_TTL,
-  });
-
-  return NextResponse.json({
-    intel: updatedState.intel,
-    lives: updatedState.lives,
-    perks: updatedState.perks,
-  });
 }

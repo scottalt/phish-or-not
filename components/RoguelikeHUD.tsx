@@ -5,7 +5,7 @@ import type { GimmickId, CardModifier } from '@/lib/roguelike';
 
 interface Props {
   floor: number;           // 0-indexed
-  gimmick: GimmickId;
+  gimmick: GimmickId | null;
   lives: number;
   livesMax: number;
   intel: number;
@@ -34,8 +34,10 @@ export function RoguelikeHUD({
   totalCards,
   modifiers,
 }: Props) {
-  const gimmickDef = GIMMICK_DEFS[gimmick];
-  const gimmickColor = gimmickDef.tier === 1 ? '#00ff41' : '#00d4ff';
+  const gimmickDef = gimmick ? GIMMICK_DEFS[gimmick] : null;
+  const gimmickColor = gimmickDef
+    ? (gimmickDef.tier === 1 ? '#00ff41' : '#00d4ff')
+    : '#00ff41';
 
   return (
     <div className="w-full font-mono text-xs space-y-1.5 px-1 pb-2">
@@ -45,12 +47,14 @@ export function RoguelikeHUD({
           <span className="text-[var(--c-muted)] tracking-widest shrink-0">
             FLOOR {floor + 1}
           </span>
-          <span
-            className="truncate tracking-wide font-bold"
-            style={{ color: gimmickColor }}
-          >
-            {gimmickDef.label.toUpperCase()}
-          </span>
+          {gimmickDef && (
+            <span
+              className="truncate tracking-wide font-bold"
+              style={{ color: gimmickColor }}
+            >
+              {gimmickDef.label.toUpperCase()}
+            </span>
+          )}
         </div>
         <span className="text-[var(--c-muted)] shrink-0 tabular-nums">
           {cardIndex + 1}/{totalCards}

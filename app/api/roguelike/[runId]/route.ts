@@ -43,42 +43,47 @@ export async function GET(
 ) {
   const { runId } = await params;
 
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-    { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } },
-  );
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  try {
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+      { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } },
+    );
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
-  const result = await authAndLoad(user.id, runId);
-  if (result instanceof NextResponse) return result;
-  const { state } = result;
+    const result = await authAndLoad(user.id, runId);
+    if (result instanceof NextResponse) return result;
+    const { state } = result;
 
-  return NextResponse.json({
-    runId: state.runId,
-    operationName: state.operationName,
-    currentFloor: state.currentFloor,
-    totalFloors: state.totalFloors,
-    lives: state.lives,
-    maxLives: state.maxLives,
-    intel: state.intel,
-    score: state.score,
-    streak: state.streak,
-    bestStreak: state.bestStreak,
-    deaths: state.deaths,
-    perks: state.perks,
-    floorsCleared: state.floorsCleared,
-    currentCardIndex: state.currentCardIndex,
-    currentGimmick: state.currentGimmick,
-    floorGimmicks: state.floorGimmicks,
-    startedAt: state.startedAt,
-    completedAt: state.completedAt,
-    status: state.status,
-  });
+    return NextResponse.json({
+      runId: state.runId,
+      operationName: state.operationName,
+      currentFloor: state.currentFloor,
+      totalFloors: state.totalFloors,
+      lives: state.lives,
+      maxLives: state.maxLives,
+      intel: state.intel,
+      score: state.score,
+      streak: state.streak,
+      bestStreak: state.bestStreak,
+      deaths: state.deaths,
+      perks: state.perks,
+      floorsCleared: state.floorsCleared,
+      currentCardIndex: state.currentCardIndex,
+      currentGimmick: state.currentGimmick,
+      floorGimmicks: state.floorGimmicks,
+      startedAt: state.startedAt,
+      completedAt: state.completedAt,
+      status: state.status,
+    });
+  } catch (err) {
+    console.error(`[roguelike/${runId}] Unhandled error in GET:`, err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }
 
 // PATCH /api/roguelike/[runId] — Finalize run, calculate score, award clearance
@@ -88,112 +93,141 @@ export async function PATCH(
 ) {
   const { runId } = await params;
 
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-    { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } },
-  );
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  try {
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+      { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } },
+    );
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
-  const result = await authAndLoad(user.id, runId);
-  if (result instanceof NextResponse) return result;
-  const { playerId, state } = result;
+    const result = await authAndLoad(user.id, runId);
+    if (result instanceof NextResponse) return result;
+    const { playerId, state } = result;
 
-  // Only finalize if in a terminal state
-  if (state.status === 'active') {
-    return NextResponse.json({ error: 'Run is still active' }, { status: 409 });
-  }
+    // Fix 4: Idempotency — prevent double finalization
+    if (state.completedAt) {
+      return NextResponse.json({ error: 'Run already finalized' }, { status: 409 });
+    }
 
-  // ── Calculate final score and clearance ──
-  const finalScore = calculateFinalScore(
-    state.score,
-    state.floorsCleared,
-    state.deaths,
-    state.bestStreak,
-    state.totalFloors,
-  );
-  const clearance = calculateRunClearance(state.floorsCleared, state.deaths, state.totalFloors);
-  const completedAt = state.completedAt ?? new Date().toISOString();
+    // Only finalize if in a terminal state
+    if (state.status === 'active') {
+      return NextResponse.json({ error: 'Run is still active' }, { status: 409 });
+    }
 
-  const admin = getSupabaseAdminClient();
+    // ── Calculate final score and clearance ──
+    const finalScore = calculateFinalScore(
+      state.score,
+      state.floorsCleared,
+      state.deaths,
+      state.bestStreak,
+      state.totalFloors,
+    );
+    const clearance = calculateRunClearance(state.floorsCleared, state.deaths, state.totalFloors);
+    const completedAt = new Date().toISOString();
 
-  // ── Update DB record ──
-  const dbStatus = state.status === 'completed' ? 'complete' : 'abandoned';
-  await admin
-    .from('roguelike_runs')
-    .update({
-      score: finalScore,
-      floor_reached: state.currentFloor,
-      floors_cleared: state.floorsCleared,
-      lives_remaining: state.lives,
-      intel_earned: state.intel,
-      clearance_earned: clearance,
-      perks_purchased: state.perks,
-      best_streak: state.bestStreak,
-      deaths: state.deaths,
-      status: dbStatus,
-      ended_at: completedAt,
-    })
-    .eq('id', runId);
+    const admin = getSupabaseAdminClient();
 
-  // ── Award clearance to player (read-then-increment) ──
-  const { data: playerClearance } = await admin
-    .from('players')
-    .select('roguelike_clearance')
-    .eq('id', playerId)
-    .single();
-  if (playerClearance) {
-    await admin
+    // ── Update DB record (Fix 9: check for errors) ──
+    const dbStatus = state.status === 'completed' ? 'complete' : 'abandoned';
+    const { error: updateError } = await admin
+      .from('roguelike_runs')
+      .update({
+        score: finalScore,
+        floor_reached: state.currentFloor,
+        floors_cleared: state.floorsCleared,
+        lives_remaining: state.lives,
+        intel_earned: state.intel,
+        clearance_earned: clearance,
+        perks_purchased: state.perks,
+        best_streak: state.bestStreak,
+        deaths: state.deaths,
+        status: dbStatus,
+        ended_at: completedAt,
+      })
+      .eq('id', runId);
+
+    if (updateError) {
+      console.error(`[roguelike/${runId}] DB update failed:`, updateError);
+      return NextResponse.json({ error: 'Failed to save run' }, { status: 500 });
+    }
+
+    // ── Award clearance to player (Fix 10: atomic SQL increment) ──
+    if (clearance > 0) {
+      const { error: clErr } = await admin.rpc('increment_roguelike_clearance', {
+        player_id: playerId,
+        amount: clearance,
+      });
+      if (clErr) {
+        // Fallback: read-then-write with error logging
+        console.warn(`[roguelike/${runId}] RPC increment failed, falling back:`, clErr);
+        const { data: pData } = await admin
+          .from('players')
+          .select('roguelike_clearance')
+          .eq('id', playerId)
+          .single();
+        if (pData) {
+          await admin
+            .from('players')
+            .update({ roguelike_clearance: (pData.roguelike_clearance ?? 0) + clearance })
+            .eq('id', playerId);
+        }
+      }
+    }
+
+    // ── Update Redis leaderboard (sorted set) ──
+    const { data: playerRow } = await admin
       .from('players')
-      .update({ roguelike_clearance: (playerClearance.roguelike_clearance ?? 0) + clearance })
-      .eq('id', playerId);
+      .select('display_name')
+      .eq('id', playerId)
+      .single();
+
+    const displayName = playerRow?.display_name ?? playerId;
+
+    // Fix 1: Only update leaderboard if new score is higher than existing
+    const existingScore = await redis.zscore('leaderboard:roguelike', playerId);
+    if (existingScore === null || (existingScore as number) < finalScore) {
+      await redis.zadd('leaderboard:roguelike', { score: finalScore, member: playerId });
+    }
+
+    // ── Store run metadata in Redis for leaderboard display ──
+    const runMeta = {
+      runId,
+      playerId,
+      displayName,
+      operationName: state.operationName,
+      score: finalScore,
+      floorsCleared: state.floorsCleared,
+      totalFloors: state.totalFloors,
+      deaths: state.deaths,
+      bestStreak: state.bestStreak,
+      clearance,
+      completedAt,
+    };
+    await redis.set(`roguelike:meta:${playerId}`, JSON.stringify(runMeta), {
+      ex: ROGUELIKE_SESSION_TTL * 24 * 7, // keep for 7 days
+    });
+
+    // ── Clean up active run key ──
+    await redis.del(`roguelike:active:${playerId}`);
+
+    // Fix 5: Return clearanceEarned (not clearance) to match client expectation
+    return NextResponse.json({
+      finalScore,
+      clearanceEarned: clearance,
+      floorsCleared: state.floorsCleared,
+      totalFloors: state.totalFloors,
+      deaths: state.deaths,
+      bestStreak: state.bestStreak,
+      status: state.status,
+      completedAt,
+    });
+  } catch (err) {
+    console.error(`[roguelike/${runId}] Unhandled error in PATCH:`, err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-
-  // ── Update Redis leaderboard (sorted set) ──
-  const { data: playerRow } = await admin
-    .from('players')
-    .select('display_name')
-    .eq('id', playerId)
-    .single();
-
-  const displayName = playerRow?.display_name ?? playerId;
-
-  // Use zadd with the final score; member is playerId so each player has one entry (best score wins via nx+gt)
-  await redis.zadd('leaderboard:roguelike', { score: finalScore, member: playerId });
-
-  // ── Store run metadata in Redis for leaderboard display ──
-  const runMeta = {
-    runId,
-    playerId,
-    displayName,
-    operationName: state.operationName,
-    score: finalScore,
-    floorsCleared: state.floorsCleared,
-    totalFloors: state.totalFloors,
-    deaths: state.deaths,
-    bestStreak: state.bestStreak,
-    clearance,
-    completedAt,
-  };
-  await redis.set(`roguelike:meta:${playerId}`, JSON.stringify(runMeta), {
-    ex: ROGUELIKE_SESSION_TTL * 24 * 7, // keep for 7 days
-  });
-
-  // ── Clean up active run key ──
-  await redis.del(`roguelike:active:${playerId}`);
-
-  return NextResponse.json({
-    finalScore,
-    clearance,
-    floorsCleared: state.floorsCleared,
-    totalFloors: state.totalFloors,
-    deaths: state.deaths,
-    bestStreak: state.bestStreak,
-    status: state.status,
-    completedAt,
-  });
 }
