@@ -6,22 +6,22 @@ export const ROGUELIKE_DEFAULT_LIVES = 3;
 export const ROGUELIKE_MAX_LIVES = 5;
 export const ROGUELIKE_SESSION_TTL = 3600;
 
-// Intel economy
-export const INTEL_CORRECT = 10;
-export const INTEL_SPEED_BONUS = 5;
+// Intel economy (balanced so a perfect floor earns ~40-50 Intel, decent floor ~25-35)
+export const INTEL_CORRECT = 5;
+export const INTEL_SPEED_BONUS = 2;
 export const INTEL_SPEED_THRESHOLD_MS = 5000;
-export const INTEL_STREAK_BONUS = 3;
+export const INTEL_STREAK_BONUS = 2;
 export const INTEL_STREAK_MIN = 3;
-export const INTEL_FLOOR_CLEAR = 15;
-export const INTEL_WRONG = -5;
+export const INTEL_FLOOR_CLEAR = 10;
+export const INTEL_WRONG = -3;
 export const INTEL_WAGER_MULTIPLIER = 2;
-export const INTEL_WAGER_OPTIONS = [5, 10, 20] as const;
-export const INVESTIGATION_INSPECT_COST = 3;
+export const INTEL_WAGER_OPTIONS = [5, 10, 15] as const;
+export const INVESTIGATION_INSPECT_COST = 8;
 
-// Clearance
-export const CLEARANCE_PER_FLOOR = [5, 10, 20, 35, 50] as const;
-export const CLEARANCE_FULL_CLEAR = 25;
-export const CLEARANCE_NO_DEATHS = 15;
+// Clearance (balanced: full perfect clear = ~60, realistic run = 15-30, max tree ~15-20 runs)
+export const CLEARANCE_PER_FLOOR = [2, 4, 8, 12, 20] as const;
+export const CLEARANCE_FULL_CLEAR = 10;
+export const CLEARANCE_NO_DEATHS = 5;
 
 // Score
 export const SCORE_CORRECT_BASE = 100;
@@ -255,7 +255,7 @@ export const PERK_DEFS: PerkDef[] = [
     id: 'EXTRA_LIFE',
     label: 'Extra Life',
     description: 'Gain one additional life (up to max).',
-    cost: 30,
+    cost: 40,
     stackable: true,
     maxOwned: ROGUELIKE_MAX_LIVES,
   },
@@ -263,7 +263,7 @@ export const PERK_DEFS: PerkDef[] = [
     id: 'SHIELD',
     label: 'Shield',
     description: 'Negate the next wrong answer — no life lost.',
-    cost: 25,
+    cost: 35,
     stackable: false,
     maxOwned: 1,
   },
@@ -271,7 +271,7 @@ export const PERK_DEFS: PerkDef[] = [
     id: 'DOUBLE_INTEL',
     label: 'Double Intel',
     description: 'Next correct answer earns double Intel.',
-    cost: 20,
+    cost: 25,
     stackable: false,
     maxOwned: 1,
   },
@@ -288,14 +288,14 @@ export const PERK_DEFS: PerkDef[] = [
     id: 'STREAK_SAVER',
     label: 'Streak Saver',
     description: 'Preserve your streak on the next wrong answer.',
-    cost: 15,
+    cost: 25,
     stackable: false,
     maxOwned: 1,
   },
   {
     id: 'INTEL_CACHE',
     label: 'Intel Cache',
-    description: 'Immediately gain 20 Intel.',
+    description: 'Immediately gain 10 Intel.',
     cost: 15,
     stackable: true,
     maxOwned: 2,
@@ -390,7 +390,7 @@ export function calculateCardScore(
  */
 export function calculateStreakIntel(streak: number, streakMin: number = INTEL_STREAK_MIN): number {
   if (streak < streakMin) return 0;
-  return INTEL_STREAK_BONUS * streak;
+  return INTEL_STREAK_BONUS; // flat bonus per qualifying streak card, not multiplicative
 }
 
 /**
