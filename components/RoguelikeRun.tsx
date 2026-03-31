@@ -420,7 +420,13 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         console.error(`[RoguelikeRun] Answer failed: HTTP ${res.status}`, body);
-        showToast('Answer failed. Try again.');
+        // Detect expired run and show a clear message instead of generic retry
+        if (res.status === 404 && typeof body.error === 'string' && body.error.includes('expired')) {
+          setLoadError('Run expired. Sessions last 1 hour. Start a new run.');
+          setPhase('loading');
+        } else {
+          showToast(body.error ?? 'Answer failed. Try again.');
+        }
         answering.current = false;
         return;
       }
