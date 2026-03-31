@@ -76,7 +76,7 @@ const SLOW_TIME_BONUS = 5000;
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
-  const { triggerSigint } = useSigint();
+  const { triggerSigint, triggerCustom } = useSigint();
   const { soundEnabled } = useSoundEnabled();
 
   // ── Phase & run identity ──
@@ -475,21 +475,22 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
         "Good work. Resupply ahead.",
       ];
 
+      // SIGINT mid-floor reactions (full Handler dialogue, not toasts)
       if (data.floorCleared) {
-        showToast(FLOOR_CLEAR_TOASTS[Math.floor(Math.random() * FLOOR_CLEAR_TOASTS.length)]);
+        triggerCustom([FLOOR_CLEAR_TOASTS[Math.floor(Math.random() * FLOOR_CLEAR_TOASTS.length)]], 'COPY');
       } else if (data.correct) {
         if (data.streak === 5) {
-          showToast(STREAK_5_TOASTS[Math.floor(Math.random() * STREAK_5_TOASTS.length)]);
+          triggerCustom([STREAK_5_TOASTS[Math.floor(Math.random() * STREAK_5_TOASTS.length)]], 'COPY');
         } else if (data.streak === 3) {
-          showToast(STREAK_3_TOASTS[Math.floor(Math.random() * STREAK_3_TOASTS.length)]);
+          triggerCustom([STREAK_3_TOASTS[Math.floor(Math.random() * STREAK_3_TOASTS.length)]], 'COPY');
         }
       } else {
         const liveLost = data.lives < lives;
         if (liveLost) {
           if (data.lives === 1) {
-            showToast(LAST_LIFE_TOASTS[Math.floor(Math.random() * LAST_LIFE_TOASTS.length)]);
+            triggerCustom([LAST_LIFE_TOASTS[Math.floor(Math.random() * LAST_LIFE_TOASTS.length)]], 'COPY');
           } else {
-            showToast(LIFE_LOST_TOASTS[Math.floor(Math.random() * LIFE_LOST_TOASTS.length)]);
+            triggerCustom([LIFE_LOST_TOASTS[Math.floor(Math.random() * LIFE_LOST_TOASTS.length)]], 'COPY');
           }
         }
       }
