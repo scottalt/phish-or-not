@@ -5,12 +5,16 @@ import { RoguelikeHUD } from './RoguelikeHUD';
 import { RoguelikePerkShop } from './RoguelikePerkShop';
 import { RoguelikeResult } from './RoguelikeResult';
 import { RoguelikeUpgrades } from './RoguelikeUpgrades';
+import { RoguelikeFeedback } from './RoguelikeFeedback';
+import { RoguelikeWager } from './RoguelikeWager';
+import { RoguelikeFloorIntro } from './RoguelikeFloorIntro';
+import { RoguelikeCardDisplay } from './RoguelikeCardDisplay';
 import type { UpgradeId } from '@/lib/roguelike-upgrades';
 import { useSigint } from '@/lib/SigintContext';
 import { useSoundEnabled } from '@/lib/useSoundEnabled';
 import { playCorrect, playWrong, playFloorClear, playLifeLost } from '@/lib/sounds';
 import { getTimerDuration } from '@/lib/roguelike-gimmicks';
-import { GIMMICK_DEFS, INTEL_WAGER_OPTIONS, INVESTIGATION_INSPECT_COST, ROGUELIKE_FLOORS } from '@/lib/roguelike';
+import { GIMMICK_DEFS, INTEL_WAGER_OPTIONS, ROGUELIKE_FLOORS } from '@/lib/roguelike';
 import type { GimmickId, PerkId, CardModifier } from '@/lib/roguelike';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -337,22 +341,9 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
   const blackoutRedactSender = isBlackout && cardIndex % 2 === 0;
   const blackoutRedactSubject = isBlackout && cardIndex % 2 !== 0;
 
-  // Combined with REDACTED_SENDER modifier: if BLACKOUT + REDACTED_SENDER, redact both
-  const hasRedactedSender = currentModifiers.includes('REDACTED_SENDER');
-  const showSenderRedacted = hasRedactedSender || blackoutRedactSender || (isBlackout && hasRedactedSender);
-  const showSubjectRedacted = blackoutRedactSubject || (isBlackout && hasRedactedSender);
-
-  // ── INVESTIGATION gimmick ──
-  const isInvestigation = gimmick === 'INVESTIGATION';
-
   // ── CONFIDENCE gimmick / HIGH_ROLLER upgrade (wager from floor 2+) ──
   const isConfidence = gimmick === 'CONFIDENCE' ||
     (ownedUpgrades.includes('HIGH_ROLLER') && floor >= 1);
-
-  // ── Modifier flags ──
-  const hasLookalikeDomain = currentModifiers.includes('LOOKALIKE_DOMAIN');
-  const hasDecoyRedFlags = currentModifiers.includes('DECOY_RED_FLAGS');
-  const hasAiEnhanced = currentModifiers.includes('AI_ENHANCED');
 
   // ── Finalize run (PATCH) ──
   async function finalizeRun(id: string): Promise<ResultData | null> {
@@ -375,7 +366,7 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
   }
 
   // ── Handle answer ──
-  async function handleAnswer(userAnswer: 'legit' | 'phishing', timerExpired = false) {
+  async function handleAnswer(userAnswer: 'legit' | 'phishing', timerExpired = false, wager = 0) {
     if (!runId || !currentCard || answering.current) return;
     answering.current = true;
 
@@ -406,8 +397,9 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
     };
 
     // Include wager if in confidence mode
-    if (isConfidence && selectedWager > 0) {
-      bodyPayload.wager = selectedWager;
+    const effectiveWager = wager > 0 ? wager : selectedWager;
+    if (isConfidence && effectiveWager > 0) {
+      bodyPayload.wager = effectiveWager;
     }
 
     try {
@@ -448,10 +440,10 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
       }
 
       // Wager result
-      if (isConfidence && selectedWager > 0) {
+      if (isConfidence && effectiveWager > 0) {
         setWagerResult({
           won: data.correct,
-          amount: selectedWager,
+          amount: effectiveWager,
         });
       }
 
@@ -551,9 +543,16 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
   }
 
   // ── Submit wager ──
-  function handleWagerSubmit() {
+  function handleWagerConfirm(amount: number) {
     if (!pendingAnswer) return;
-    handleAnswer(pendingAnswer);
+    setSelectedWager(amount);
+    handleAnswer(pendingAnswer, false, amount);
+  }
+
+  function handleWagerSkip() {
+    if (!pendingAnswer) return;
+    setSelectedWager(0);
+    handleAnswer(pendingAnswer, false, 0);
   }
 
   // ── Handle inspect (INVESTIGATION gimmick) ──
@@ -564,8 +563,8 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
       setInspectedFields((prev) => new Set(prev).add(field));
       return;
     }
-    if (intel < INVESTIGATION_INSPECT_COST) return;
-    setIntel((prev) => prev - INVESTIGATION_INSPECT_COST);
+    if (intel < 3) return;
+    setIntel((prev) => prev - 3);
     setInspectedFields((prev) => new Set(prev).add(field));
   }
 
@@ -831,51 +830,15 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
 
   // ── Render: floor intro ──
   if (phase === 'floor-intro') {
-    const introGimmickDef = floorIntroGimmick ? GIMMICK_DEFS[floorIntroGimmick] : null;
-    const isBossFloor = introGimmickDef?.tier === 3;
-    const introGimmickColor = introGimmickDef
-      ? (isBossFloor ? '#ff3333' : introGimmickDef.tier === 1 ? '#00ff41' : '#00d4ff')
-      : '#00ff41';
-    const floorGlowStyle = isBossFloor
-      ? { color: '#ff3333', textShadow: '0 0 20px #ff3333, 0 0 40px #ff333388, 0 0 80px #ff333344' }
-      : { color: 'var(--c-primary)' };
-
     return (
-      <div
-        onClick={() => {
+      <RoguelikeFloorIntro
+        floor={floor}
+        gimmick={floorIntroGimmick}
+        onSkip={() => {
           if (floorIntroTimeoutRef.current) clearTimeout(floorIntroTimeoutRef.current);
           setPhase('floor');
         }}
-        className="flex flex-col items-center justify-center gap-4 p-8 font-mono min-h-[300px] cursor-pointer select-none"
-      >
-        <div className="anim-floor-intro text-center space-y-3">
-          {isBossFloor && (
-            <p className="text-sm font-bold tracking-widest animate-pulse" style={{ color: '#ff3333' }}>
-              ⚠ BOSS FLOOR ⚠
-            </p>
-          )}
-          <p
-            className="text-4xl font-black tracking-widest glow"
-            style={floorGlowStyle}
-          >
-            FLOOR {floor + 1}
-          </p>
-          {introGimmickDef && (
-            <p
-              className="text-lg font-bold tracking-widest"
-              style={{ color: introGimmickColor }}
-            >
-              {introGimmickDef.label.toUpperCase()}
-            </p>
-          )}
-          {introGimmickDef && (
-            <p className="text-xs text-[var(--c-muted)] max-w-xs">
-              {introGimmickDef.description}
-            </p>
-          )}
-        </div>
-        <p className="text-[var(--c-muted)] text-xs mt-4 animate-pulse">TAP TO START</p>
-      </div>
+      />
     );
   }
 
@@ -951,69 +914,12 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
           perks={perks}
         />
 
-        <div className="term-border p-6 space-y-4 text-center">
-          <p className="text-xs text-[var(--c-muted)] tracking-widest">CONFIDENCE WAGER</p>
-          <p className="text-sm text-[var(--c-secondary)]">
-            You answered{' '}
-            <span
-              className="font-bold tracking-wide"
-              style={{ color: pendingAnswer === 'phishing' ? '#ff3333' : 'var(--c-primary)' }}
-            >
-              {pendingAnswer.toUpperCase()}
-            </span>
-          </p>
-
-          <div className="flex items-center justify-center gap-2 py-2">
-            <span className="text-2xl font-black tabular-nums" style={{ color: '#ffaa00' }}>
-              {intel}
-            </span>
-            <span className="text-xs text-[var(--c-muted)]">INTEL AVAILABLE</span>
-          </div>
-
-          <p className="text-xs text-[var(--c-muted)]">How much Intel will you wager?</p>
-
-          <div className="flex gap-2 justify-center flex-wrap">
-            {/* Skip (0) option */}
-            <button
-              onClick={() => setSelectedWager(0)}
-              aria-label="Skip wager"
-              className={`py-2 px-4 term-border text-sm tracking-widest transition-all active:scale-95 ${
-                selectedWager === 0 ? 'bg-[color-mix(in_srgb,var(--c-primary)_12%,transparent)]' : ''
-              }`}
-              style={{
-                color: selectedWager === 0 ? 'var(--c-primary)' : 'var(--c-muted)',
-                borderColor: selectedWager === 0 ? 'var(--c-primary)' : undefined,
-              }}
-            >
-              SKIP
-            </button>
-
-            {INTEL_WAGER_OPTIONS.map((amount) => (
-              <button
-                key={amount}
-                onClick={() => setSelectedWager(amount)}
-                disabled={intel < amount}
-                aria-label={`Wager ${amount} Intel`}
-                className={`py-2 px-4 term-border text-sm tracking-widest transition-all active:scale-95 ${
-                  selectedWager === amount ? 'anim-wager-pulse' : ''
-                } ${intel < amount ? 'opacity-30 cursor-not-allowed' : ''}`}
-                style={{
-                  color: selectedWager === amount ? '#ffaa00' : 'var(--c-secondary)',
-                  borderColor: selectedWager === amount ? '#ffaa00' : undefined,
-                }}
-              >
-                {amount}
-              </button>
-            ))}
-          </div>
-
-          <button
-            onClick={handleWagerSubmit}
-            className="w-full py-3 term-border text-sm tracking-widest text-[var(--c-primary)] hover:bg-[color-mix(in_srgb,var(--c-primary)_8%,transparent)] active:scale-95 transition-all mt-2"
-          >
-            [ CONFIRM ]
-          </button>
-        </div>
+        <RoguelikeWager
+          intel={intel}
+          pendingAnswer={pendingAnswer}
+          onWager={handleWagerConfirm}
+          onSkip={handleWagerSkip}
+        />
 
         {/* Abort during wager */}
         <button
@@ -1062,200 +968,33 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
 
       {/* Feedback overlay */}
       {phase === 'feedback' && feedbackData && (
-        <div
-          className={`term-border p-4 space-y-2 anim-fade-in-up ${isDead ? 'p-6' : ''}`}
-          style={{
-            borderColor: feedbackData.correct ? '#00ff41' : '#ff3333',
-            background: feedbackData.correct ? '#00ff4110' : '#ff333310',
-          }}
-        >
-          <p
-            className={`font-black tracking-widest text-center ${isDead ? 'text-2xl' : 'text-lg'}`}
-            style={{ color: feedbackData.correct ? '#00ff41' : '#ff3333' }}
-          >
-            {isDead ? '[ MISSION FAILED ]' : feedbackData.correct ? '[ CORRECT ]' : '[ WRONG ]'}
-          </p>
-          {feedbackData.explanation && (
-            <p className="text-xs text-[var(--c-secondary)] leading-relaxed">
-              {feedbackData.explanation}
-            </p>
-          )}
-          {feedbackData.technique && (
-            <p className="text-xs text-[var(--c-muted)] tracking-wide">
-              TECHNIQUE: {feedbackData.technique}
-            </p>
-          )}
-          {/* Wager result */}
-          {wagerResult && (
-            <p
-              className="text-sm font-bold tabular-nums text-center"
-              style={{ color: wagerResult.won ? '#00ff41' : '#ff3333' }}
-            >
-              {wagerResult.won ? '+' : '-'}{wagerResult.amount} INTEL (WAGER)
-            </p>
-          )}
-          <p
-            className="text-xs font-bold tabular-nums text-right"
-            style={{ color: feedbackData.correct ? '#ffaa00' : '#ff3333' }}
-          >
-            {feedbackData.cardScore > 0 ? '+' : ''}{feedbackData.cardScore} pts
-          </p>
-          <button
-            onClick={handleContinue}
-            aria-label={isDead ? 'View results' : feedbackData.floorCleared ? 'Continue to next floor' : 'Continue to next card'}
-            className="w-full mt-3 py-3 term-border-bright text-[var(--c-primary)] font-mono font-bold tracking-widest text-sm hover:bg-[color-mix(in_srgb,var(--c-primary)_8%,transparent)] active:scale-95 transition-all"
-          >
-            {isDead ? '[ VIEW RESULTS ]' : feedbackData.floorCleared ? '[ CONTINUE ]' : '[ NEXT CARD ]'}
-          </button>
-        </div>
+        <RoguelikeFeedback
+          feedbackData={feedbackData}
+          wagerResult={wagerResult}
+          isDead={!!isDead}
+          onContinue={handleContinue}
+        />
       )}
 
       {/* Card display */}
       {phase === 'floor' && (
         <>
-          {/* TRIAGE: Inbox preview */}
-          {gimmick === 'TRIAGE' && (
-            <div className="term-border divide-y divide-[var(--c-dark)]">
-              <div className="px-3 py-1.5 text-xs text-[var(--c-muted)] tracking-widest">
-                INBOX — TRIAGE {cardIndex + 1}/{cards.length}
-              </div>
-              {cards.slice(0, Math.min(cards.length, cardIndex + 3)).map((card, i) => {
-                const isCurrent = i === cardIndex;
-                const isAnswered = i < cardIndex;
-                return (
-                  <div
-                    key={i}
-                    className={`px-3 py-2 text-xs font-mono ${
-                      isCurrent ? 'bg-[color-mix(in_srgb,var(--c-primary)_6%,transparent)]' : ''
-                    } ${isAnswered ? 'opacity-40 line-through' : ''}`}
-                  >
-                    <span className={isCurrent ? 'text-[var(--c-primary)]' : 'text-[var(--c-muted)]'}>
-                      {card.from?.split('@')[0] ?? '???'}
-                    </span>
-                    {card.subject && (
-                      <span className="text-[var(--c-secondary)] ml-2 truncate">
-                        {card.subject}
-                      </span>
-                    )}
-                    {isCurrent && <span className="text-[var(--c-primary)] ml-2">◄</span>}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* DECOY_RED_FLAGS modifier — suspicious marker (misleading on legit cards) */}
-          {hasDecoyRedFlags && (
-            <div className="text-xs tracking-widest text-center" style={{ color: '#ff333388' }}>
-              {'>'} SUSPICIOUS {'<'}
-            </div>
-          )}
-
-          <div className={`term-border p-4 space-y-3 ${redFlashClass}`}>
-            {/* Timer progress bar */}
-            {timerActive && timerDurationMs > 0 && (
-              <div
-                className="w-full h-1 rounded-full overflow-hidden"
-                style={{ background: 'var(--c-dark)' }}
-              >
-                <div
-                  className="h-full rounded-full roguelike-timer-bar-js"
-                  style={{
-                    width: `${timerProgress * 100}%`,
-                    background: getTimerColor(timerProgress),
-                  }}
-                />
-              </div>
-            )}
-
-            {/* AI_ENHANCED badge */}
-            {hasAiEnhanced && (
-              <div
-                className="text-[10px] tracking-widest font-bold inline-block px-1.5 py-0.5 rounded-sm border"
-                style={{ color: '#bf5fff', borderColor: '#bf5fff44', background: '#bf5fff18' }}
-              >
-                {'>'} AI-ENHANCED
-              </div>
-            )}
-
-            {/* FROM */}
-            {showSenderRedacted ? (
-              <div className="text-sm">
-                <span className="text-[var(--c-muted)]">FROM: </span>
-                <span style={{ color: '#ff333366' }}>[REDACTED]</span>
-              </div>
-            ) : (
-              <div className="text-sm flex items-center gap-2">
-                <div>
-                  <span className="text-[var(--c-muted)]">FROM: </span>
-                  <span className="text-[var(--c-secondary)]">{currentCard.from}</span>
-                </div>
-                {/* LOOKALIKE_DOMAIN: no pre-answer indicator — would spoil the challenge */}
-                {/* INVESTIGATION: inspect FROM button */}
-                {isInvestigation && !inspectedFields.has('from') && (
-                  <button
-                    onClick={() => handleInspect('from')}
-                    disabled={intel < INVESTIGATION_INSPECT_COST}
-                    aria-label={`Inspect sender field for ${INVESTIGATION_INSPECT_COST} Intel`}
-                    className={`text-[10px] tracking-wide px-1.5 py-0.5 term-border transition-all active:scale-95 ${
-                      intel < INVESTIGATION_INSPECT_COST ? 'opacity-30 cursor-not-allowed' : ''
-                    }`}
-                    style={{ color: '#00d4ff' }}
-                  >
-                    INSPECT (-{INVESTIGATION_INSPECT_COST})
-                  </button>
-                )}
-                {/* INVESTIGATION: inspected FROM result */}
-                {isInvestigation && inspectedFields.has('from') && currentCard.authStatus && (
-                  <span className="text-[10px] text-[var(--c-muted)]">
-                    [{currentCard.authStatus}]
-                  </span>
-                )}
-              </div>
-            )}
-
-            {/* SUBJECT */}
-            {currentCard.subject && (
-              showSubjectRedacted ? (
-                <div className="text-sm">
-                  <span className="text-[var(--c-muted)]">SUBJ: </span>
-                  <span style={{ color: '#ff333366' }}>[REDACTED]</span>
-                </div>
-              ) : (
-                <div className="text-sm flex items-center gap-2">
-                  <div>
-                    <span className="text-[var(--c-muted)]">SUBJ: </span>
-                    <span className="text-[var(--c-secondary)]">{currentCard.subject}</span>
-                  </div>
-                  {/* INVESTIGATION: inspect SUBJECT button */}
-                  {isInvestigation && !inspectedFields.has('subject') && (
-                    <button
-                      onClick={() => handleInspect('subject')}
-                      disabled={intel < INVESTIGATION_INSPECT_COST}
-                      aria-label={`Inspect subject field for ${INVESTIGATION_INSPECT_COST} Intel`}
-                      className={`text-[10px] tracking-wide px-1.5 py-0.5 term-border transition-all active:scale-95 ${
-                        intel < INVESTIGATION_INSPECT_COST ? 'opacity-30 cursor-not-allowed' : ''
-                      }`}
-                      style={{ color: '#00d4ff' }}
-                    >
-                      INSPECT (-{INVESTIGATION_INSPECT_COST})
-                    </button>
-                  )}
-                  {/* INVESTIGATION: inspected SUBJECT result — shows auth status */}
-                  {isInvestigation && inspectedFields.has('subject') && currentCard.authStatus && (
-                    <span className="text-[10px] text-[var(--c-muted)]">
-                      [{currentCard.authStatus}]
-                    </span>
-                  )}
-                </div>
-              )
-            )}
-
-            {/* BODY */}
-            <div className="text-sm text-[var(--c-secondary)] leading-relaxed whitespace-pre-wrap max-h-52 lg:max-h-none overflow-y-auto">
-              {currentCard.body}
-            </div>
-          </div>
+          <RoguelikeCardDisplay
+            card={currentCard}
+            cardIndex={cardIndex}
+            cards={cards}
+            gimmick={gimmick}
+            modifiers={currentModifiers}
+            blackoutRedactSender={blackoutRedactSender}
+            blackoutRedactSubject={blackoutRedactSubject}
+            inspectedFields={inspectedFields}
+            onInspect={handleInspect}
+            intel={intel}
+            freeInspections={freeInspections}
+            timerProgress={timerActive && timerDurationMs > 0 ? timerProgress : null}
+            timerColor={getTimerColor(timerProgress)}
+            cardClassName={redFlashClass}
+          />
 
           {/* Answer buttons — phishing left, legit right (matches main game) */}
           <div className="flex gap-3">
