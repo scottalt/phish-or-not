@@ -191,6 +191,7 @@ function BranchColumn({
             branchColor={branchColor}
             isConfirming={isConfirming}
             isPurchasing={isPurchasing}
+            ownedUpgrades={upgrades}
             onClick={() => onCardClick(def, status)}
           />
         );
@@ -207,6 +208,7 @@ function UpgradeCard({
   branchColor,
   isConfirming,
   isPurchasing,
+  ownedUpgrades,
   onClick,
 }: {
   def: UpgradeDef;
@@ -214,15 +216,16 @@ function UpgradeCard({
   branchColor: string;
   isConfirming: boolean;
   isPurchasing: boolean;
+  ownedUpgrades: UpgradeId[];
   onClick: () => void;
 }) {
   const isClickable = status === 'affordable' || status === 'too-expensive';
   const borderColor = statusBorderColor(status, branchColor);
   const opacity = statusOpacity(status);
 
-  // Prereq hint
+  // Prereq hint — use actual owned upgrades to show correct missing prereq
   const check = status === 'requires-prereq'
-    ? canPurchaseUpgrade(def.id, [], 999)
+    ? canPurchaseUpgrade(def.id, ownedUpgrades, 999)
     : null;
 
   return (

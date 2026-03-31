@@ -1654,7 +1654,7 @@ export default function ProfilePage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-[var(--c-muted)]">BEST FLOOR</span>
-                <span className="text-[var(--c-secondary)] tabular-nums">{(profile as unknown as Record<string, unknown>).roguelikeBestFloor as number ?? 0} / 3</span>
+                <span className="text-[var(--c-secondary)] tabular-nums">{(profile as unknown as Record<string, unknown>).roguelikeBestFloor as number ?? 0} / 5</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-[var(--c-muted)]">AVG ACCURACY</span>
