@@ -65,7 +65,7 @@ export async function POST(
         ...state,
         currentFloor: nextFloor,
         status: 'completed',
-        completedAt: new Date().toISOString(),
+        // completedAt is set by PATCH finalize, not here
       };
       await redis.set(`roguelike:run:${runId}`, JSON.stringify(updatedState), {
         ex: ROGUELIKE_SESSION_TTL,

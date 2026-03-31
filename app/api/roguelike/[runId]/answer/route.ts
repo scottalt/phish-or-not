@@ -246,7 +246,7 @@ export async function POST(
       currentCardIndex: newCardIndex,
       floorsCleared: newFloorsCleared,
       status: newStatus,
-      completedAt: newStatus !== 'active' ? new Date().toISOString() : state.completedAt,
+      completedAt: state.completedAt, // Only PATCH finalize sets completedAt
     };
 
     // ── Save updated state to Redis ──
