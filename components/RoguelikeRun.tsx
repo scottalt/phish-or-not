@@ -62,7 +62,7 @@ interface ResultData {
   xpEarned?: number;
 }
 
-type Phase = 'loading' | 'floor' | 'feedback' | 'shop' | 'result' | 'floor-intro' | 'wager' | 'upgrades';
+type Phase = 'lobby' | 'loading' | 'floor' | 'feedback' | 'shop' | 'result' | 'floor-intro' | 'wager' | 'upgrades';
 
 interface Props {
   onBack: () => void;
@@ -80,7 +80,7 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
   const { soundEnabled } = useSoundEnabled();
 
   // ── Phase & run identity ──
-  const [phase, setPhase] = useState<Phase>('loading');
+  const [phase, setPhase] = useState<Phase>('lobby');
   const [loadError, setLoadError] = useState<string | null>(null);
   const [runId, setRunId] = useState<string | null>(null);
   const [operationName, setOperationName] = useState('');
@@ -215,8 +215,9 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
     return baseMs;
   }, [assignments, cardIndex, gimmick, floor, perks]);
 
-  // ── Start the run ──
+  // ── Start the run (only when player clicks START from lobby) ──
   useEffect(() => {
+    if (phase !== 'loading') return;
     let cancelled = false;
 
     async function startRun() {
@@ -256,7 +257,7 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
 
     startRun();
     return () => { cancelled = true; };
-  }, []);
+  }, [phase]);
 
   // ── Floor intro auto-dismiss ──
   useEffect(() => {
@@ -757,7 +758,79 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
     );
   }
 
-  // ── Render: loading / mission lobby ──
+  // ── Render: mission lobby (player sees this first, clicks START to begin) ──
+  if (phase === 'lobby') {
+    return (
+      <div className="flex flex-col items-center justify-center gap-6 p-8 font-mono min-h-[360px] anim-fade-in-up">
+        {/* Operation header */}
+        <div className="text-center space-y-1">
+          <p className="text-xs text-[var(--c-muted)] tracking-widest">DEADLOCK</p>
+          <p className="text-lg font-bold tracking-wider" style={{ color: '#ff3333', textShadow: '0 0 8px rgba(255,51,51,0.3)' }}>
+            ROGUELIKE SURVIVAL
+          </p>
+        </div>
+
+        {/* Tower visualization */}
+        <div className="flex flex-col items-center gap-1 w-40">
+          {Array.from({ length: ROGUELIKE_FLOORS }, (_, i) => ROGUELIKE_FLOORS - 1 - i).map((floorIdx) => (
+            <div
+              key={floorIdx}
+              className="w-full term-border px-3 py-2 text-center"
+              style={{
+                opacity: 1 - floorIdx * 0.15,
+                borderColor: floorIdx === ROGUELIKE_FLOORS - 1 ? 'rgba(255,51,51,0.4)' : 'color-mix(in srgb, var(--c-primary) 40%, transparent)',
+              }}
+            >
+              <span className="text-xs tracking-widest" style={{ color: floorIdx === ROGUELIKE_FLOORS - 1 ? '#ff3333' : 'var(--c-secondary)' }}>
+                {floorIdx === ROGUELIKE_FLOORS - 1 ? '⚠ FLOOR ' + (floorIdx + 1) + ' — BOSS' : 'FLOOR ' + (floorIdx + 1)}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Lives indicator */}
+        {(() => {
+          const lobbyLives = ownedUpgrades.includes('THICK_SKIN') ? 4 : 3;
+          return (
+            <div className="text-sm tracking-widest" style={{ color: '#ff3333' }}>
+              {'♥'.repeat(lobbyLives)} {lobbyLives} LIVES
+            </div>
+          );
+        })()}
+
+        {/* START button */}
+        <button
+          onClick={() => setPhase('loading')}
+          className="w-full max-w-xs py-4 term-border-bright font-bold tracking-widest text-sm active:scale-95 transition-all hover:bg-[color-mix(in_srgb,var(--c-primary)_8%,transparent)]"
+          style={{ color: '#ff3333', borderColor: 'rgba(255,51,51,0.5)', textShadow: '0 0 6px rgba(255,51,51,0.3)' }}
+        >
+          [ START OPERATION ]
+        </button>
+
+        {/* Upgrades button */}
+        <button
+          onClick={() => openUpgrades('lobby')}
+          className="py-2 px-4 term-border text-sm tracking-widest active:scale-95 transition-all"
+          style={{ color: '#00d4ff', borderColor: 'rgba(0,212,255,0.35)' }}
+        >
+          [ UPGRADES ]
+          {upgradeClearance > 0 && (
+            <span className="text-[var(--c-muted)] text-xs ml-2">{upgradeClearance} CLR</span>
+          )}
+        </button>
+
+        {/* Back button */}
+        <button
+          onClick={onBack}
+          className="text-xs text-[var(--c-muted)] hover:text-[var(--c-secondary)] tracking-widest transition-colors"
+        >
+          [ BACK ]
+        </button>
+      </div>
+    );
+  }
+
+  // ── Render: loading (after START clicked, API in flight) ──
   if (phase === 'loading') {
     return (
       <div className="flex flex-col items-center justify-center gap-6 p-8 font-mono min-h-[360px] anim-fade-in-up">
@@ -765,7 +838,7 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
           <>
             <p className="text-sm text-[#ff3333] tracking-wide">{loadError}</p>
             <button
-              onClick={() => { setLoadError(null); setPhase('loading'); window.location.reload(); }}
+              onClick={() => { setLoadError(null); setPhase('loading'); }}
               className="py-2 px-6 term-border text-sm tracking-widest text-[var(--c-primary)] active:scale-95 transition-all"
             >
               [ RETRY ]
@@ -778,63 +851,9 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
             </button>
           </>
         ) : (
-          <>
-            {/* Operation name */}
-            <div className="text-center space-y-1">
-              <p className="text-xs text-[var(--c-muted)] tracking-widest">OPERATION</p>
-              <p
-                className="text-2xl font-black tracking-widest glow animate-pulse"
-                style={{ color: 'var(--c-primary)' }}
-              >
-                {operationName || '██████████'}
-              </p>
-            </div>
-
-            {/* Tower visualization */}
-            <div className="flex flex-col items-center gap-1 w-40">
-              {Array.from({ length: ROGUELIKE_FLOORS }, (_, i) => ROGUELIKE_FLOORS - 1 - i).map((floorIdx) => (
-                <div
-                  key={floorIdx}
-                  className="w-full term-border px-3 py-2 text-center"
-                  style={{
-                    opacity: 1 - floorIdx * 0.15,
-                    borderColor: 'color-mix(in srgb, var(--c-primary) 40%, transparent)',
-                  }}
-                >
-                  <span className="text-xs tracking-widest" style={{ color: 'var(--c-secondary)' }}>
-                    FLOOR {floorIdx + 1}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {/* Lives indicator */}
-            {(() => {
-              const lobbyLives = ownedUpgrades.includes('THICK_SKIN') ? 4 : 3;
-              return (
-                <div className="text-sm tracking-widest" style={{ color: '#ff3333' }}>
-                  {'♥'.repeat(lobbyLives)} {lobbyLives} LIVES
-                </div>
-              );
-            })()}
-
-            {/* Upgrades button */}
-            <button
-              onClick={() => openUpgrades('loading')}
-              className="py-2 px-4 term-border text-sm tracking-widest active:scale-95 transition-all"
-              style={{ color: '#00d4ff', borderColor: 'rgba(0,212,255,0.35)' }}
-            >
-              [ UPGRADES ]
-              {upgradeClearance > 0 && (
-                <span className="text-[var(--c-muted)] text-xs ml-2">{upgradeClearance} CLR</span>
-              )}
-            </button>
-
-            {/* Status */}
-            <p className="text-xs text-[var(--c-muted)] tracking-widest animate-pulse">
-              INITIALIZING...
-            </p>
-          </>
+          <p className="text-sm text-[var(--c-muted)] tracking-widest animate-pulse">
+            INITIALIZING OPERATION...
+          </p>
         )}
       </div>
     );
