@@ -25,7 +25,7 @@ interface SafeCard {
   from: string;
   subject?: string;
   body: string;
-  authStatus: string;
+  authStatus?: string;
 }
 
 interface RoguelikeCardAssignment {
@@ -238,8 +238,7 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
         setIntel(data.intel);
         setScore(data.score);
         setGimmick(data.gimmick ?? null);
-        const floorGimmicksArr: (GimmickId | null)[] = data.floorGimmicks ?? [];
-        setGimmicks(floorGimmicksArr);
+        setGimmicks([data.gimmick ?? null]);
         setCards(data.cards ?? []);
         setAssignments(data.assignments ?? []);
         setCardIndex(0);
@@ -555,17 +554,33 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
     handleAnswer(pendingAnswer, false, 0);
   }
 
-  // ── Handle inspect (INVESTIGATION gimmick) ──
-  function handleInspect(field: string) {
-    // ANALYST_EYE upgrade: use free inspection first
-    if (freeInspections > 0) {
-      setFreeInspections((prev) => prev - 1);
+  // ── Handle inspect (INVESTIGATION gimmick) — server-side deduction ──
+  async function handleInspect(field: string) {
+    if (!runId) return;
+    try {
+      const res = await fetch(`/api/roguelike/${runId}/inspect`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ field }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        showToast(body.error ?? 'Inspect failed');
+        return;
+      }
+      const data = await res.json();
+      setIntel(data.intel);
+      setFreeInspections(data.freeInspections ?? 0);
       setInspectedFields((prev) => new Set(prev).add(field));
-      return;
+      // Store authStatus on the current card in local state
+      setCards((prev) =>
+        prev.map((c, i) =>
+          i === cardIndex ? { ...c, authStatus: data.authStatus } : c,
+        ),
+      );
+    } catch {
+      showToast('Inspect failed');
     }
-    if (intel < 3) return;
-    setIntel((prev) => prev - 3);
-    setInspectedFields((prev) => new Set(prev).add(field));
   }
 
   // ── Upgrade panel ──
@@ -624,14 +639,11 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
       setIntel(data.intel);
       setLives(data.lives);
 
-      // Compute next floor's gimmick for shop preview
-      const nextFloorIndex = floor + 1;
-      const nextGimmickId = gimmicks[nextFloorIndex] ?? null;
+      // Use server-provided nextGimmick (only set if player has SIGNAL_INTERCEPT)
+      const nextGimmickId: GimmickId | null = data.nextGimmick ?? null;
       setNextGimmick(nextGimmickId);
 
-      // If player has SIGNAL_INTERCEPT upgrade, reveal next gimmick name
-      const hasSignalIntercept = ownedUpgrades.includes('SIGNAL_INTERCEPT');
-      if (hasSignalIntercept && nextGimmickId) {
+      if (nextGimmickId) {
         const gimmickDef = GIMMICK_DEFS[nextGimmickId];
         const INTEL_LINES = [
           `Intel suggests the next floor is ${gimmickDef.label}. Prepare accordingly.`,

@@ -8,7 +8,7 @@ interface SafeCard {
   from: string;
   subject?: string;
   body: string;
-  authStatus: string;
+  authStatus?: string;
 }
 
 interface CardDisplayProps {

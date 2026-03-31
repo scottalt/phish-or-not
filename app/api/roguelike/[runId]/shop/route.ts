@@ -61,11 +61,18 @@ export async function GET(
       return def;
     }).filter(Boolean);
 
+    // Only reveal next gimmick if player has SIGNAL_INTERCEPT upgrade
+    const hasSignalIntercept = (state.activeUpgrades ?? []).includes('SIGNAL_INTERCEPT');
+    const nextGimmick = hasSignalIntercept
+      ? state.floorGimmicks[state.currentFloor + 1] ?? null
+      : null;
+
     return NextResponse.json({
       offerings,
       intel: state.intel,
       lives: state.lives,
       perks: state.perks,
+      nextGimmick,
     });
   } catch (err) {
     console.error(`[roguelike/${runId}/shop] Unhandled error in GET:`, err);
@@ -106,6 +113,12 @@ export async function POST(
     if (!state) return NextResponse.json({ error: 'Run expired. Sessions last 1 hour.' }, { status: 404 });
     if (state.playerId !== playerId) return NextResponse.json({ error: 'Not your run' }, { status: 403 });
     if (state.status !== 'active') return NextResponse.json({ error: 'Run is not active' }, { status: 409 });
+
+    // ── Re-derive offerings to validate purchase (prevents bypassing shop RNG) ──
+    const validOfferings = getShopOfferings(state, state.shopSlots ?? 3);
+    if (!validOfferings.includes(perkId)) {
+      return NextResponse.json({ error: 'Perk not available in current shop' }, { status: 400 });
+    }
 
     // ── Apply purchase (throws if insufficient intel or unknown perk) ──
     // INSIDER_TRADING upgrade: 10% discount on perk prices

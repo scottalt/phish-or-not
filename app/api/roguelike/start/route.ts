@@ -233,7 +233,6 @@ export async function POST() {
       from: c.from,
       subject: c.subject,
       body: c.body,
-      authStatus: c.authStatus,
     }));
 
     return NextResponse.json({
@@ -246,7 +245,6 @@ export async function POST() {
       intel: 0,
       score: 0,
       gimmick: floorGimmicks[0] ?? null,
-      floorGimmicks,
       activeUpgrades: ownedUpgrades.length > 0 ? ownedUpgrades : undefined,
       freeInspections: freeInspections > 0 ? freeInspections : undefined,
       cards: safeCards,

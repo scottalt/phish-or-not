@@ -154,7 +154,6 @@ export async function POST(
       from: c.from,
       subject: c.subject,
       body: c.body,
-      authStatus: c.authStatus,
     }));
 
     return NextResponse.json({
