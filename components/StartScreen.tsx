@@ -1040,14 +1040,16 @@ export function StartScreen({ onStart, musicEnabled, onToggleMusic: toggleMusic 
                     {pvpButton}
                     {dailyButton}
                   </div>
-                  <button
-                    onClick={() => handleStart('roguelike')}
-                    className="w-full py-4 term-border font-mono font-bold tracking-widest text-sm active:scale-95 transition-all text-[#ff3333] hover:bg-[rgba(255,51,51,0.05)]"
-                    style={{ borderColor: 'rgba(255, 51, 51, 0.35)' }}
-                  >
-                    [ DEADLOCK ]
-                    <div className="text-[var(--c-muted)] text-xs mt-1 font-normal tracking-wide">Roguelike Survival</div>
-                  </button>
+                  {graduated && (
+                    <button
+                      onClick={() => handleStart('roguelike')}
+                      className="w-full py-4 term-border font-mono font-bold tracking-widest text-sm active:scale-95 transition-all text-[#ff3333] hover:bg-[rgba(255,51,51,0.05)]"
+                      style={{ borderColor: 'rgba(255, 51, 51, 0.35)' }}
+                    >
+                      [ DEADLOCK ]
+                      <div className="text-[var(--c-muted)] text-xs mt-1 font-normal tracking-wide">Roguelike Survival</div>
+                    </button>
+                  )}
                   {leaderboard}
                   {versionLink}
                 </div>
