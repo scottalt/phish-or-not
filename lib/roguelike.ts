@@ -16,6 +16,7 @@ export const INTEL_FLOOR_CLEAR = 15;
 export const INTEL_WRONG = -5;
 export const INTEL_WAGER_MULTIPLIER = 2;
 export const INTEL_WAGER_OPTIONS = [5, 10, 20] as const;
+export const INVESTIGATION_INSPECT_COST = 3;
 
 // Clearance
 export const CLEARANCE_PER_FLOOR = [5, 10, 20, 35, 50] as const;

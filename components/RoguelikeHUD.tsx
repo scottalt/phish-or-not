@@ -1,7 +1,7 @@
 'use client';
 
-import { GIMMICK_DEFS, MODIFIER_DEFS } from '@/lib/roguelike';
-import type { GimmickId, CardModifier } from '@/lib/roguelike';
+import { GIMMICK_DEFS, MODIFIER_DEFS, PERK_DEFS } from '@/lib/roguelike';
+import type { GimmickId, CardModifier, PerkId } from '@/lib/roguelike';
 
 interface Props {
   floor: number;           // 0-indexed
@@ -14,6 +14,7 @@ interface Props {
   totalCards: number;
   modifiers: CardModifier[];
   omniscience?: boolean;   // OMNISCIENCE upgrade: show all modifiers (no spoiler hiding)
+  perks: PerkId[];
 }
 
 const MODIFIER_COLORS: Record<CardModifier, string> = {
@@ -35,6 +36,7 @@ export function RoguelikeHUD({
   totalCards,
   modifiers,
   omniscience,
+  perks,
 }: Props) {
   const gimmickDef = gimmick ? GIMMICK_DEFS[gimmick] : null;
   const gimmickColor = gimmickDef
@@ -120,6 +122,26 @@ export function RoguelikeHUD({
           </div>
         );
       })()}
+
+      {/* Row 4: Active perks */}
+      {perks.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {perks.map((perkId) => {
+            const def = PERK_DEFS.find(p => p.id === perkId);
+            if (!def) return null;
+            return (
+              <span
+                key={perkId}
+                className="px-1.5 py-0.5 text-[10px] tracking-wide rounded-sm border border-[var(--c-primary)] text-[var(--c-primary)]"
+                style={{ background: 'color-mix(in srgb, var(--c-primary) 10%, transparent)' }}
+                title={def.description}
+              >
+                {def.label.toUpperCase()}
+              </span>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

@@ -100,6 +100,11 @@ export function RoguelikePerkShop({
       )}
 
       {/* Perk cards */}
+      {perks.length === 0 && (
+        <div className="term-border p-4 text-center text-sm text-[var(--c-muted)]">
+          No offers available this floor.
+        </div>
+      )}
       <div className="w-full flex flex-col sm:flex-row gap-3">
         {perks.map((perkId) => {
           const def = PERK_DEFS.find((p) => p.id === perkId);

@@ -10,7 +10,7 @@ import { useSigint } from '@/lib/SigintContext';
 import { useSoundEnabled } from '@/lib/useSoundEnabled';
 import { playCorrect, playWrong, playFloorClear, playLifeLost } from '@/lib/sounds';
 import { getTimerDuration } from '@/lib/roguelike-gimmicks';
-import { GIMMICK_DEFS, INTEL_WAGER_OPTIONS, ROGUELIKE_FLOORS } from '@/lib/roguelike';
+import { GIMMICK_DEFS, INTEL_WAGER_OPTIONS, INVESTIGATION_INSPECT_COST, ROGUELIKE_FLOORS } from '@/lib/roguelike';
 import type { GimmickId, PerkId, CardModifier } from '@/lib/roguelike';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -564,8 +564,8 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
       setInspectedFields((prev) => new Set(prev).add(field));
       return;
     }
-    if (intel < 3) return;
-    setIntel((prev) => prev - 3);
+    if (intel < INVESTIGATION_INSPECT_COST) return;
+    setIntel((prev) => prev - INVESTIGATION_INSPECT_COST);
     setInspectedFields((prev) => new Set(prev).add(field));
   }
 
@@ -948,6 +948,7 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
           totalCards={cards.length}
           modifiers={currentModifiers}
           omniscience={ownedUpgrades.includes('OMNISCIENCE')}
+          perks={perks}
         />
 
         <div className="term-border p-6 space-y-4 text-center">
@@ -1056,6 +1057,7 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
         totalCards={cards.length}
         modifiers={currentModifiers}
         omniscience={ownedUpgrades.includes('OMNISCIENCE')}
+        perks={perks}
       />
 
       {/* Feedback overlay */}
@@ -1193,14 +1195,14 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
                 {isInvestigation && !inspectedFields.has('from') && (
                   <button
                     onClick={() => handleInspect('from')}
-                    disabled={intel < 3}
-                    aria-label="Inspect sender field for 3 Intel"
+                    disabled={intel < INVESTIGATION_INSPECT_COST}
+                    aria-label={`Inspect sender field for ${INVESTIGATION_INSPECT_COST} Intel`}
                     className={`text-[10px] tracking-wide px-1.5 py-0.5 term-border transition-all active:scale-95 ${
-                      intel < 3 ? 'opacity-30 cursor-not-allowed' : ''
+                      intel < INVESTIGATION_INSPECT_COST ? 'opacity-30 cursor-not-allowed' : ''
                     }`}
                     style={{ color: '#00d4ff' }}
                   >
-                    INSPECT (-3)
+                    INSPECT (-{INVESTIGATION_INSPECT_COST})
                   </button>
                 )}
                 {/* INVESTIGATION: inspected FROM result */}
@@ -1229,14 +1231,14 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
                   {isInvestigation && !inspectedFields.has('subject') && (
                     <button
                       onClick={() => handleInspect('subject')}
-                      disabled={intel < 3}
-                      aria-label="Inspect subject field for 3 Intel"
+                      disabled={intel < INVESTIGATION_INSPECT_COST}
+                      aria-label={`Inspect subject field for ${INVESTIGATION_INSPECT_COST} Intel`}
                       className={`text-[10px] tracking-wide px-1.5 py-0.5 term-border transition-all active:scale-95 ${
-                        intel < 3 ? 'opacity-30 cursor-not-allowed' : ''
+                        intel < INVESTIGATION_INSPECT_COST ? 'opacity-30 cursor-not-allowed' : ''
                       }`}
                       style={{ color: '#00d4ff' }}
                     >
-                      INSPECT (-3)
+                      INSPECT (-{INVESTIGATION_INSPECT_COST})
                     </button>
                   )}
                   {/* INVESTIGATION: inspected SUBJECT result — shows auth status */}
