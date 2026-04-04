@@ -221,7 +221,8 @@ export async function POST(
       newStatus = 'dead';
     } else if (floorComplete) {
       // Floor completed — award floor clear intel bonus
-      newIntelFinal = newIntel + INTEL_FLOOR_CLEAR;
+      const floorClearBonus = INTEL_FLOOR_CLEAR[Math.min(state.currentFloor, INTEL_FLOOR_CLEAR.length - 1)] ?? 10;
+      newIntelFinal = newIntel + floorClearBonus;
       newFloorsCleared = state.floorsCleared + 1;
 
       // FIELD_MEDIC upgrade: heal 1 life on floor clear (if below max)

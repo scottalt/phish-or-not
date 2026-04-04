@@ -92,6 +92,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (typeof body.researchSessionsCompleted === 'number' && body.researchSessionsCompleted >= 0) {
     updates.research_sessions_completed = body.researchSessionsCompleted;
   }
+  if (body.featureFlags && typeof body.featureFlags === 'object') {
+    updates.feature_flags = body.featureFlags;
+  }
 
   if (body.reset === true) {
     const admin = getSupabaseAdminClient();

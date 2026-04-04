@@ -201,6 +201,22 @@ export default function AdminPlayerDetail() {
           {renderEditableField('SESSIONS', 'totalSessions', p.total_sessions, 'number')}
           {renderEditableField('CUSTOM TITLE', 'customTitle', p.custom_title, 'text')}
           {renderEditableField('TOXIC MODE', 'toxicMode', p.toxic_mode, 'boolean')}
+          {/* DEADLOCK feature flag */}
+          <div className="flex items-center justify-between py-1">
+            <span className="text-[var(--c-secondary)] text-xs tracking-widest">DEADLOCK ACCESS</span>
+            <button
+              onClick={() => {
+                const currentFlags = (p.feature_flags as Record<string, boolean>) ?? {};
+                const newFlags = { ...currentFlags, deadlock: !currentFlags.deadlock };
+                saveField('featureFlags', newFlags);
+              }}
+              className={`font-mono text-sm hover:underline ${
+                ((p.feature_flags as Record<string, boolean>)?.deadlock) ? 'text-[#ff3333]' : 'text-[var(--c-muted)]'
+              }`}
+            >
+              {((p.feature_flags as Record<string, boolean>)?.deadlock) ? 'ENABLED' : 'DISABLED'}
+            </button>
+          </div>
           {/* Theme override */}
           <div className="flex items-center justify-between py-1">
             <span className="text-[var(--c-secondary)] text-xs tracking-widest">THEME</span>

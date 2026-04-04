@@ -6,14 +6,14 @@ export const ROGUELIKE_DEFAULT_LIVES = 3;
 export const ROGUELIKE_MAX_LIVES = 5;
 export const ROGUELIKE_SESSION_TTL = 3600;
 
-// Intel economy (balanced so a perfect floor earns ~40-50 Intel, decent floor ~25-35)
+// Intel economy (perfect floor ~47-55, good floor ~30-38, decent floor ~24-30; floor clear scales with difficulty)
 export const INTEL_CORRECT = 5;
 export const INTEL_SPEED_BONUS = 2;
 export const INTEL_SPEED_THRESHOLD_MS = 5000;
 export const INTEL_STREAK_BONUS = 2;
 export const INTEL_STREAK_MIN = 3;
-export const INTEL_FLOOR_CLEAR = 10;
-export const INTEL_WRONG = -3;
+export const INTEL_FLOOR_CLEAR = [8, 10, 12, 15, 20] as const;
+export const INTEL_WRONG = -2;
 export const INTEL_WAGER_MULTIPLIER = 2;
 export const INTEL_WAGER_OPTIONS = [5, 10, 15] as const;
 export const INVESTIGATION_INSPECT_COST = 8;
@@ -288,7 +288,7 @@ export const PERK_DEFS: PerkDef[] = [
     id: 'STREAK_SAVER',
     label: 'Streak Saver',
     description: 'Preserve your streak on the next wrong answer.',
-    cost: 25,
+    cost: 18,
     stackable: false,
     maxOwned: 1,
   },
@@ -296,7 +296,7 @@ export const PERK_DEFS: PerkDef[] = [
     id: 'INTEL_CACHE',
     label: 'Intel Cache',
     description: 'Immediately gain 10 Intel.',
-    cost: 15,
+    cost: 10,
     stackable: true,
     maxOwned: 2,
   },

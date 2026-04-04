@@ -140,4 +140,5 @@ export interface PlayerProfile {
   seenMoments?: string[];
   dailyResult?: { score: number; totalScore: number } | null;
   cooldown?: { hourlyRemaining: number; dailyRemaining: number; hourlyResetsAt: string; dailyResetsAt: string };
+  featureFlags?: Record<string, boolean>;
 }

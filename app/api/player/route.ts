@@ -80,7 +80,7 @@ export async function GET(req: NextRequest) {
   const nowHour = new Date().toISOString().slice(0, 13);
   const todayStr = new Date().toISOString().slice(0, 10);
 
-  const [{ count: researchAnswersSubmitted }, { data: achievementRows }, { data: streakData }, { data: momentRows }, hourlyCount, dailyCount, { data: dailyAnswers }, { data: roguelikeRunsRaw }] = await Promise.all([
+  const [{ count: researchAnswersSubmitted }, { data: achievementRows }, { data: streakData }, { data: momentRows }, hourlyCount, dailyCount, { data: dailyAnswers }, { data: roguelikeRunsRaw }, { data: globalSettingsRow }] = await Promise.all([
     admin.from('answers').select('*', { count: 'exact', head: true })
       .eq('player_id', row.id as string).eq('game_mode', 'research'),
     admin.from('player_achievements').select('achievement_id')
@@ -102,6 +102,8 @@ export async function GET(req: NextRequest) {
       .select('score, floors_cleared, clearance_earned, cards_answered, cards_correct')
       .eq('player_id', row.id as string)
       .in('status', ['complete', 'abandoned']),
+    // Global feature flags
+    admin.from('app_settings').select('value').eq('key', 'feature_flags').maybeSingle(),
   ]);
 
   const achievements = (achievementRows ?? []).map((r: { achievement_id: string }) => r.achievement_id);
@@ -149,10 +151,19 @@ export async function GET(req: NextRequest) {
     : 0;
   const roguelikeClearance = (row.roguelike_clearance as number) ?? 0;
 
+  // Merge feature flags: override mode — global true = everyone, global false = per-player check
+  const globalFlags = (globalSettingsRow?.value as Record<string, boolean>) ?? {};
+  const playerFlags = (row.feature_flags as Record<string, boolean>) ?? {};
+  const mergedFlags: Record<string, boolean> = {};
+  for (const key of new Set([...Object.keys(globalFlags), ...Object.keys(playerFlags)])) {
+    mergedFlags[key] = globalFlags[key] === true || playerFlags[key] === true;
+  }
+
   const profile = toProfile(row, researchAnswersSubmitted ?? 0, achievements, streakData, seenMoments);
 
   return NextResponse.json({
     ...profile,
+    featureFlags: mergedFlags,
     roguelikeBestScore,
     roguelikeBestFloor,
     roguelikeTotalRuns,
