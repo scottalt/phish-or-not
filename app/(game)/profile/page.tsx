@@ -600,10 +600,10 @@ export default function ProfilePage() {
         </div>
 
         {/* Tab bar */}
-        <div className="term-border bg-[var(--c-bg)] flex overflow-x-auto">
+        <div className="term-border bg-[var(--c-bg)] flex overflow-x-auto scrollbar-none">
           <button
             onClick={() => setProfileTab('info')}
-            className={`flex-1 py-2 text-sm font-mono tracking-widest transition-colors ${
+            className={`flex-1 min-w-0 py-2 px-2 text-xs sm:text-sm font-mono tracking-widest transition-colors whitespace-nowrap ${
               profileTab === 'info'
                 ? 'text-[var(--c-primary)] bg-[color-mix(in_srgb,var(--c-primary)_6%,transparent)] border-b-2 border-[var(--c-primary)]'
                 : 'text-[var(--c-secondary)] hover:text-[var(--c-primary)] border-b-2 border-transparent'
@@ -613,17 +613,17 @@ export default function ProfilePage() {
           </button>
           <button
             onClick={() => setProfileTab('solo')}
-            className={`flex-1 py-2 text-sm font-mono tracking-widest transition-colors ${
+            className={`flex-1 min-w-0 py-2 px-2 text-xs sm:text-sm font-mono tracking-widest transition-colors whitespace-nowrap ${
               profileTab === 'solo'
                 ? 'text-[var(--c-primary)] bg-[color-mix(in_srgb,var(--c-primary)_6%,transparent)] border-b-2 border-[var(--c-primary)]'
                 : 'text-[var(--c-secondary)] hover:text-[var(--c-primary)] border-b-2 border-transparent'
             }`}
           >
-            <span className="hidden sm:inline">SOLO </span>STATS
+            STATS
           </button>
           <button
             onClick={() => setProfileTab('h2h')}
-            className={`flex-1 py-2 text-sm font-mono tracking-widest transition-colors ${
+            className={`flex-1 min-w-0 py-2 px-2 text-xs sm:text-sm font-mono tracking-widest transition-colors whitespace-nowrap ${
               profileTab === 'h2h'
                 ? 'text-[#ff0080] bg-[rgba(255,0,128,0.06)] border-b-2 border-[#ff0080]'
                 : 'text-[var(--c-secondary)] hover:text-[#ff0080] border-b-2 border-transparent'
@@ -633,7 +633,7 @@ export default function ProfilePage() {
           </button>
           <button
             onClick={() => setProfileTab('quests')}
-            className={`flex-1 py-2 text-sm font-mono tracking-widest transition-colors ${
+            className={`flex-1 min-w-0 py-2 px-2 text-xs sm:text-sm font-mono tracking-widest transition-colors whitespace-nowrap ${
               profileTab === 'quests'
                 ? 'text-[var(--c-accent)] bg-[color-mix(in_srgb,var(--c-accent)_6%,transparent)] border-b-2 border-[var(--c-accent)]'
                 : 'text-[var(--c-secondary)] hover:text-[var(--c-accent)] border-b-2 border-transparent'
@@ -643,7 +643,7 @@ export default function ProfilePage() {
           </button>
           <button
             onClick={() => setProfileTab('friends')}
-            className={`relative flex-1 py-2 text-sm font-mono tracking-widest transition-colors ${
+            className={`relative flex-1 min-w-0 py-2 px-2 text-xs sm:text-sm font-mono tracking-widest transition-colors whitespace-nowrap ${
               profileTab === 'friends'
                 ? 'text-[var(--c-primary)] bg-[color-mix(in_srgb,var(--c-primary)_6%,transparent)] border-b-2 border-[var(--c-primary)]'
                 : 'text-[var(--c-secondary)] hover:text-[var(--c-primary)] border-b-2 border-transparent'
@@ -656,10 +656,10 @@ export default function ProfilePage() {
               </span>
             )}
           </button>
-          {profile.researchGraduated && (
+          {profile.featureFlags?.deadlock && (
             <button
               onClick={() => setProfileTab('deadlock')}
-              className={`flex-1 py-2 text-sm font-mono tracking-widest transition-colors ${
+              className={`flex-1 min-w-0 py-2 px-2 text-xs sm:text-sm font-mono tracking-widest transition-colors whitespace-nowrap ${
                 profileTab === 'deadlock'
                   ? 'text-[#ff3333] bg-[rgba(255,51,51,0.06)] border-b-2 border-[#ff3333]'
                   : 'text-[var(--c-secondary)] hover:text-[#ff3333] border-b-2 border-transparent'
