@@ -69,19 +69,19 @@ export function RoguelikeCardDisplay({
             return (
               <div
                 key={i}
-                className={`px-3 py-2 text-xs font-mono ${
+                className={`px-3 py-2 text-xs font-mono flex items-baseline gap-1 min-w-0 ${
                   isCurrent ? 'bg-[color-mix(in_srgb,var(--c-primary)_6%,transparent)]' : ''
                 } ${isAnswered ? 'opacity-40 line-through' : ''}`}
               >
-                <span className={isCurrent ? 'text-[var(--c-primary)]' : 'text-[var(--c-muted)]'}>
+                <span className={`shrink-0 ${isCurrent ? 'text-[var(--c-primary)]' : 'text-[var(--c-muted)]'}`}>
                   {c.from?.split('@')[0] ?? '???'}
                 </span>
                 {c.subject && (
-                  <span className="text-[var(--c-secondary)] ml-2 truncate">
+                  <span className="text-[var(--c-secondary)] truncate min-w-0">
                     {c.subject}
                   </span>
                 )}
-                {isCurrent && <span className="text-[var(--c-primary)] ml-2">◄</span>}
+                {isCurrent && <span className="text-[var(--c-primary)] shrink-0">◄</span>}
               </div>
             );
           })}
