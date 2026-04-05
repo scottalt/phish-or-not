@@ -230,7 +230,12 @@ export async function POST(
     const newScore = state.score + cardScore;
 
     // ── Update card history and card index ──
-    const newCardHistory = [...state.cardHistory, currentCardId];
+    const newCardHistory = [...state.cardHistory, {
+      cardId: currentCardId,
+      technique: card.technique ?? null,
+      correct,
+      isPhishing: card.isPhishing,
+    }];
     const newCardIndex = cardIndex + 1;
     const floorComplete = newCardIndex >= ROGUELIKE_CARDS_PER_FLOOR;
 

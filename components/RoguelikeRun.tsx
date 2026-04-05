@@ -60,6 +60,7 @@ interface ResultData {
   operationName: string;
   newAchievements?: string[];
   xpEarned?: number;
+  techniqueBreakdown?: { technique: string; seen: number; caught: number; missed: number }[];
 }
 
 type Phase = 'lobby' | 'loading' | 'floor' | 'feedback' | 'shop' | 'result' | 'floor-intro' | 'wager' | 'upgrades' | 'paused-prompt';
@@ -1056,6 +1057,7 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
         won={won}
         newAchievements={resultData.newAchievements}
         xpEarned={resultData.xpEarned}
+        techniqueBreakdown={resultData.techniqueBreakdown}
         onPlayAgain={onPlayAgain}
         onBack={onBack}
       />

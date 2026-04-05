@@ -118,10 +118,13 @@ export async function POST(
     }));
 
     // ── Select cards for the next floor (exclude all previously seen cards) ──
+    const seenCardIds = state.cardHistory.map((entry) =>
+      typeof entry === 'string' ? entry : entry.cardId,
+    );
     const nextFloorAssignments = selectFloorCards(
       cards,
       nextFloor,
-      state.cardHistory,
+      seenCardIds,
       ROGUELIKE_CARDS_PER_FLOOR,
     );
     const nextFloorCardIds = nextFloorAssignments.map((a) => a.cardId);

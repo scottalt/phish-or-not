@@ -21,6 +21,7 @@ interface Props {
   won: boolean;             // true if all floors cleared
   newAchievements?: string[]; // achievement IDs earned this run
   xpEarned?: number;
+  techniqueBreakdown?: { technique: string; seen: number; caught: number; missed: number }[];
   onPlayAgain: () => void;
   onBack: () => void;
 }
@@ -38,6 +39,7 @@ export function RoguelikeResult({
   won,
   newAchievements,
   xpEarned,
+  techniqueBreakdown,
   onPlayAgain,
   onBack,
 }: Props) {
@@ -191,10 +193,58 @@ export function RoguelikeResult({
         </div>
       )}
 
+      {/* Technique analysis */}
+      {techniqueBreakdown && techniqueBreakdown.length > 0 && (
+        <div
+          className="w-full term-border anim-fade-in-up"
+          style={{ animationDelay: '400ms', animationFillMode: 'both' }}
+        >
+          <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_25%,transparent)] px-3 py-1.5">
+            <span className="text-xs text-[var(--c-secondary)] tracking-widest">THREAT ANALYSIS</span>
+          </div>
+          <div className="divide-y divide-[color-mix(in_srgb,var(--c-primary)_10%,transparent)]">
+            {techniqueBreakdown.map((t) => {
+              const rate = t.seen > 0 ? Math.round((t.caught / t.seen) * 100) : 0;
+              const worstRate = Math.min(...techniqueBreakdown.map((x) => x.seen > 0 ? Math.round((x.caught / x.seen) * 100) : 100));
+              const isWorst = techniqueBreakdown.length > 1 && rate === worstRate;
+              const barWidth = t.seen > 0 ? (t.caught / t.seen) * 100 : 0;
+              return (
+                <div key={t.technique} className="px-3 py-2 space-y-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-[var(--c-secondary)] uppercase tracking-wider">
+                      {t.technique.replace(/_/g, ' ')}
+                    </span>
+                    <span className="tabular-nums flex items-center gap-2">
+                      <span style={{ color: isWorst ? '#ff3333' : 'var(--c-primary)' }}>
+                        {t.caught}/{t.seen} {rate}%
+                      </span>
+                      {isWorst && (
+                        <span className="text-[10px] tracking-widest" style={{ color: '#ff3333' }}>
+                          WEAK SPOT
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                  <div className="w-full h-1.5 rounded-full" style={{ background: 'var(--c-dark)' }}>
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{
+                        width: `${barWidth}%`,
+                        background: isWorst ? '#ff3333' : 'var(--c-primary)',
+                      }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Floor breakdown */}
       <div
         className="w-full term-border anim-fade-in-up"
-        style={{ animationDelay: '450ms', animationFillMode: 'both' }}
+        style={{ animationDelay: '525ms', animationFillMode: 'both' }}
       >
         <div className="border-b border-[color-mix(in_srgb,var(--c-primary)_25%,transparent)] px-3 py-1.5">
           <span className="text-xs text-[var(--c-secondary)] tracking-widest">FLOOR BREAKDOWN</span>
@@ -236,7 +286,7 @@ export function RoguelikeResult({
       {/* Buttons */}
       <div
         className="flex gap-3 w-full anim-fade-in-up"
-        style={{ animationDelay: '600ms', animationFillMode: 'both' }}
+        style={{ animationDelay: '675ms', animationFillMode: 'both' }}
       >
         <button
           onClick={() => { if (soundEnabled) playClick(); onPlayAgain(); }}

@@ -282,6 +282,21 @@ export async function PATCH(
       }
     }
 
+    // ── Technique breakdown for debrief ──
+    const techMap = new Map<string, { seen: number; caught: number; missed: number }>();
+    for (const entry of state.cardHistory) {
+      if (typeof entry === 'string') continue; // old format, skip
+      if (!entry.isPhishing || !entry.technique) continue; // only track phishing techniques
+      const t = techMap.get(entry.technique) ?? { seen: 0, caught: 0, missed: 0 };
+      t.seen++;
+      if (entry.correct) t.caught++;
+      else t.missed++;
+      techMap.set(entry.technique, t);
+    }
+    const techniqueBreakdown = Array.from(techMap.entries())
+      .map(([technique, stats]) => ({ technique, ...stats }))
+      .sort((a, b) => b.seen - a.seen);
+
     // Fix 5: Return clearanceEarned (not clearance) to match client expectation
     return NextResponse.json({
       finalScore,
@@ -298,6 +313,7 @@ export async function PATCH(
       newAchievements,
       xpEarned,
       levelUp,
+      techniqueBreakdown,
     });
   } catch (err) {
     console.error(`[roguelike/${runId}] Unhandled error in PATCH:`, err);

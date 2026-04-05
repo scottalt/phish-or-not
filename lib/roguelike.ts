@@ -360,7 +360,7 @@ export interface RoguelikeRunState {
   deaths: number;
   perks: PerkId[];
   floorsCleared: number;
-  cardHistory: string[];      // cardIds answered so far
+  cardHistory: (string | { cardId: string; technique: string | null; correct: boolean; isPhishing: boolean })[];      // cardIds answered so far
   cardsCorrect: number;       // count of correct answers
   currentFloorCardIds: string[];
   currentCardIndex: number;
