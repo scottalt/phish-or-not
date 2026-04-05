@@ -7,10 +7,11 @@ interface FloorIntroProps {
   floor: number;
   gimmick: GimmickId | null;
   secondaryGimmick?: GimmickId | null;
+  resumeOperationName?: string | null;
   onSkip: () => void;
 }
 
-export function RoguelikeFloorIntro({ floor, gimmick, secondaryGimmick, onSkip }: FloorIntroProps) {
+export function RoguelikeFloorIntro({ floor, gimmick, secondaryGimmick, resumeOperationName, onSkip }: FloorIntroProps) {
   const introGimmickDef = gimmick ? GIMMICK_DEFS[gimmick] : null;
   const isBossFloor = introGimmickDef?.tier === 3;
   const introGimmickColor = introGimmickDef
@@ -65,6 +66,14 @@ export function RoguelikeFloorIntro({ floor, gimmick, secondaryGimmick, onSkip }
           </>
         )}
       </div>
+        {resumeOperationName && (
+          <p
+            className="text-xs tracking-widest"
+            style={{ color: '#ffaa00' }}
+          >
+            RESUMING: {resumeOperationName}
+          </p>
+        )}
       <p className="text-[var(--c-muted)] text-xs mt-4 animate-pulse">TAP TO START</p>
     </div>
   );

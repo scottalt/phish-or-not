@@ -63,7 +63,7 @@ interface ResultData {
   techniqueBreakdown?: { technique: string; seen: number; caught: number; missed: number }[];
 }
 
-type Phase = 'lobby' | 'loading' | 'floor' | 'feedback' | 'shop' | 'result' | 'floor-intro' | 'wager' | 'upgrades' | 'paused-prompt';
+type Phase = 'lobby' | 'loading' | 'floor' | 'feedback' | 'shop' | 'result' | 'floor-intro' | 'wager' | 'upgrades' | 'paused-prompt' | 'floor-clear';
 
 interface Props {
   onBack: () => void;
@@ -128,6 +128,9 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
   const [freeInspections, setFreeInspections] = useState(0);
   const [floorIntroGimmick, setFloorIntroGimmick] = useState<GimmickId | null>(null);
 
+  // ── Resume state ──
+  const [isResumed, setIsResumed] = useState(false);
+
   // ── Paused run prompt state ──
   const [pausedRunInfo, setPausedRunInfo] = useState<{
     runId: string; operationName: string; score: number;
@@ -146,6 +149,12 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
   const [toast, setToast] = useState<string | null>(null);
   const [toastKey, setToastKey] = useState(0);
   const toastTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // ── Reactive handler dialogue state ──
+  const [missedPhishingStreak, setMissedPhishingStreak] = useState(0);
+  const [falsePositiveStreak, setFalsePositiveStreak] = useState(0);
+  const [fastAnswerStreak, setFastAnswerStreak] = useState(0);
+  const lastReactiveCard = useRef(-1);
 
   function showToast(msg: string) {
     if (toastTimeout.current) clearTimeout(toastTimeout.current);
@@ -196,6 +205,13 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
       if (floorIntroTimeoutRef.current) clearTimeout(floorIntroTimeoutRef.current);
     };
   }, []);
+
+  // Auto-dismiss floor clear after 1.5s
+  useEffect(() => {
+    if (phase !== 'floor-clear' || !runId) return;
+    const timer = setTimeout(() => loadShop(runId), 1500);
+    return () => clearTimeout(timer);
+  }, [phase, runId]);
 
   // ── Compute effective timer duration for current card ──
   const getEffectiveTimerMs = useCallback((): number | null => {
@@ -469,49 +485,147 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
         }
       }
 
-      // SIGINT mid-floor toasts
-      const STREAK_3_TOASTS = [
-        "Nice read. Keep that up.",
-        "Three in a row. You're warming up.",
-        "Good pattern recognition.",
-      ];
-      const STREAK_5_TOASTS = [
-        "You're on fire, operative.",
-        "Five straight. Impressive.",
-        "Razor sharp. Don't get cocky.",
-      ];
-      const LIFE_LOST_TOASTS = [
-        "Shake it off. Stay focused.",
-        "That one was tricky. Regroup.",
-        "Damage taken. Keep moving.",
-      ];
-      const LAST_LIFE_TOASTS = [
-        "One more slip and we're dark.",
-        "Final life. Every call matters now.",
-        "Critical status. Focus.",
-      ];
-      const FLOOR_CLEAR_TOASTS = [
-        "Floor cleared. Requisition incoming.",
-        "Sector clear. Moving up.",
-        "Good work. Resupply ahead.",
-      ];
+      // ── Reactive handler dialogue ──
+      const REACTIVE_LINES = {
+        clutch: [
+          "Nerves of steel. Barely.",
+          "One life and still standing. Impressive.",
+          "That was too close. But you made it.",
+        ],
+        floorPerfect: [
+          "Clean sweep. That's how it's done.",
+          "Flawless floor. Don't let it go to your head.",
+          "Perfect reads. Every single one.",
+        ],
+        hotStreak: [
+          "Sharp. Keep that up.",
+          "You're locked in. I can tell.",
+          "Razor sharp. Don't get cocky.",
+        ],
+        overconfidence: [
+          "Confidence without accuracy is a liability.",
+          "That was a CERTAIN? Recalibrate.",
+          "Overconfidence kills operations. Literally.",
+        ],
+        missingPhishing: [
+          "You're letting threats through. Slow down.",
+          "Three slipped past. Tighten the filter.",
+          "Threats are getting through. Reassess.",
+        ],
+        falsePositives: [
+          "Not everything's a threat. You're jumping at shadows.",
+          "Ease up. Real analysts don't flag everything.",
+          "Too many false alarms. Trust the signals.",
+        ],
+        speedDemon: [
+          "Fast hands. Hope the brain's keeping up.",
+          "Speed's good. Accuracy's better.",
+          "Slow down. This isn't a race.",
+        ],
+        floorClear: [
+          "Floor cleared. Requisition incoming.",
+          "Sector clear. Moving up.",
+          "Good work. Resupply ahead.",
+        ],
+        lastLife: [
+          "One more slip and we're dark.",
+          "Final life. Every call matters now.",
+          "Critical status. Focus.",
+        ],
+        lifeLost: [
+          "Shake it off. Stay focused.",
+          "That one was tricky. Regroup.",
+          "Damage taken. Keep moving.",
+        ],
+      } as const;
 
-      // SIGINT mid-floor reactions (full Handler dialogue, not toasts)
-      if (data.floorCleared) {
-        triggerCustom([FLOOR_CLEAR_TOASTS[Math.floor(Math.random() * FLOOR_CLEAR_TOASTS.length)]], 'COPY');
-      } else if (data.correct) {
-        if (data.streak === 5) {
-          triggerCustom([STREAK_5_TOASTS[Math.floor(Math.random() * STREAK_5_TOASTS.length)]], 'COPY');
-        } else if (data.streak === 3) {
-          triggerCustom([STREAK_3_TOASTS[Math.floor(Math.random() * STREAK_3_TOASTS.length)]], 'COPY');
-        }
+      const pickLine = (pool: readonly string[]) =>
+        pool[Math.floor(Math.random() * pool.length)];
+
+      // Update reactive tracking
+      if (!data.correct && data.isPhishing) {
+        setMissedPhishingStreak((s) => s + 1);
+        setFalsePositiveStreak(0);
+      } else if (!data.correct && !data.isPhishing) {
+        setFalsePositiveStreak((s) => s + 1);
+        setMissedPhishingStreak(0);
       } else {
-        const liveLost = data.lives < lives;
-        if (liveLost) {
-          if (data.lives === 1) {
-            triggerCustom([LAST_LIFE_TOASTS[Math.floor(Math.random() * LAST_LIFE_TOASTS.length)]], 'COPY');
-          } else {
-            triggerCustom([LIFE_LOST_TOASTS[Math.floor(Math.random() * LIFE_LOST_TOASTS.length)]], 'COPY');
+        setMissedPhishingStreak(0);
+        setFalsePositiveStreak(0);
+      }
+      if (timeFromRenderMs < 3000) {
+        setFastAnswerStreak((s) => s + 1);
+      } else {
+        setFastAnswerStreak(0);
+      }
+
+      // Fire reactive handler lines (priority order, cooldown of 3 cards)
+      const canFire = cardIndex - lastReactiveCard.current >= 3 || lastReactiveCard.current === -1;
+      let firedReactive = false;
+
+      if (canFire) {
+        // Priority 1: Clutch (correct at 1 life)
+        if (!firedReactive && data.correct && data.lives === 1) {
+          triggerCustom([pickLine(REACTIVE_LINES.clutch)], 'COPY');
+          lastReactiveCard.current = cardIndex;
+          firedReactive = true;
+        }
+
+        // Priority 2: Floor perfect
+        if (!firedReactive && data.floorCleared && data.correct && data.streak >= 5) {
+          triggerCustom([pickLine(REACTIVE_LINES.floorPerfect)], 'COPY');
+          lastReactiveCard.current = cardIndex;
+          firedReactive = true;
+        }
+
+        // Priority 3: Hot streak (5+)
+        if (!firedReactive && data.correct && data.streak >= 5) {
+          triggerCustom([pickLine(REACTIVE_LINES.hotStreak)], 'COPY');
+          lastReactiveCard.current = cardIndex;
+          firedReactive = true;
+        }
+
+        // Priority 4: Overconfidence (high wager on wrong answer)
+        if (!firedReactive && !data.correct && selectedWager >= 15) {
+          triggerCustom([pickLine(REACTIVE_LINES.overconfidence)], 'COPY');
+          lastReactiveCard.current = cardIndex;
+          firedReactive = true;
+        }
+
+        // Priority 5: Missing phishing (3+ in a row)
+        if (!firedReactive && missedPhishingStreak >= 2 && !data.correct && data.isPhishing) {
+          triggerCustom([pickLine(REACTIVE_LINES.missingPhishing)], 'COPY');
+          lastReactiveCard.current = cardIndex;
+          firedReactive = true;
+        }
+
+        // Priority 6: False positives (3+ in a row)
+        if (!firedReactive && falsePositiveStreak >= 2 && !data.correct && !data.isPhishing) {
+          triggerCustom([pickLine(REACTIVE_LINES.falsePositives)], 'COPY');
+          lastReactiveCard.current = cardIndex;
+          firedReactive = true;
+        }
+
+        // Priority 7: Speed demon (3+ fast answers)
+        if (!firedReactive && fastAnswerStreak >= 3) {
+          triggerCustom([pickLine(REACTIVE_LINES.speedDemon)], 'COPY');
+          lastReactiveCard.current = cardIndex;
+          firedReactive = true;
+        }
+      }
+
+      // Fallback toasts (always eligible, not subject to cooldown)
+      if (!firedReactive) {
+        if (data.floorCleared) {
+          triggerCustom([pickLine(REACTIVE_LINES.floorClear)], 'COPY');
+        } else if (!data.correct) {
+          const liveLost = data.lives < lives;
+          if (liveLost) {
+            if (data.lives === 1) {
+              triggerCustom([pickLine(REACTIVE_LINES.lastLife)], 'COPY');
+            } else {
+              triggerCustom([pickLine(REACTIVE_LINES.lifeLost)], 'COPY');
+            }
           }
         }
       }
@@ -544,7 +658,7 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
     }
 
     if (data.floorCleared) {
-      await loadShop(runId);
+      setPhase('floor-clear');
       return;
     }
 
@@ -760,6 +874,7 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
       if (data.activeUpgrades) setOwnedUpgrades(data.activeUpgrades as UpgradeId[]);
       setPausedRunInfo(null);
       setSecondaryGimmick(null); // resumed runs go to shop, secondary set on next floor advance
+      setIsResumed(true);
 
       // Player paused at the shop — take them back there
       await loadShop(data.runId);
@@ -1010,6 +1125,32 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
     );
   }
 
+  // ── Render: floor clear animation ──
+  if (phase === 'floor-clear') {
+    return (
+      <div
+        onClick={() => { if (runId) loadShop(runId); }}
+        className="flex flex-col items-center justify-center gap-4 p-8 font-mono min-h-[300px] cursor-pointer select-none"
+      >
+        <div className="anim-floor-intro text-center space-y-3">
+          <p
+            className="text-3xl font-black tracking-widest"
+            style={{
+              color: '#00ff41',
+              textShadow: '0 0 12px #00ff41, 0 0 30px rgba(0,255,65,0.3)',
+            }}
+          >
+            FLOOR {floor + 1} CLEARED
+          </p>
+          <p className="text-sm text-[var(--c-secondary)] tabular-nums">
+            SCORE: {score.toLocaleString()}
+          </p>
+        </div>
+        <p className="text-[var(--c-muted)] text-xs mt-4 animate-pulse">TAP TO CONTINUE</p>
+      </div>
+    );
+  }
+
   // ── Render: floor intro ──
   if (phase === 'floor-intro') {
     return (
@@ -1017,8 +1158,10 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
         floor={floor}
         gimmick={floorIntroGimmick}
         secondaryGimmick={secondaryGimmick}
+        resumeOperationName={isResumed ? operationName : null}
         onSkip={() => {
           if (floorIntroTimeoutRef.current) clearTimeout(floorIntroTimeoutRef.current);
+          setIsResumed(false);
           setPhase('floor');
         }}
       />
