@@ -3,6 +3,7 @@ import {
   type RoguelikeRunState,
   PERK_DEFS,
   ROGUELIKE_MAX_LIVES,
+  SYNERGY_DEFS,
 } from './roguelike';
 
 function shuffle<T>(arr: T[]): T[] {
@@ -19,6 +20,31 @@ function shuffle<T>(arr: T[]): T[] {
  */
 export function hasPerk(state: RoguelikeRunState, perkId: PerkId): boolean {
   return state.perks.includes(perkId);
+}
+
+/**
+ * Check if a synergy is active (player owns both perks in the pair).
+ */
+export function hasSynergy(state: RoguelikeRunState, synergyId: string): boolean {
+  const def = SYNERGY_DEFS.find((s) => s.id === synergyId);
+  if (!def) return false;
+  return state.perks.includes(def.perkA) && state.perks.includes(def.perkB);
+}
+
+/**
+ * Get synergy info for a perk offering (for shop display).
+ * Returns the synergy def if the player owns the partner perk.
+ */
+export function getSynergyForPerk(state: RoguelikeRunState, perkId: PerkId): { name: string; description: string } | null {
+  for (const syn of SYNERGY_DEFS) {
+    if (syn.perkA === perkId && state.perks.includes(syn.perkB)) {
+      return { name: syn.name, description: syn.description };
+    }
+    if (syn.perkB === perkId && state.perks.includes(syn.perkA)) {
+      return { name: syn.name, description: syn.description };
+    }
+  }
+  return null;
 }
 
 /**
@@ -107,7 +133,9 @@ export function applyPerkPurchase(
     next.lives = Math.min(next.lives + 1, ROGUELIKE_MAX_LIVES);
   }
   if (perkId === 'INTEL_CACHE') {
-    next.intel += 20;
+    // COMPOUND_INTEREST synergy: 25 instead of 20 if player also owns DOUBLE_INTEL
+    const hasCompound = state.perks.includes('DOUBLE_INTEL');
+    next.intel += hasCompound ? 25 : 20;
   }
 
   return next;

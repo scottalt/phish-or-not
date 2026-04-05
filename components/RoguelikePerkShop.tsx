@@ -13,6 +13,7 @@ interface Props {
   floor: number;            // just-cleared floor (0-indexed)
   nextGimmick: GimmickId | null;
   sigintLine?: string;
+  synergies?: Record<string, { name: string; description: string }>;
   onBuy: (perkId: PerkId) => Promise<void>;
   onSkip: () => void;
   onPause?: () => void;
@@ -25,6 +26,7 @@ export function RoguelikePerkShop({
   floor,
   nextGimmick,
   sigintLine,
+  synergies,
   onBuy,
   onSkip,
   onPause,
@@ -156,6 +158,11 @@ export function RoguelikePerkShop({
               <p className="text-xs text-[var(--c-secondary)] leading-relaxed">
                 {def.description}
               </p>
+              {synergies?.[perkId] && (
+                <p className="text-[10px] tracking-widest" style={{ color: '#ffaa00' }}>
+                  SYNERGY: {synergies[perkId].name} — {synergies[perkId].description}
+                </p>
+              )}
               {isBuying && (
                 <p className="text-xs text-[var(--c-muted)] animate-pulse tracking-widest">
                   ACQUIRING...

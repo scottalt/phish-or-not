@@ -110,6 +110,7 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
 
   // ── Shop state ──
   const [shopPerks, setShopPerks] = useState<PerkId[]>([]);
+  const [shopSynergies, setShopSynergies] = useState<Record<string, { name: string; description: string }>>({});
   const [nextGimmick, setNextGimmick] = useState<GimmickId | null>(null);
 
   // ── Result / feedback ──
@@ -646,6 +647,15 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
         typeof p === 'string' ? p : p.id
       ) as PerkId[];
       setShopPerks(offeringIds);
+
+      // Extract synergy data keyed by perk ID
+      const synergies: Record<string, { name: string; description: string }> = {};
+      for (const p of data.offerings ?? []) {
+        if (typeof p === 'object' && p.synergy) {
+          synergies[p.id] = p.synergy;
+        }
+      }
+      setShopSynergies(synergies);
       setIntel(data.intel);
       setLives(data.lives);
 
@@ -1054,6 +1064,7 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
         floor={floor}
         nextGimmick={nextGimmick}
         sigintLine={shopSigintLine}
+        synergies={shopSynergies}
         onBuy={handleBuyPerk}
         onSkip={handleSkipShop}
         onPause={handlePause}

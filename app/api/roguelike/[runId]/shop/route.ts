@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 import { getSupabaseAdminClient } from '@/lib/supabase';
 import { redis } from '@/lib/redis';
 import { type RoguelikeRunState, ROGUELIKE_SESSION_TTL, PERK_DEFS } from '@/lib/roguelike';
-import { getShopOfferings, applyPerkPurchase } from '@/lib/roguelike-perks';
+import { getShopOfferings, applyPerkPurchase, getSynergyForPerk } from '@/lib/roguelike-perks';
 import type { PerkId } from '@/lib/roguelike';
 
 async function getPlayerId(userId: string): Promise<string | null> {
@@ -54,11 +54,11 @@ export async function GET(
     const offerings = offeringIds.map((id) => {
       const def = PERK_DEFS.find((d) => d.id === id);
       if (!def) return null;
-      // INSIDER_TRADING upgrade: 10% discount on perk prices
-      if (state.perkDiscount && state.perkDiscount < 1) {
-        return { ...def, cost: Math.max(0, Math.floor(def.cost * state.perkDiscount)) };
-      }
-      return def;
+      const cost = (state.perkDiscount && state.perkDiscount < 1)
+        ? Math.max(0, Math.floor(def.cost * state.perkDiscount))
+        : def.cost;
+      const synergy = getSynergyForPerk(state, id);
+      return { ...def, cost, synergy };
     }).filter(Boolean);
 
     // Only reveal next gimmick if player has SIGNAL_INTERCEPT upgrade

@@ -302,6 +302,47 @@ export const PERK_DEFS: PerkDef[] = [
   },
 ];
 
+// ─── Perk Synergies ──────────────────────────────────────────────────────────
+
+export interface SynergyDef {
+  id: string;
+  perkA: PerkId;
+  perkB: PerkId;
+  name: string;
+  description: string;
+}
+
+export const SYNERGY_DEFS: SynergyDef[] = [
+  {
+    id: 'FAILSAFE',
+    perkA: 'SHIELD',
+    perkB: 'STREAK_SAVER',
+    name: 'Failsafe',
+    description: 'When either triggers, refund 25% of its cost as Intel.',
+  },
+  {
+    id: 'COMPOUND_INTEREST',
+    perkA: 'DOUBLE_INTEL',
+    perkB: 'INTEL_CACHE',
+    name: 'Compound Interest',
+    description: 'Intel Cache gives 25 instead of 20.',
+  },
+  {
+    id: 'MOMENTUM',
+    perkA: 'SLOW_TIME',
+    perkB: 'STREAK_SAVER',
+    name: 'Momentum',
+    description: 'Streak intel bonus doubled (+4 instead of +2).',
+  },
+  {
+    id: 'FORTIFIED',
+    perkA: 'EXTRA_LIFE',
+    perkB: 'SHIELD',
+    name: 'Fortified',
+    description: 'Start each floor with a free Shield.',
+  },
+];
+
 // ─── Run State ────────────────────────────────────────────────────────────────
 
 export interface RoguelikeRunState {
