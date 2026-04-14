@@ -100,6 +100,24 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
     body: 'Request data deletion from your profile page. Sign-up now requires agreement to Privacy Policy and Terms of Use.',
   },
   {
+    date: '2026-04-13',
+    category: 'update',
+    title: 'v2.1.0 — DEADLOCK (Beta)',
+    body: 'A roguelike survival mode where every wrong answer brings you closer to the end. Unlocks alongside Freeplay at 30 research answers.',
+    details: [
+      'DEADLOCK — 5 floors of escalating difficulty (Easy → Extreme). 5 cards per floor, 3 lives, permadeath.',
+      'FLOOR GIMMICKS — Each floor adds a twist: timed answers, redacted senders, decoy red flags, lookalike domains, AI-enhanced cards.',
+      'INTEL ECONOMY — Earn Intel from correct answers, streaks, and floor clears. Spend it between floors at the perk shop.',
+      'PERKS — EXTRA_LIFE, SHIELD, DOUBLE_INTEL, SLOW_TIME, STREAK_SAVER, INTEL_CACHE — and synergies that stack effects.',
+      'PERMANENT UPGRADES — Earn Clearance across runs to unlock 12 permanent upgrades across 3 branches: Survival, Intelligence, Profit.',
+      'LEADERBOARD — Score-based DEADLOCK leaderboard with Clearance tracking.',
+      'SIGINT — New handler dialogue throughout runs reacting to streaks, close calls, floor clears, and defeats.',
+      'BETA — DEADLOCK is in beta. Expect rough edges and report anything weird.',
+    ],
+    highlight: true,
+  },
+
+  {
     date: '2026-03-22',
     category: 'update',
     title: 'v2.0.0 — Season 0',
