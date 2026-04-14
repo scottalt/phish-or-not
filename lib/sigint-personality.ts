@@ -250,7 +250,8 @@ export const MILESTONES = {
     lines: [
       "30 classifications. Research protocol complete.",
       "Full clearance granted. Freeplay, Expert cards. The whole terminal is yours.",
-      "You've earned it. The Freeplay button is on the home screen now.",
+      "One more thing. You've been cleared for DEADLOCK — a roguelike survival simulation. 5 floors. 3 lives. Permadeath.",
+      "Fair warning: DEADLOCK is still in beta. Expect rough edges. If something breaks, that's on us, not you.",
       "Welcome to the inner circle, operative.",
     ],
     buttonText: "FINALLY",
