@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { PERK_DEFS, GIMMICK_DEFS } from '@/lib/roguelike';
 import type { PerkId, GimmickId } from '@/lib/roguelike';
 import { playClick, playPerkBuy } from '@/lib/sounds';
@@ -34,9 +34,17 @@ export function RoguelikePerkShop({
   const { soundEnabled } = useSoundEnabled();
   const [buying, setBuying] = useState<PerkId | null>(null);
   const [purchased, setPurchased] = useState<PerkId | null>(null);
+  // Absorb the 300ms ghost-click that mobile browsers synthesize from the
+  // preceding "TAP TO CONTINUE" screen; otherwise the first real tap can land
+  // on a button that's mid-mount and appear to do nothing.
+  const [armed, setArmed] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setArmed(true), 250);
+    return () => clearTimeout(t);
+  }, []);
 
   async function handleBuy(perkId: PerkId) {
-    if (buying || purchased) return;
+    if (!armed || buying || purchased) return;
     setBuying(perkId);
     try {
       await onBuy(perkId);
@@ -116,7 +124,7 @@ export function RoguelikePerkShop({
           const canAfford = intel >= def.cost;
           const isBuying = buying === perkId;
           const isPurchased = purchased === perkId;
-          const isDisabled = !canAfford || !!buying || !!purchased;
+          const isDisabled = !armed || !canAfford || !!buying || !!purchased;
 
           return (
             <button
@@ -124,6 +132,7 @@ export function RoguelikePerkShop({
               onClick={() => !isDisabled && handleBuy(perkId)}
               disabled={isDisabled}
               aria-label={`${def.label} — costs ${def.cost} Intel. ${def.description}`}
+              style={{ touchAction: 'manipulation' }}
               className={`
                 flex-1 term-border px-3 py-4 text-left space-y-2 transition-all active:scale-95
                 ${isPurchased
