@@ -170,6 +170,7 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
   const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const shakeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const floorIntroTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const floorClearAdvancingRef = useRef(false);
 
   // ── Refs ──
   const renderTimestamp = useRef(Date.now());
@@ -665,6 +666,7 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
     }
 
     if (data.floorCleared) {
+      floorClearAdvancingRef.current = false;
       setPhase('floor-clear');
       return;
     }
@@ -1134,9 +1136,16 @@ export function RoguelikeRun({ onBack, onPlayAgain }: Props) {
 
   // ── Render: floor clear animation ──
   if (phase === 'floor-clear') {
+    const handleFloorClearTap = () => {
+      if (!runId || floorClearAdvancingRef.current) return;
+      floorClearAdvancingRef.current = true;
+      if (floor + 1 >= totalFloors) advanceToNextFloor(runId);
+      else loadShop(runId);
+    };
     return (
       <div
-        onClick={() => { if (runId) { floor + 1 >= totalFloors ? advanceToNextFloor(runId) : loadShop(runId); } }}
+        onClick={handleFloorClearTap}
+        style={{ touchAction: 'manipulation' }}
         className="flex flex-col items-center justify-center gap-4 p-8 font-mono min-h-[300px] cursor-pointer select-none"
       >
         <div className="anim-floor-intro text-center space-y-3">
